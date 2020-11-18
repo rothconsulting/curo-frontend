@@ -44,3 +44,5 @@ export * from './lib/camunda/variable-query-parameter';
 export * from './lib/camunda/variable-value';
 export * from './lib/camunda/variables';
 export * from './lib/core.module';
+export * from './lib/curo-form-accessor';
+export * from './lib/generic-form/generic-form.component';

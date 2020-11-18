@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
+import { GenericFormComponent } from './generic-form/generic-form.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [GenericFormComponent],
   imports: [],
-  exports: []
+  exports: [GenericFormComponent]
 })
 export class CuroCoreModule {}
