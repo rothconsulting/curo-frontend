@@ -17,7 +17,8 @@
     "module": "es2020",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@umb-ag/curo-core": ["dist/core/core", "dist/core"]
+      "@umb-ag/curo-core": ["dist/core/core", "dist/core"],
+      "@umb-ag/curo-camunda": ["dist/camunda/camunda", "dist/camunda"]
     }
   },
   "angularCompilerOptions": {

@@ -8,11 +8,8 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {
-  CAMUNDA_BASE_PATH,
-  CuroCoreModule,
-  CURO_FORM_ACCESSOR
-} from '@umb-ag/curo-core';
+import { CAMUNDA_BASE_PATH, CuroCamundaModule } from '@umb-ag/curo-camunda';
+import { CuroCoreModule, CURO_FORM_ACCESSOR } from '@umb-ag/curo-core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
@@ -35,6 +32,7 @@ import { SharedModule } from './shared/shared.module';
     MatToolbarModule,
 
     CuroCoreModule,
+    CuroCamundaModule,
 
     AppRoutingModule,
     CoreModule,
