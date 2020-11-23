@@ -1,4 +1,7 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatCardModule } from '@angular/material/card';
+import { MatListModule } from '@angular/material/list';
 import { TaskListComponent } from './task-list.component';
 
 describe('TaskListComponent', () => {
@@ -7,6 +10,7 @@ describe('TaskListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule, MatCardModule, MatListModule],
       declarations: [TaskListComponent]
     }).compileComponents();
   });
