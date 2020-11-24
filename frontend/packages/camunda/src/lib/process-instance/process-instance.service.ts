@@ -29,6 +29,9 @@ export class ProcessInstanceService {
     this.basePath = camundaBasePath || '';
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/get-query/
+   */
   getProcessInstances(
     maxResult?: number,
     firstResult?: number
@@ -41,6 +44,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-query/
+   */
   queryProcessInstances(
     query?: ProcessInstanceQuery,
     maxResult?: number,
@@ -55,12 +61,18 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/get-query-count/
+   */
   getProcessInstancesCount(): Observable<CountResult> {
     return this.httpClient.get<CountResult>(
       `${this.basePath}/process-instance/count`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-query-count/
+   */
   queryProcessInstancesCount(
     query?: ProcessInstanceQuery
   ): Observable<CountResult> {
@@ -70,6 +82,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-delete/
+   */
   deleteProcessInstances(data: DeleteProcessInstances): Observable<Batch> {
     return this.httpClient.post<Batch>(
       `${this.basePath}/process-instance/delete`,
@@ -77,6 +92,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-delete-historic-query-based/
+   */
   deleteProcessInstancesByHistoricQuery(
     data: DeleteProcessInstances
   ): Observable<Batch> {
@@ -86,6 +104,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-set-job-retries/
+   */
   setJobRetries(data: SetJobRetriesByProcess): Observable<Batch> {
     return this.httpClient.post<Batch>(
       `${this.basePath}/process-instance/job-retries`,
@@ -93,6 +114,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-set-job-retries-historic-query-based/
+   */
   setJobRetriesByHistoricQuery(
     data: SetJobRetriesByProcess
   ): Observable<Batch> {
@@ -102,6 +126,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/put-activate-suspend-in-group/
+   */
   suspend(state: ProcessInstanceSuspensionState): Observable<void> {
     return this.httpClient.put<void>(
       `${this.basePath}/process-instance/suspended`,
@@ -109,6 +136,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-activate-suspend-in-batch/
+   */
   suspendAsync(state: ProcessInstanceSuspensionStateAsync): Observable<Batch> {
     return this.httpClient.post<Batch>(
       `${this.basePath}/process-instance/suspended-async`,
@@ -116,6 +146,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-set-variables-async/
+   */
   setVariablesAsync(variables: SetVariablesAsync): Observable<Batch> {
     return this.httpClient.post<Batch>(
       `${this.basePath}/process-instance/variables-async`,
@@ -123,6 +156,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/delete/
+   */
   deleteProcessInstance(
     id: string,
     options?: {
@@ -155,18 +191,27 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/get/
+   */
   getProcessInstance(id: string): Observable<ProcessInstance> {
     return this.httpClient.get<ProcessInstance>(
       `${this.basePath}/process-instance/${id}`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/get-activity-instances/
+   */
   getActivityInstance(id: string): Observable<ActivityInstance> {
     return this.httpClient.get<ActivityInstance>(
       `${this.basePath}/process-instance/${id}/activity-instances`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-modification/
+   */
   modifyProcessInstance(
     id: string,
     data: ProcessInstanceModification
@@ -177,6 +222,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/post-modification-async/
+   */
   modifyProcessInstanceAsync(
     id: string,
     data: ProcessInstanceModification
@@ -187,6 +235,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/put-activate-suspend-by-proc-def-id/
+   */
   suspendProcessInstance(id: string, suspended: boolean): Observable<void> {
     return this.httpClient.put<void>(
       `${this.basePath}/process-instance/${id}/suspended`,
@@ -194,12 +245,18 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/get-variables/
+   */
   getVariables(id: string): Observable<Variables> {
     return this.httpClient.get<Variables>(
       `${this.basePath}/process-instance/${id}/variables`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/post-variables/
+   */
   patchVariables(
     id: string,
     modifications?: Variables,
@@ -211,12 +268,18 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/delete-variable/
+   */
   deleteVariable(id: string, variableName: string): Observable<void> {
     return this.httpClient.delete<void>(
       `${this.basePath}/process-instance/${id}/variables/${variableName}`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/get-variable/
+   */
   getVariable<T>(
     id: string,
     variableName: string
@@ -226,6 +289,9 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/put-variable/
+   */
   setVariable(
     id: string,
     variableName: string,
@@ -237,12 +303,18 @@ export class ProcessInstanceService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/get-variable-binary/
+   */
   getVariableData(id: string, variableName: string): Observable<string> {
     return this.httpClient.get<string>(
       `${this.basePath}/process-instance/${id}/variables/${variableName}/data`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-instance/variables/post-variable-binary/
+   */
   setVariableData(
     id: string,
     variableName: string,
