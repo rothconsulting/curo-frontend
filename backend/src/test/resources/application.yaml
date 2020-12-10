@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: Curo
+    description: ""
+    version: 1
+
+camunda:
+  bpm:
+    admin-user:
+      email: demo@demo.com
+      first-name: demo
+      last-name: demo
+      password: demo
+      id: demo
+    default-serialization-format: application/json
+    filter:
+      create: 🌍 All tasks
