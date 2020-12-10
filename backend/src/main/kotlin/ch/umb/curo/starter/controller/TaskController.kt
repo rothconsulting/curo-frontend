@@ -27,9 +27,7 @@ interface TaskController {
 
             @ApiParam(value = "Define if the values should be loaded from historic data endpoint", required = false)
             @RequestParam("historic", required = false, defaultValue = "false")
-            loadFromHistoric: Boolean = false,
-
-            response: HttpServletResponse): CuroTask
+            loadFromHistoric: Boolean = false): CuroTask
 
     @ApiOperation(value = "Load file from a task", nickname = "getTaskFile", notes = "", tags = ["task"])
     @GetMapping("/{id}/file/{file}", produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE])

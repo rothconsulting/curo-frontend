@@ -117,7 +117,7 @@ class CuroTask {
      * Variables related to this task
      **/
     @ApiModelProperty("Variables related to this task")
-    var variables: HashMap<String, Any>? = null
+    var variables: HashMap<String, Any?>? = null
 
 
     companion object {

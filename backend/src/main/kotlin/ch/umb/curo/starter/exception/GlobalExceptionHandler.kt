@@ -19,10 +19,8 @@ import java.util.stream.Collectors
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-@ControllerAdvice
+//@ControllerAdvice
 class GlobalExceptionHandler {
-    @Value("\${aleeva.print_stacktrace}")
-    private val printStacktrace = false
 
     @ExceptionHandler(ApiException::class)
     fun handleApiException(apiException: ApiException, request: HttpServletRequest, response: HttpServletResponse) {
