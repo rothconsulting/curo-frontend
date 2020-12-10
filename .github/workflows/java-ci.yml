@@ -24,7 +24,7 @@ jobs:
 
       - name: Gradle Build
         working-directory: ./backend
-        run: ./gradlew test --info --full-stacktrace
+        run: ./gradlew build --info --full-stacktrace
 
       - uses: actions/upload-artifact@v2
         with:
