@@ -3,6 +3,8 @@ export interface Task {
   name?: string;
   assignee?: string;
   created?: string;
+  endTime?: string;
+  durationInMillis?: number;
   due?: string;
   followUp?: string;
   delegationState?: string;
