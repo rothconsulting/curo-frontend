@@ -129,6 +129,7 @@ class CuroTask {
             curoTask.processDefinitionId = task.processDefinitionId
             curoTask.taskDefinitionKey = task.taskDefinitionKey
             curoTask.name = task.name
+            curoTask.priority = task.priority.toDouble()
             curoTask.assignee = task.assignee
             curoTask.owner = task.owner
             curoTask.created = DateTime(task.createTime)
