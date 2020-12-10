@@ -57,7 +57,7 @@ class CuroTask {
      * [80..100] highest
      **/
     @ApiModelProperty("Indication of how important/urgent this task is with a number between 0 and 100 where higher values mean a higher priority and lower values mean owner priority: [0..19] lowest, [20..39] low, [40..59] normal, [60..79] high, [80..100] highest")
-    var priority: Long = 0L
+    var priority: Double = 0.0
 
     /**
      * The userId of the person to which this task is assigned or delegated
