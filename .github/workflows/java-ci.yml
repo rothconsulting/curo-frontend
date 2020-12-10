@@ -22,6 +22,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Build with Gradle
+      - name: Gradle Build
         working-directory: ./backend
         run: ./gradlew test --info --full-stacktrace
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Package
+          path: build/libs
