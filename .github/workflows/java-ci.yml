@@ -13,13 +13,5 @@ jobs:
         with:
           java-version: 11
           architecture: x64
-      - name: Cache Gradle packages
-          uses: actions/cache@v2
-          with:
-            path: ~/.gradle/caches
-            key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-            restore-keys: ${{ runner.os }}-gradle
-      - name: Download Dependencies Gradle
-            run: ./gradlew dependencies
       - name: Build with Gradle
         run: ./gradlew clean build test --info --full-stacktrace
