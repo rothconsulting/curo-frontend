@@ -36,8 +36,6 @@ class DefaultTaskController : TaskController {
             CuroTask.fromCamundaTask(task)
         }
 
-
-
         if(attributes.isNotEmpty()) {
             //Filter attributes
             val attrDefinitions = CuroTask::class.java.declaredFields
@@ -52,15 +50,25 @@ class DefaultTaskController : TaskController {
         if(attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
             //Load variables
-            var taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
-            //Filter files out
+            if(loadFromHistoric) {
+                var taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list() ?: throw ApiException.NOT_FOUND_404
 
-            taskVariables.entries.forEach { variable ->
-                if(variables.isEmpty() || variables.contains(variable.key)){
-                    if(variable.value is JacksonJsonNode){
-                        curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                    }else{
-                        curoTask.variables!![variable.key] = variable.value
+                taskVariables.forEach { variable ->
+                    if(variables.isEmpty() || variables.contains(variable.name)){
+                        curoTask.variables!![variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                    }
+                }
+            } else{
+                var taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404
+                //Filter files out
+
+                taskVariables.entries.forEach { variable ->
+                    if(variables.isEmpty() || variables.contains(variable.key)){
+                        if(variable.value is JacksonJsonNode){
+                            curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                        }else{
+                            curoTask.variables!![variable.key] = variable.value
+                        }
                     }
                 }
             }
