@@ -51,15 +51,15 @@ class DefaultTaskController : TaskController {
             curoTask.variables = hashMapOf()
             //Load variables
             if(loadFromHistoric) {
-                var taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list() ?: throw ApiException.NOT_FOUND_404
+                val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list() ?: throw ApiException.NOT_FOUND_404
 
                 taskVariables.forEach { variable ->
                     if(variables.isEmpty() || variables.contains(variable.name)){
                         curoTask.variables!![variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
                     }
                 }
-            } else{
-                var taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404
+            } else {
+                val taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404
                 //Filter files out
 
                 taskVariables.entries.forEach { variable ->
