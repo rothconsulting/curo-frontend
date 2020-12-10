@@ -1,10 +1,12 @@
 package ch.umb.curo.starter.models.response
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.annotations.ApiModelProperty
 import org.camunda.bpm.engine.task.DelegationState
 import org.camunda.bpm.engine.task.Task
 import org.joda.time.DateTime
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 class CuroTask {
 
     /**
@@ -57,7 +59,7 @@ class CuroTask {
      * [80..100] highest
      **/
     @ApiModelProperty("Indication of how important/urgent this task is with a number between 0 and 100 where higher values mean a higher priority and lower values mean owner priority: [0..19] lowest, [20..39] low, [40..59] normal, [60..79] high, [80..100] highest")
-    var priority: Double = 0.0
+    var priority: Double? = null
 
     /**
      * The userId of the person to which this task is assigned or delegated
@@ -105,7 +107,7 @@ class CuroTask {
      * Indicated whether this task is suspended or not
      **/
     @ApiModelProperty("Indicated whether this task is suspended or not")
-    var suspended: Boolean = false
+    var suspended: Boolean? = null
 
     /**
      * Provides the form key for the task

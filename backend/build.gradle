@@ -37,6 +37,8 @@ dependencies {
 
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
+	implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2"
+
 	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:3.4.0"
 	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:3.4.0"
 	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:3.4.0"

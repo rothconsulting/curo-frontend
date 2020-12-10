@@ -2,14 +2,16 @@ package ch.umb.curo.starter.controller
 
 import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.response.CuroTask
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletResponse
+
 
 @RestController
 @ConditionalOnMissingClass
@@ -27,7 +29,7 @@ class DefaultTaskController : TaskController {
 
         if(attributes.isNotEmpty()) {
             //Filter attributes
-            val attrDefinitions = CuroTask::class.java.fields
+            val attrDefinitions = CuroTask::class.java.declaredFields
             attrDefinitions.forEach { field ->
                 if(field.name !in attributes && field.name != "Companion"){
                     field.isAccessible = true
@@ -36,24 +38,17 @@ class DefaultTaskController : TaskController {
             }
         }
 
-        if(attributes.contains("variables")) {
+        if(attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
-
             //Load variables
-            var taskVariables = runtimeService.getVariablesTyped(task.executionId) ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
-
-            //Map CamundaVariable to object
-
+            var taskVariables = taskService.getVariablesTyped(task.id) ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
             //Filter files out
 
-
-            if(variables.isEmpty()){
-                //Add all
-                curoTask.variables!!.putAll(taskVariables)
-            } else {
-                //Filter variables
-                taskVariables.entries.forEach { variable ->
-                    if(variables.contains(variable.key)){
+            taskVariables.entries.forEach { variable ->
+                if(variables.isEmpty() || variables.contains(variable.key)){
+                    if(variable.value is JacksonJsonNode){
+                        curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                    }else{
                         curoTask.variables!![variable.key] = variable.value
                     }
                 }
