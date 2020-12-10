@@ -2,6 +2,7 @@ package ch.umb.curo.starter.models.response
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.annotations.ApiModelProperty
+import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.task.DelegationState
 import org.camunda.bpm.engine.task.Task
 import org.joda.time.DateTime
@@ -74,10 +75,22 @@ class CuroTask {
     var owner: String? = null
 
     /**
-     * The date/time when this task was created
+     * The date/time when this task was created | Time when the task started
      **/
-    @ApiModelProperty("The date/time when this task was created")
+    @ApiModelProperty("The date/time when this task was created | Time when the task started")
     var created: DateTime? = null
+
+    /**
+     * Time when the task was deleted or completed
+     **/
+    @ApiModelProperty("Time when the task was deleted or completed")
+    var endTime: DateTime? = null
+
+    /**
+     * Difference between endTime and startTime in milliseconds
+     **/
+    @ApiModelProperty("Difference between endTime and startTime in milliseconds")
+    var durationInMillis: Long? = null
 
     /**
      * Due date of the task
@@ -141,6 +154,29 @@ class CuroTask {
             curoTask.parentTaskId = task.parentTaskId
             curoTask.suspended = task.isSuspended
             curoTask.formKey = task.formKey
+
+            return curoTask
+        }
+        fun fromCamundaHistoricTask(task: HistoricTaskInstance): CuroTask {
+            val curoTask = CuroTask()
+            curoTask.id = task.id
+            curoTask.executionId = task.executionId
+            curoTask.processInstanceId = task.processInstanceId
+            curoTask.processDefinitionId = task.processDefinitionId
+            curoTask.taskDefinitionKey = task.taskDefinitionKey
+            curoTask.name = task.name
+            curoTask.priority = task.priority.toDouble()
+            curoTask.assignee = task.assignee
+            curoTask.owner = task.owner
+            curoTask.created = DateTime(task.startTime)
+            curoTask.endTime = DateTime(task.endTime)
+            curoTask.durationInMillis = task.durationInMillis
+            curoTask.due =  DateTime(task.dueDate)
+            curoTask.followUp =  DateTime(task.followUpDate)
+            curoTask.delegationState = null
+            curoTask.parentTaskId = task.parentTaskId
+            curoTask.suspended = null
+            curoTask.formKey = null
 
             return curoTask
         }

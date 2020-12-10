@@ -4,6 +4,7 @@ import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.response.CuroTask
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
@@ -21,11 +22,21 @@ class DefaultTaskController : TaskController {
     lateinit var taskService: TaskService
 
     @Autowired
+    lateinit var historyService: HistoryService
+
+    @Autowired
     lateinit var runtimeService: RuntimeService
 
     override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
-        val curoTask = CuroTask.fromCamundaTask(task)
+        val curoTask = if(loadFromHistoric) {
+           val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
+           CuroTask.fromCamundaHistoricTask(task)
+        } else {
+           val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
+            CuroTask.fromCamundaTask(task)
+        }
+
+
 
         if(attributes.isNotEmpty()) {
             //Filter attributes
@@ -41,7 +52,7 @@ class DefaultTaskController : TaskController {
         if(attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
             //Load variables
-            var taskVariables = taskService.getVariablesTyped(task.id) ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
+            var taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
             //Filter files out
 
             taskVariables.entries.forEach { variable ->
