@@ -14,4 +14,5 @@ jobs:
           java-version: 11
           architecture: x64
       - name: Build with Gradle
+        working-directory: ./backend
         run: ./gradlew clean build test --info --full-stacktrace
