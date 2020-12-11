@@ -29,10 +29,10 @@ class DefaultTaskController : TaskController {
 
     override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
         val curoTask = if(loadFromHistoric) {
-           val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
+           val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.notFound404("Task not found in history")
            CuroTask.fromCamundaHistoricTask(task)
         } else {
-           val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.NOT_FOUND_404 //TODO: add message to 404
+           val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.notFound404("Task not found")
             CuroTask.fromCamundaTask(task)
         }
 
@@ -51,7 +51,7 @@ class DefaultTaskController : TaskController {
             curoTask.variables = hashMapOf()
             //Load variables
             if(loadFromHistoric) {
-                val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list() ?: throw ApiException.NOT_FOUND_404
+                val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list()
 
                 taskVariables.forEach { variable ->
                     if(variables.isEmpty() || variables.contains(variable.name)){
@@ -59,7 +59,7 @@ class DefaultTaskController : TaskController {
                     }
                 }
             } else {
-                val taskVariables = taskService.getVariablesTyped(curoTask.id) ?: throw ApiException.NOT_FOUND_404
+                val taskVariables = taskService.getVariablesTyped(curoTask.id)
                 //Filter files out
 
                 taskVariables.entries.forEach { variable ->

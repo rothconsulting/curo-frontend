@@ -41,7 +41,6 @@ dependencies {
 
 	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:3.4.0"
 	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:3.4.0"
-	implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:3.4.0"
 	implementation "org.camunda.spin:camunda-spin-core"
 	implementation "org.camunda.spin:camunda-spin-dataformat-json-jackson"
 	implementation "org.camunda.bpm:camunda-engine-plugin-spin"
@@ -58,8 +57,9 @@ dependencies {
 	implementation "org.zalando:logbook-spring-boot-starter:2.2.0"
 
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
-	testImplementation("org.springframework.boot:spring-boot-starter-web")
-	testImplementation("com.h2database:h2")
+	testImplementation "org.springframework.boot:spring-boot-starter-web"
+	testImplementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:3.4.0"
+	testImplementation "com.h2database:h2"
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

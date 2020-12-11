@@ -23,7 +23,7 @@ import java.io.Serializable
 class ApiException private constructor(message: String, cause: Throwable?, val errorCode: ErrorCode, details: ErrorDetail?) : Exception(message, cause, false, false) {
     private val details: ErrorDetail? = details
 
-    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(if (details != null) details.toMessage() else errorCode.defaultMessage, null, errorCode, details) {}
+    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details) {}
 
     /**
      * Error codes innspired by google's gRPC error model
@@ -98,6 +98,14 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
 
         fun outOfRange400(vararg outOfRangeDetails: BadRequestDetail.FieldViolation): ApiException {
             return ApiException(ErrorCode.OUT_OF_RANGE, BadRequestDetail(*outOfRangeDetails))
+        }
+
+        fun notFound404(description: String): ApiException {
+            return ApiException(ErrorCode.NOT_FOUND, object : ErrorDetail {
+                override fun toMessage(): String {
+                    return description
+                }
+            })
         }
     }
 

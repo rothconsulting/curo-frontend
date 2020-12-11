@@ -4,12 +4,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 
 @ConfigurationProperties(CuroProperties.PREFIX)
-class CuroProperties {
+open class CuroProperties {
 
     companion object {
         const val PREFIX = "curo"
     }
 
-    val frontendEnabled = true
+    var frontendEnabled = true
+    var printStacktrace = true
 
 }

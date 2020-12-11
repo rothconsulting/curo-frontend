@@ -4,6 +4,9 @@ spring:
     description: ""
     version: 1
 
+curo:
+  print-stacktrace: false
+
 camunda:
   bpm:
     admin-user:
