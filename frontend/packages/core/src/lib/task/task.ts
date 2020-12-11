@@ -2,6 +2,7 @@ export interface Task {
   id?: string;
   name?: string;
   assignee?: string;
+  status?: string;
   created?: string;
   endTime?: string;
   durationInMillis?: number;
