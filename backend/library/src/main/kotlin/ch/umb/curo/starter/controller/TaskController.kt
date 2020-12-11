@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletResponse
 
 @Api(value = "task", description = "Curo Task API")
-@RequestMapping("/curo-api/task")
+@RequestMapping("/curo-api/tasks")
 interface TaskController {
 
     @ApiOperation(value = "Load information about a single task", nickname = "getTask", notes = "", response = CuroTask::class, tags = ["task"], authorizations = [Authorization("CuroBasic")])
