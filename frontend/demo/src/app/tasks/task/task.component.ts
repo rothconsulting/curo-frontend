@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TaskService } from '@umb-ag/curo-camunda';
+import { TaskService } from '@umb-ag/curo-core';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -21,8 +21,12 @@ export class TaskComponent implements OnInit {
   ngOnInit(): void {
     this.formKey$ = this.activatedRoute.params.pipe(
       map((params) => params.taskId),
-      switchMap((taskId) => this.taskService.getForm(taskId)),
-      map((form) => form.key)
+      switchMap((taskId) =>
+        this.taskService.getTask(taskId, {
+          includedTaskAttributes: ['formKey']
+        })
+      ),
+      map((task) => task.formKey || '')
     );
   }
 }
