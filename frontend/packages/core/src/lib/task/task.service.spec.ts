@@ -34,7 +34,7 @@ describe('TaskService', () => {
 
       service.getTask(id).subscribe((data) => expect(data).toEqual({}));
 
-      const req = httpTestingController.expectOne(`/curo-api/task/${id}`);
+      const req = httpTestingController.expectOne(`/curo-api/tasks/${id}`);
       expect(req.request.method).toEqual('GET');
 
       req.flush({});
@@ -44,11 +44,11 @@ describe('TaskService', () => {
       const id = '1234';
 
       service
-        .getTask(id, { includedVariables: ['varA', 'varB'] })
+        .getTask(id, { variables: ['varA', 'varB'] })
         .subscribe((data) => expect(data).toEqual({}));
 
       const req = httpTestingController.expectOne(
-        `/curo-api/task/${id}?includedVariables=varA&includedVariables=varB`
+        `/curo-api/tasks/${id}?variables=varA&variables=varB`
       );
       expect(req.request.method).toEqual('GET');
 
@@ -59,11 +59,11 @@ describe('TaskService', () => {
       const id = '1234';
 
       service
-        .getTask(id, { includedTaskAttributes: ['attrA', 'attrB'] })
+        .getTask(id, { attributes: ['attrA', 'attrB'] })
         .subscribe((data) => expect(data).toEqual({}));
 
       const req = httpTestingController.expectOne(
-        `/curo-api/task/${id}?includedTaskAttributes=attrA&includedTaskAttributes=attrB`
+        `/curo-api/tasks/${id}?attributes=attrA&attributes=attrB`
       );
       expect(req.request.method).toEqual('GET');
 

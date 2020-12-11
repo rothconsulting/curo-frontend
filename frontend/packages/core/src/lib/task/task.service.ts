@@ -28,7 +28,7 @@ export class TaskService {
       attributes?: string[];
     }
   ): Observable<Task> {
-    return this.httpClient.get<Task>(`${this.basePath}/task/${id}`, {
+    return this.httpClient.get<Task>(`${this.basePath}/tasks/${id}`, {
       params: params as Params
     });
   }
