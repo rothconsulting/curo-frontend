@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { Task, TaskService } from '@umb-ag/curo-core';
+import { Task, TaskService } from '@umb-ag/curo-camunda';
 import { Observable } from 'rxjs';
 
 @Component({

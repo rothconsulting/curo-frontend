@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TaskService } from '@umb-ag/curo-core';
+import { TaskService } from '@umb-ag/curo-camunda';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 

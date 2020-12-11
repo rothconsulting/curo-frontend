@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/camunda",
+  "lib": {
+    "entryFile": "src/public-api.ts"
+  }
+}

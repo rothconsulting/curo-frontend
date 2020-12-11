@@ -28,6 +28,9 @@ export class ProcessDefinitionService {
     this.basePath = camundaBasePath || '';
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-query/
+   */
   getProcessDefinitions(
     query?: ProcessDefinitionQuery,
     maxResult?: number,
@@ -49,6 +52,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-query-count/
+   */
   getProcessDefinitionsCount(
     query?: ProcessDefinitionQuery
   ): Observable<CountResult> {
@@ -67,6 +73,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/delete-by-key/
+   */
   deleteProcessDefinitionByKey(
     key: string,
     cascade?: boolean,
@@ -92,24 +101,36 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get/
+   */
   getProcessDefinitionByKey(key: string): Observable<ProcessDefinition> {
     return this.httpClient.get<ProcessDefinition>(
       `${this.basePath}/process-definition/key/${key}`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-diagram/
+   */
   getDiagramByKey(key: string): Observable<string> {
     return this.httpClient.get<string>(
       `${this.basePath}/process-definition/key/${key}/diagram`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-form-variables/
+   */
   getStartFormVariablesByKey(key: string): Observable<Variables> {
     return this.httpClient.get<Variables>(
       `${this.basePath}/process-definition/key/${key}/form-variables`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/put-history-time-to-live/
+   */
   updateHistoryTimeToLiveByKey(
     key: string,
     historyTimeToLive: number
@@ -120,6 +141,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/post-start-process-instance/
+   */
   startByKey(
     key: string,
     data?: StartProcessInstance
@@ -130,12 +154,18 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-start-form-key/
+   */
   getStartFormByKey(key: string): Observable<Form> {
     return this.httpClient.get<Form>(
       `${this.basePath}/process-definition/key/${key}/startForm`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-activity-statistics/
+   */
   getStatisticsByKey(
     key: string,
     filter?: {
@@ -161,6 +191,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/put-activate-suspend-by-id/
+   */
   suspendByKey(
     key: string,
     state: ProcessDefinitionSuspensionState
@@ -171,12 +204,18 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-xml/
+   */
   getXmlByKey(key: string): Observable<ProcessDefinitionDiagram> {
     return this.httpClient.get<ProcessDefinitionDiagram>(
       `${this.basePath}/process-definition/key/${key}/xml`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-statistics/
+   */
   getStatistics(filter?: {
     failedJobs?: boolean;
     incidents?: boolean;
@@ -203,6 +242,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/put-activate-suspend-by-key/
+   */
   suspend(state: ProcessDefinitionSuspensionState): Observable<void> {
     return this.httpClient.put<void>(
       `${this.basePath}/process-definition/suspended`,
@@ -210,6 +252,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/delete-process-definition/
+   */
   deleteProcessDefinitionById(
     id: string,
     cascade?: boolean,
@@ -235,24 +280,36 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get/
+   */
   getProcessDefinitionById(id: string): Observable<ProcessDefinition> {
     return this.httpClient.get<ProcessDefinition>(
       `${this.basePath}/process-definition/${id}`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-diagram/
+   */
   getDiagramById(id: string): Observable<string> {
     return this.httpClient.get<string>(
       `${this.basePath}/process-definition/${id}/diagram`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-form-variables/
+   */
   getStartFormVariablesById(id: string): Observable<Variables> {
     return this.httpClient.get<Variables>(
       `${this.basePath}/process-definition/${id}/form-variables`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/put-history-time-to-live/
+   */
   updateHistoryTimeToLiveById(
     id: string,
     historyTimeToLive: number
@@ -263,6 +320,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/post-restart-process-instance-sync/
+   */
   restartProcessInstanceById(
     id: string,
     data: RestartProcessInstance
@@ -272,6 +332,10 @@ export class ProcessDefinitionService {
       data
     );
   }
+
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/post-restart-process-instance-async/
+   */
   restartProcessInstanceAsyncById(
     id: string,
     data: RestartProcessInstance
@@ -282,6 +346,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/post-start-process-instance/
+   */
   startById(
     id: string,
     data?: StartProcessInstance
@@ -292,12 +359,18 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-start-form-key/
+   */
   getStartFormById(id: string): Observable<Form> {
     return this.httpClient.get<Form>(
       `${this.basePath}/process-definition/${id}/startForm`
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-activity-statistics/
+   */
   getStatisticsById(
     id: string,
     filter?: {
@@ -323,6 +396,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/put-activate-suspend-by-id/
+   */
   suspendById(
     id: string,
     state: ProcessDefinitionSuspensionState
@@ -333,6 +409,9 @@ export class ProcessDefinitionService {
     );
   }
 
+  /**
+   * @see https://docs.camunda.org/manual/7.14/reference/rest/process-definition/get-xml/
+   */
   getXmlById(id: string): Observable<ProcessDefinitionDiagram> {
     return this.httpClient.get<ProcessDefinitionDiagram>(
       `${this.basePath}/process-definition/${id}/xml`
