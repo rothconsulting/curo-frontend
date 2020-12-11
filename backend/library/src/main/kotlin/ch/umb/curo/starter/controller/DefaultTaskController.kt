@@ -28,33 +28,33 @@ class DefaultTaskController : TaskController {
     lateinit var runtimeService: RuntimeService
 
     override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
-        val curoTask = if(loadFromHistoric) {
-           val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.notFound404("Task not found in history")
-           CuroTask.fromCamundaHistoricTask(task)
+        val curoTask = if (loadFromHistoric) {
+            val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.notFound404("Task not found in history")
+            CuroTask.fromCamundaHistoricTask(task)
         } else {
-           val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.notFound404("Task not found")
+            val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.notFound404("Task not found")
             CuroTask.fromCamundaTask(task)
         }
 
-        if(attributes.isNotEmpty()) {
+        if (attributes.isNotEmpty()) {
             //Filter attributes
             val attrDefinitions = CuroTask::class.java.declaredFields
             attrDefinitions.forEach { field ->
-                if(field.name !in attributes && field.name != "Companion"){
+                if (field.name !in attributes && field.name != "Companion") {
                     field.isAccessible = true
                     field.set(curoTask, null)
                 }
             }
         }
 
-        if(attributes.contains("variables") || attributes.isEmpty()) {
+        if (attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
             //Load variables
-            if(loadFromHistoric) {
+            if (loadFromHistoric) {
                 val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list()
 
                 taskVariables.forEach { variable ->
-                    if(variables.isEmpty() || variables.contains(variable.name)){
+                    if (variables.isEmpty() || variables.contains(variable.name)) {
                         curoTask.variables!![variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
                     }
                 }
@@ -63,10 +63,10 @@ class DefaultTaskController : TaskController {
                 //Filter files out
 
                 taskVariables.entries.forEach { variable ->
-                    if(variables.isEmpty() || variables.contains(variable.key)){
-                        if(variable.value is JacksonJsonNode){
+                    if (variables.isEmpty() || variables.contains(variable.key)) {
+                        if (variable.value is JacksonJsonNode) {
                             curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                        }else{
+                        } else {
                             curoTask.variables!![variable.key] = variable.value
                         }
                     }

@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse
 @RequestMapping("/curo-api/task")
 interface TaskController {
 
-    @ApiOperation(value = "Load information about a single task", nickname = "getTask", notes = "", response = CuroTask::class, tags = ["task"])
+    @ApiOperation(value = "Load information about a single task", nickname = "getTask", notes = "", response = CuroTask::class, tags = ["task"], authorizations = [Authorization("CuroBasic")])
     @GetMapping("/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun getTask(
             @ApiParam(value = "ID of task to get information from", required = true)
@@ -42,4 +42,7 @@ interface TaskController {
 
             response: HttpServletResponse)
 
+    //fun completeTask()
+
+    //fun assignTask()
 }

@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
 import org.springframework.stereotype.Component
+import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.HttpHeaders
@@ -16,7 +17,7 @@ import javax.ws.rs.core.HttpHeaders
  * This is needed that Curo can call Camunda directly without the browser prompting the BasicAuth dialog when password or username is wrong.
  * </p>
  *
- * @author Patrick Bösch
+ * @author itsmefox
  *
  */
 @Component
