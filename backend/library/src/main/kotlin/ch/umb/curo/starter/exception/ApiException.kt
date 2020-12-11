@@ -19,13 +19,15 @@ import ch.umb.curo.starter.exception.details.ErrorDetail
  *
  * Thread-safe
  */
-class ApiException private constructor(message: String, cause: Throwable?, val errorCode: ErrorCode, details: ErrorDetail?) : Exception(message, cause, false, false) {
+class ApiException private constructor(message: String, cause: Throwable?, val errorCode: ErrorCode, details: ErrorDetail?, val curoErrorCode: CuroErrorCode?) : Exception(message, cause, false, false) {
     private val details: ErrorDetail? = details
 
-    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details) {}
+    private constructor(errorCode: ErrorCode) : this(errorCode.defaultMessage, null, errorCode, null, null) {}
+    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details, null) {}
+    private constructor(curoErrorCode: CuroErrorCode, details: ErrorDetail? = null) : this(curoErrorCode.defaultMessage, null, curoErrorCode.errorCode, null, curoErrorCode) {}
 
     /**
-     * Error codes innspired by google's gRPC error model
+     * Error codes inspired by google's gRPC error model
      */
     enum class ErrorCode constructor(val httpMapping: Int, val defaultMessage: String = "") {
         INVALID_ARGUMENT(400, "Client specified an invalid argument"),
@@ -45,7 +47,14 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
         NOT_IMPLEMENTED(501, "API method not implemented by the server"),
         UNAVAILABLE(503, "Service unavailable. Typically the server is down"),
         DEADLINE_EXCEEDED(504, "Request deadline exceeded. This will happen only if the caller sets a deadline that is shorter than the method's default deadline (i.e. requested deadline is not enough for the server to process the request) and the request did not finish within the deadline");
+    }
 
+    /**
+     * Curo Error codes
+     */
+    enum class CuroErrorCode constructor(val errorCode: ErrorCode, val defaultMessage: String = "") {
+        TASK_NOT_FOUND(ErrorCode.NOT_FOUND, "Task not found"),
+        COMPLETE_NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user")
     }
 
     companion object {
@@ -103,6 +112,14 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
             return ApiException(ErrorCode.NOT_FOUND, object : ErrorDetail {
                 override fun toMessage(): String {
                     return description
+                }
+            })
+        }
+
+        fun curoErrorCode(code: CuroErrorCode): ApiException {
+            return ApiException(code, object : ErrorDetail {
+                override fun toMessage(): String {
+                    return code.defaultMessage
                 }
             })
         }

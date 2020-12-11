@@ -63,6 +63,12 @@ class CuroTask {
     var priority: Double? = null
 
     /**
+     * Status of the task
+     **/
+    @ApiModelProperty("Status of the task")
+    var status: String? = null
+
+    /**
      * The userId of the person to which this task is assigned or delegated
      **/
     @ApiModelProperty("The userId of the person to which this task is assigned or delegated")
@@ -145,6 +151,7 @@ class CuroTask {
             curoTask.taskDefinitionKey = task.taskDefinitionKey
             curoTask.name = task.name
             curoTask.priority = task.priority.toDouble()
+            curoTask.status = "open"
             curoTask.assignee = task.assignee
             curoTask.owner = task.owner
             curoTask.created = DateTime(task.createTime)
@@ -166,6 +173,7 @@ class CuroTask {
             curoTask.taskDefinitionKey = task.taskDefinitionKey
             curoTask.name = task.name
             curoTask.priority = task.priority.toDouble()
+            curoTask.status = task.deleteReason
             curoTask.assignee = task.assignee
             curoTask.owner = task.owner
             curoTask.created = DateTime(task.startTime)

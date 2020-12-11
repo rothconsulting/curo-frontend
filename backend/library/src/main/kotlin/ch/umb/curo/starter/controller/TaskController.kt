@@ -1,6 +1,8 @@
 package ch.umb.curo.starter.controller
 
+import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
+import com.fasterxml.jackson.databind.JsonNode
 import io.swagger.annotations.*
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
@@ -42,7 +44,23 @@ interface TaskController {
 
             response: HttpServletResponse)
 
-    //fun completeTask()
+    @ApiOperation(value = "Complete the given task", nickname = "completeTask", notes = "", tags = ["task"], authorizations = [Authorization("CuroBasic")])
+    @PostMapping("/{id}/status", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun completeTask(
+            @ApiParam(value = "ID of task to complete", required = true)
+            @PathVariable("id", required = true)
+            id: String,
+
+            @ApiParam(value = "Body including all variables", required = false)
+            body: HashMap<String, Any>,
+
+            @ApiParam(value = "Define if variables should be returned on success", required = false)
+            @RequestParam("returnVariables", required = false, defaultValue = "false")
+            returnVariables: Boolean = false,
+
+            @ApiParam(value = "Define if flowToNext should be returned on success. ", required = false)
+            @RequestParam("flowToNext", required = false, defaultValue = "false")
+            flowToNext: Boolean = false): CompleteTaskResponse
 
     //fun assignTask()
 }

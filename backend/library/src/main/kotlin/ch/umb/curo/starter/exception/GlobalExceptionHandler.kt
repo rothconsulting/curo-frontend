@@ -23,6 +23,7 @@ class GlobalExceptionHandler {
                 DateTime.now(),
                 apiException.errorCode.httpMapping,
                 apiException.errorCode.defaultMessage,
+                apiException.curoErrorCode?.name,
                 if (properties.printStacktrace) apiException.cause?.let { stackTraceToString(it) } ?: "" else "",
                 apiException.message ?: "",
                 request.servletPath
@@ -39,6 +40,7 @@ class GlobalExceptionHandler {
     class DefaultErrorModel(val timestamp: DateTime,
                             val status: Int,
                             val error: String,
+                            val errorCode: String?,
                             val exception: String,
                             val message: String,
                             val path: String)

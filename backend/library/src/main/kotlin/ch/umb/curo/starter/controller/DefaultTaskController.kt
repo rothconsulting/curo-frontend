@@ -1,12 +1,14 @@
 package ch.umb.curo.starter.controller
 
 import ch.umb.curo.starter.exception.ApiException
+import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
@@ -79,6 +81,18 @@ class DefaultTaskController : TaskController {
 
     override fun getTaskFile(id: String, file: String, response: HttpServletResponse) {
         TODO("Not yet implemented")
+    }
+
+    override fun completeTask(id: String, body: HashMap<String, Any>, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        //Check if user is assignee
+        val engine = EngineUtil.lookupProcessEngine(null)
+        val currentUser = engine.identityService.currentAuthentication
+        if(task.assignee != currentUser.userId){
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.COMPLETE_NEEDS_SAME_ASSIGNEE)
+        }
+
+        return CompleteTaskResponse()
     }
 
 
