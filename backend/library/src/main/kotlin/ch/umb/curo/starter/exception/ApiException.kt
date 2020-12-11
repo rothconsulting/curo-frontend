@@ -2,7 +2,6 @@ package ch.umb.curo.starter.exception
 
 import ch.umb.curo.starter.exception.details.BadRequestDetail
 import ch.umb.curo.starter.exception.details.ErrorDetail
-import java.io.Serializable
 
 /**
  * Provides constants and helper methods for common errors in our REST-API.

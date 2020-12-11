@@ -3,7 +3,6 @@ package ch.umb.curo.starter.auth
 import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
-import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
 import org.springframework.stereotype.Component
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse

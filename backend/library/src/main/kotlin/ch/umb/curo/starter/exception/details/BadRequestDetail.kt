@@ -1,7 +1,5 @@
 package ch.umb.curo.starter.exception.details
 
-import java.util.*
-
 /**
  * Provides error details for client errors such as INVALID_ARGUMENT or OUT_OF_RANGE
  */
