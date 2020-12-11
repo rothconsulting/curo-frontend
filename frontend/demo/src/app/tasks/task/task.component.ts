@@ -23,7 +23,7 @@ export class TaskComponent implements OnInit {
       map((params) => params.taskId),
       switchMap((taskId) =>
         this.taskService.getTask(taskId, {
-          includedTaskAttributes: ['formKey']
+          attributes: ['formKey']
         })
       ),
       map((task) => task.formKey || '')
