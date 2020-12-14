@@ -38,17 +38,6 @@ class DefaultTaskController : TaskController {
             CuroTask.fromCamundaTask(task)
         }
 
-        if (attributes.isNotEmpty()) {
-            //Filter attributes
-            val attrDefinitions = CuroTask::class.java.declaredFields
-            attrDefinitions.forEach { field ->
-                if (field.name !in attributes && field.name != "Companion") {
-                    field.isAccessible = true
-                    field.set(curoTask, null)
-                }
-            }
-        }
-
         if (attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
             //Load variables
@@ -72,6 +61,17 @@ class DefaultTaskController : TaskController {
                             curoTask.variables!![variable.key] = variable.value
                         }
                     }
+                }
+            }
+        }
+
+        if (attributes.isNotEmpty()) {
+            //Filter attributes
+            val attrDefinitions = CuroTask::class.java.declaredFields
+            attrDefinitions.forEach { field ->
+                if (field.name !in attributes && field.name != "Companion") {
+                    field.isAccessible = true
+                    field.set(curoTask, null)
                 }
             }
         }
