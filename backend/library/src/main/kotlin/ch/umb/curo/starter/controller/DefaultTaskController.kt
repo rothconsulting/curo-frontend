@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletResponse
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 
 @RestController
@@ -94,11 +93,12 @@ class DefaultTaskController : TaskController {
     }
 
     override fun completeTask(id: String, body: HashMap<String, Any>, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
+                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
-        if(task.assignee != currentUser.userId){
+        if (task.assignee != currentUser.userId) {
             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.COMPLETE_NEEDS_SAME_ASSIGNEE)
         }
 
@@ -108,19 +108,19 @@ class DefaultTaskController : TaskController {
         val objectVariablesNames = objectVariables.map { it.key }
 
         body.entries.forEach { entry ->
-            if(entry.key in objectVariablesNames){
+            if (entry.key in objectVariablesNames) {
                 try {
                     val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
                     taskService.setVariable(task.id, entry.key, obj)
-                }catch (e: InvalidDefinitionException){
+                } catch (e: InvalidDefinitionException) {
                     taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
-                } catch (e: UnrecognizedPropertyException){
+                } catch (e: UnrecognizedPropertyException) {
                     throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
                 }
-            }else{
-                if(!BeanUtils.isSimpleValueType(entry.value::class.java)){
+            } else {
+                if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
                     taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
-                }else{
+                } else {
                     taskService.setVariable(task.id, entry.key, entry.value)
                 }
             }
@@ -131,16 +131,16 @@ class DefaultTaskController : TaskController {
 
 
         // add variables if needed
-        val variables = if(returnVariables){
+        val variables = if (returnVariables) {
             val variablesTyped = taskService.getVariablesTyped(task.id)
             val variables: HashMap<String, Any?> = hashMapOf()
 
             variablesTyped.entries.forEach { variable ->
-                    if (variable.value is JacksonJsonNode) {
-                        variables[variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                    } else {
-                        variables[variable.key] = variable.value
-                    }
+                if (variable.value is JacksonJsonNode) {
+                    variables[variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                } else {
+                    variables[variable.key] = variable.value
+                }
             }
 
             variables
@@ -157,7 +157,8 @@ class DefaultTaskController : TaskController {
     }
 
     override fun assignTask(id: String, assigneeRequest: AssigneeRequest, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
+                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
 
@@ -185,7 +186,7 @@ class DefaultTaskController : TaskController {
                     taskService.setAssignee(task.id, null)
                 }
             }
-        }catch(e: AuthorizationException) {
+        } catch (e: AuthorizationException) {
             throw ApiException.unauthorized403("User is not allowed to set assignee")
         }
 
