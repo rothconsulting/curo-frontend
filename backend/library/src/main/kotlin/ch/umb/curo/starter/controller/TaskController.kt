@@ -1,9 +1,12 @@
 package ch.umb.curo.starter.controller
 
+import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
-import com.fasterxml.jackson.databind.JsonNode
-import io.swagger.annotations.*
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Authorization
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletResponse
@@ -52,6 +55,7 @@ interface TaskController {
             id: String,
 
             @ApiParam(value = "Body including all variables", required = false)
+            @RequestBody
             body: HashMap<String, Any>,
 
             @ApiParam(value = "Define if variables should be returned on success", required = false)
@@ -62,5 +66,16 @@ interface TaskController {
             @RequestParam("flowToNext", required = false, defaultValue = "false")
             flowToNext: Boolean = false): CompleteTaskResponse
 
-    //fun assignTask()
+    @ApiOperation(value = "Set assignment of given task", nickname = "assignTask", notes = "", tags = ["task"], authorizations = [Authorization("CuroBasic")])
+    @PostMapping("/{id}/assignee", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun assignTask(
+            @ApiParam(value = "ID of task to change assignment", required = true)
+            @PathVariable("id", required = true)
+            id: String,
+
+            @ApiParam(value = "Assigment", required = false)
+            @RequestBody
+            assigneeRequest: AssigneeRequest,
+
+            response: HttpServletResponse)
 }
