@@ -17,7 +17,10 @@ import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.RestController
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import javax.servlet.http.HttpServletResponse
 
 
@@ -99,7 +102,7 @@ class DefaultTaskController : TaskController {
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.COMPLETE_NEEDS_SAME_ASSIGNEE)
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
         }
 
         //Save variables
@@ -129,7 +132,6 @@ class DefaultTaskController : TaskController {
         //Complete Task
         taskService.complete(task.id)
 
-
         // add variables if needed
         val variables = if (returnVariables) {
             val variablesTyped = taskService.getVariablesTyped(task.id)
@@ -157,8 +159,7 @@ class DefaultTaskController : TaskController {
     }
 
     override fun assignTask(id: String, assigneeRequest: AssigneeRequest, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
 
@@ -193,6 +194,42 @@ class DefaultTaskController : TaskController {
         response.status = 200
     }
 
+    override fun saveVariables(id: String, body: HashMap<String, Any>, response: HttpServletResponse) {
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
+                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        //Check if user is assignee
+        val engine = EngineUtil.lookupProcessEngine(null)
+        val currentUser = engine.identityService.currentAuthentication
+        if (task.assignee != currentUser.userId) {
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
+        }
+
+        //Save variables
+        val taskVariables = taskService.getVariablesTyped(task.id)
+        val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
+        val objectVariablesNames = objectVariables.map { it.key }
+
+        body.entries.forEach { entry ->
+            if (entry.key in objectVariablesNames) {
+                try {
+                    val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
+                    taskService.setVariable(task.id, entry.key, obj)
+                } catch (e: InvalidDefinitionException) {
+                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                } catch (e: UnrecognizedPropertyException) {
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                }
+            } else {
+                if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
+                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                } else {
+                    taskService.setVariable(task.id, entry.key, entry.value)
+                }
+            }
+        }
+
+        response.status = HttpStatus.OK.value()
+    }
 
     enum class AssignmentType {
         CLAIM, ASSIGN, UNCLAIM, UNASSIGN

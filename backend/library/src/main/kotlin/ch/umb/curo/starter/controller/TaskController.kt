@@ -67,7 +67,7 @@ interface TaskController {
             flowToNext: Boolean = false): CompleteTaskResponse
 
     @ApiOperation(value = "Set assignment of given task", nickname = "assignTask", notes = "", tags = ["task"], authorizations = [Authorization("CuroBasic")])
-    @PostMapping("/{id}/assignee", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping("/{id}/assignee", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun assignTask(
             @ApiParam(value = "ID of task to change assignment", required = true)
             @PathVariable("id", required = true)
@@ -76,6 +76,20 @@ interface TaskController {
             @ApiParam(value = "Assigment", required = false)
             @RequestBody
             assigneeRequest: AssigneeRequest,
+
+            response: HttpServletResponse)
+
+    @ApiOperation(value = "Save variables for the given task", nickname = "saveVariables", notes = "", tags = ["task"], authorizations = [Authorization("CuroBasic")])
+    @PatchMapping("/{id}/variables", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun saveVariables(
+
+            @ApiParam(value = "ID of task to complete", required = true)
+            @PathVariable("id", required = true)
+            id: String,
+
+            @ApiParam(value = "Body with variables", required = false)
+            @RequestBody
+            body: HashMap<String, Any>,
 
             response: HttpServletResponse)
 }
