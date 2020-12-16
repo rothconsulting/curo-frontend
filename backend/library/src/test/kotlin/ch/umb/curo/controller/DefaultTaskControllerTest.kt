@@ -5,7 +5,6 @@ import ch.umb.curo.DataModel
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -276,7 +275,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
         }.andExpect {
             status { isEqualTo(404) }
-            content { contentType(MediaType.APPLICATION_JSON) }
+            //content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
 
