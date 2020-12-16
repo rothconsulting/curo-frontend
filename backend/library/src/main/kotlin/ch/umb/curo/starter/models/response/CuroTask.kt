@@ -186,6 +186,10 @@ class CuroTask {
             curoTask.suspended = null
             curoTask.formKey = null
 
+            if(curoTask.status == null || curoTask.status!!.isEmpty()){
+                curoTask.status = "open"
+            }
+
             return curoTask
         }
     }

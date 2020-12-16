@@ -1,16 +1,15 @@
 package ch.umb.curo
 
+import ch.umb.curo.controller.DefaultTaskControllerTest
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 
-@SpringBootTest
-//@ContextConfiguration(classes = [CuroTestApplication::class])
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringBootTest {
 
-    //@Test
+    @Test
     fun contextLoads() {
-        //Thread.sleep(Long.MAX_VALUE)
     }
 
 }
