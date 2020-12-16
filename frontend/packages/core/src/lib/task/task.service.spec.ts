@@ -70,4 +70,45 @@ describe('TaskService', () => {
       req.flush({});
     });
   });
+
+  describe('assignTask', () => {
+    it('should assign the task to a specific assignee', () => {
+      const id = '1234';
+      const assignee = 'demo';
+
+      service
+        .assignTask(id, assignee)
+        .subscribe((data) => expect(data).toBeNull());
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/assignee`
+      );
+      expect(req.request.method).toEqual('POST');
+      expect(req.request.body).toEqual({ assignee });
+
+      req.flush(null);
+    });
+  });
+
+  describe('completeTask', () => {
+    it('should complete the task with variables', () => {
+      const id = '1234';
+      const variables = { firstname: 'Demo' };
+
+      service
+        .completeTask(id, variables, {
+          flowToNext: true,
+          returnVariables: true
+        })
+        .subscribe((data) => expect(data).toEqual({}));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/status?flowToNext=true&returnVariables=true`
+      );
+      expect(req.request.method).toEqual('POST');
+      expect(req.request.body).toEqual(variables);
+
+      req.flush({});
+    });
+  });
 });
