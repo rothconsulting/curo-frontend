@@ -64,6 +64,11 @@ dependencies {
 	testImplementation "org.springframework.boot:spring-boot-starter-web"
 	testImplementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:3.4.0"
 	testImplementation "com.h2database:h2"
+
+}
+
+test {
+	useJUnitPlatform()
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -71,4 +76,3 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 		jvmTarget = "1.8"
 	}
 }
-

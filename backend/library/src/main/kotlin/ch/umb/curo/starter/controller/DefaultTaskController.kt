@@ -95,7 +95,7 @@ class DefaultTaskController : TaskController {
         TODO("Not yet implemented")
     }
 
-    override fun completeTask(id: String, body: HashMap<String, Any>, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
+    override fun completeTask(id: String, body: HashMap<String, Any>?, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
                 ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
@@ -106,42 +106,43 @@ class DefaultTaskController : TaskController {
         }
 
         //Save variables
-        val taskVariables = taskService.getVariablesTyped(task.id)
-        val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
-        val objectVariablesNames = objectVariables.map { it.key }
+        if(body != null) {
+            val taskVariables = taskService.getVariablesTyped(task.id)
+            val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
+            val objectVariablesNames = objectVariables.map { it.key }
 
-        body.entries.forEach { entry ->
-            if (entry.key in objectVariablesNames) {
-                try {
-                    val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
-                    taskService.setVariable(task.id, entry.key, obj)
-                } catch (e: InvalidDefinitionException) {
-                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
-                } catch (e: UnrecognizedPropertyException) {
-                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                }
-            } else {
-                if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
-                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+            body.entries.forEach { entry ->
+                if (entry.key in objectVariablesNames) {
+                    try {
+                        val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
+                        taskService.setVariable(task.id, entry.key, obj)
+                    } catch (e: InvalidDefinitionException) {
+                        taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                    } catch (e: UnrecognizedPropertyException) {
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    }
                 } else {
-                    taskService.setVariable(task.id, entry.key, entry.value)
+                    if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
+                        taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                    } else {
+                        taskService.setVariable(task.id, entry.key, entry.value)
+                    }
                 }
             }
         }
-
         //Complete Task
         taskService.complete(task.id)
 
         // add variables if needed
         val variables = if (returnVariables) {
-            val variablesTyped = taskService.getVariablesTyped(task.id)
+            val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(task.processInstanceId).list()
             val variables: HashMap<String, Any?> = hashMapOf()
 
-            variablesTyped.entries.forEach { variable ->
+            taskVariables.forEach { variable ->
                 if (variable.value is JacksonJsonNode) {
-                    variables[variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                    variables[variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
                 } else {
-                    variables[variable.key] = variable.value
+                    variables[variable.name] = variable.value
                 }
             }
 
@@ -164,11 +165,11 @@ class DefaultTaskController : TaskController {
         val currentUser = engine.identityService.currentAuthentication
 
         val type = when {
-            currentUser.userId == assigneeRequest.assignee && task.assignee?.isBlank() == true -> AssignmentType.CLAIM
-            currentUser.userId == assigneeRequest.assignee && task.assignee?.isNotBlank() == true -> AssignmentType.ASSIGN
+            currentUser.userId == assigneeRequest.assignee && (task.assignee ?: "").isBlank() -> AssignmentType.CLAIM
+            currentUser.userId == assigneeRequest.assignee && (task.assignee ?: "").isNotBlank() -> AssignmentType.ASSIGN
+            currentUser.userId == task.assignee && (assigneeRequest.assignee ?: "").isEmpty() -> AssignmentType.UNCLAIM
+            currentUser.userId != task.assignee && (assigneeRequest.assignee ?: "").isEmpty() -> AssignmentType.UNASSIGN
             currentUser.userId != assigneeRequest.assignee -> AssignmentType.ASSIGN
-            currentUser.userId == task.assignee && assigneeRequest.assignee?.isEmpty() == true -> AssignmentType.UNCLAIM
-            currentUser.userId != task.assignee && assigneeRequest.assignee?.isEmpty() == true -> AssignmentType.UNASSIGN
             else -> AssignmentType.ASSIGN
         }
 

@@ -55,8 +55,8 @@ interface TaskController {
             id: String,
 
             @ApiParam(value = "Body including all variables", required = false)
-            @RequestBody
-            body: HashMap<String, Any>,
+            @RequestBody(required = false)
+            body: HashMap<String, Any>?,
 
             @ApiParam(value = "Define if variables should be returned on success", required = false)
             @RequestParam("returnVariables", required = false, defaultValue = "false")
@@ -83,7 +83,7 @@ interface TaskController {
     @PatchMapping("/{id}/variables", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun saveVariables(
 
-            @ApiParam(value = "ID of task to complete", required = true)
+            @ApiParam(value = "ID of task", required = true)
             @PathVariable("id", required = true)
             id: String,
 

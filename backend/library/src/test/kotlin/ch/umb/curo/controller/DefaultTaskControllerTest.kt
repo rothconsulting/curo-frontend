@@ -2,7 +2,9 @@ package ch.umb.curo.controller
 
 
 import ch.umb.curo.DataModel
+import ch.umb.curo.starter.models.request.AssigneeRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.junit.jupiter.api.Test
@@ -13,9 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.result.isEqualTo
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -35,6 +35,9 @@ class DefaultTaskControllerTest {
 
     @Autowired
     lateinit var taskService: TaskService
+
+    @Autowired
+    lateinit var historyService: HistoryService
 
     @Autowired
     lateinit var runtimeService: RuntimeService
@@ -261,7 +264,7 @@ class DefaultTaskControllerTest {
 
     @Test
     fun `completeTask() - complete task without authorization should not work`() {
-        mockMvc.post("/curo-api/tasks/status/12345") {
+        mockMvc.post("/curo-api/tasks/12345/status") {
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
             status { isEqualTo(401) }
@@ -270,13 +273,321 @@ class DefaultTaskControllerTest {
 
     @Test
     fun `completeTask() - complete not existing task should result in 404`() {
-        mockMvc.get("/curo-api/tasks/status/12345") {
+        mockMvc.post("/curo-api/tasks/12345/status") {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
         }.andExpect {
             status { isEqualTo(404) }
-            //content { contentType(MediaType.APPLICATION_JSON) }
+            content { contentType(MediaType.APPLICATION_JSON) }
         }
+    }
+
+    @Test
+    fun `completeTask() - complete task with wrong wrong user should not work`() {
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.post("/curo-api/tasks/${task.id}/status") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isEqualTo(403) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+
+    @Test
+    fun `completeTask() - complete task should work`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.setAssignee(task.id, "demo")
+
+        variables["name"] = "CHANGED"
+
+        mockMvc.post("/curo-api/tasks/${task.id}/status") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+        }.andExpect {
+            status { isEqualTo(200) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+
+        //Check if completed
+        val historicTask = historyService.createHistoricTaskInstanceQuery().taskId(task.id).singleResult()
+        assert(historicTask?.deleteReason == "completed")
+
+        val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(newInstance.processInstanceId).list()
+        assert(taskVariables.firstOrNull { it.name == "name" }?.value == "CHANGED")
+    }
+
+    @Test
+    fun `completeTask() - complete task with return variables should work`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.setAssignee(task.id, "demo")
+
+        mockMvc.post("/curo-api/tasks/${task.id}/status") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            param("returnVariables", "true")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+        }.andExpect {
+            status { isEqualTo(200) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { value(variables["name"].toString()) }
+            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
+            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { value(variables["age"] as Int) }
+            jsonPath("$.variables.data") { isMap }
+            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data.id") { value(data["id"].toString()) }
+            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { value(data["name"].toString()) }
+            jsonPath("$.variables.obj") { isMap }
+            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
+            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
+            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
+        }
+
+        //Check if completed
+        val historicTask = historyService.createHistoricTaskInstanceQuery().taskId(task.id).singleResult()
+        assert(historicTask?.deleteReason == "completed")
+    }
+
+    @Test
+    fun `assignTask() - assign task without authorization should not work`() {
+        mockMvc.put("/curo-api/tasks/12345/assignee") {
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isEqualTo(401) }
+        }
+    }
+
+    @Test
+    fun `assignTask() - assign not existing task should result in 404`() {
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = "demo"
+
+        mockMvc.put("/curo-api/tasks/12345/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(404) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `assignTask() - claim task should work`() { //currentUser.userId == assigneeRequest.assignee && (task.assignee ?: "").isBlank()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = "demo"
+
+        mockMvc.put("/curo-api/tasks/${task.id}/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert((updatedTask?.assignee ?: "") == "demo")
+
+        //Check if correct method was used
+        val lastOperation = historyService.createUserOperationLogQuery().taskId(task.id).singleResult()
+        assert(lastOperation?.operationType == "Claim")
+    }
+
+    @Test
+    fun `assignTask() - assign task should work`() { //currentUser.userId == assigneeRequest.assignee && (task.assignee ?: "").isNotBlank()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "user")
+
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = "demo"
+
+        mockMvc.put("/curo-api/tasks/${task.id}/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert((updatedTask?.assignee ?: "") == "demo")
+
+        //Check if correct method was used
+        val lastOperation = historyService.createUserOperationLogQuery().taskId(task.id).singleResult()
+        assert(lastOperation?.operationType == "Assign")
+    }
+
+    @Test
+    fun `assignTask() - assign task should work (different user)`() { //currentUser.userId != assigneeRequest.assignee
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "demo")
+
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = "user"
+
+        mockMvc.put("/curo-api/tasks/${task.id}/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert((updatedTask?.assignee ?: "") == "user")
+
+        //Check if correct method was used
+        val lastOperation = historyService.createUserOperationLogQuery().taskId(task.id).singleResult()
+        assert(lastOperation?.operationType == "Assign")
+    }
+
+    @Test
+    fun `assignTask() - unclaim task should work`() { //currentUser.userId == task.assignee && (assigneeRequest.assignee ?: "").isEmpty()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "demo")
+
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = ""
+
+        mockMvc.put("/curo-api/tasks/${task.id}/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert((updatedTask?.assignee ?: "") == "")
+
+        //Check if correct method was used
+        val lastOperation = historyService.createUserOperationLogQuery().taskId(task.id).singleResult()
+        assert(lastOperation?.operationType == "Claim")
+    }
+
+    @Test
+    fun `assignTask() - unassign task should work`() { //currentUser.userId != task.assignee && (assigneeRequest.assignee ?: "").isEmpty()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "user")
+
+        val assigneeRequest = AssigneeRequest()
+        assigneeRequest.assignee = ""
+
+        mockMvc.put("/curo-api/tasks/${task.id}/assignee") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(assigneeRequest)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert((updatedTask?.assignee ?: "") == "")
+
+        //Check if correct method was used
+        val lastOperation = historyService.createUserOperationLogQuery().taskId(task.id).singleResult()
+        assert(lastOperation?.operationType == "Assign")
+    }
+
+    @Test
+    fun `saveVariables() - save variables without authorization should not work`() {
+        mockMvc.patch("/curo-api/tasks/12345/variables") {
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isEqualTo(401) }
+        }
+    }
+
+    @Test
+    fun `saveVariables() - save variables for not existing task should result in 404`() {
+        val (variables, data, obj) = getVariables()
+
+        mockMvc.patch("/curo-api/tasks/12345/variables") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+        }.andExpect {
+            status { isEqualTo(404) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `saveVariables() - save variables for task with different assignee should result in 403`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "user")
+
+        mockMvc.patch("/curo-api/tasks/${task.id}/variables") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+        }.andExpect {
+            status { isEqualTo(403) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `saveVariables() - save variables should work`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.claim(task.id, "demo")
+
+        variables["name"] = "UMB AG"
+        val newData = DataModel()
+        newData.name = "NEW_DATA"
+        variables["newData"] = newData
+
+        mockMvc.patch("/curo-api/tasks/${task.id}/variables") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+        }.andExpect {
+            status { isEqualTo(200) }
+        }
+
+        val taskVariables = taskService.getVariablesTyped(task.id)
+        assert((taskVariables["name"] ?:"") == "UMB AG")
+        assert((mapper.readValue(taskVariables["newData"] as String, DataModel::class.java)).name == "NEW_DATA")
+
     }
 
     private fun getVariables(): Triple<HashMap<String, Any>, LinkedHashMap<String, Any>, DataModel> {
