@@ -4,8 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng build core --watch & ng build camunda --watch & sleep 5 && ng serve",
-    "build": "ng build core --prod && ng build camunda --prod && ng build --prod",
+    "prebuild": "npm run build.libs",
+    "build": "ng build --prod",
+    "build.libs": "ng build core --prod && ng build camunda --prod",
     "test": "ng test",
+    "pretest.ci": "npm run build.libs",
     "test.ci": "ng test --browsers=ChromeHeadlessNoSandbox --watch=false --code-coverage=true --progress=false",
     "lint": "ng lint && prettier -c * && stylelint \"**/*.scss\"",
     "e2e": "ng e2e"
