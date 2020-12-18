@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js $NODE_VERSION
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v1
         with:
-          node-version: $NODE_VERSION
+          node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run lint
 
@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js $NODE_VERSION
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v1
         with:
-          node-version: $NODE_VERSION
+          node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run test.ci
 
@@ -40,16 +40,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js $node-version
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v1
         with:
-          node-version: $node-version
+          node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run build
-#  containerize:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Check out the repo
-#        uses: actions/checkout@v2
-#      - name: Push to Docker Hub
-#        uses: docker/build-push-action@v1
+
+  containerize:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v1
