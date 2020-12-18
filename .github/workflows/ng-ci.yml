@@ -11,17 +11,17 @@ defaults:
     working-directory: frontend
 
 env:
-  node-version: 14.x
+  NODE_VERSION: 14.x
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ node-version }}
+      - name: Use Node.js $NODE_VERSION
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ node-version }}
+          node-version: $NODE_VERSION
       - run: npm ci
       - run: npm run lint
 
@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ node-version }}
+      - name: Use Node.js $NODE_VERSION
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ node-version }}
+          node-version: $NODE_VERSION
       - run: npm ci
       - run: npm run test.ci
 
@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ node-version }}
+      - name: Use Node.js $node-version
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ node-version }}
+          node-version: $node-version
       - run: npm ci
       - run: npm run build
 #  containerize:
