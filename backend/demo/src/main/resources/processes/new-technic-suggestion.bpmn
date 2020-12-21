@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0caf9hp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.4.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0caf9hp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.4.0">
   <bpmn:collaboration id="Collaboration_1x75irk">
     <bpmn:participant id="Participant_0mypmp2" name="new technic suggestion" processRef="new-technic-suggestion" />
   </bpmn:collaboration>
@@ -9,7 +9,7 @@
       <bpmn:incoming>Flow_0yg9igu</bpmn:incoming>
       <bpmn:outgoing>Flow_1l8idc1</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Activity_04aecky" name="Save suggestion (logging)">
+    <bpmn:serviceTask id="Activity_04aecky" name="Save suggestion" camunda:delegateExpression="${saveSuggestion}">
       <bpmn:incoming>Flow_19vu6m3</bpmn:incoming>
       <bpmn:outgoing>Flow_0bkil6e</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -18,8 +18,12 @@
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_0ucc3is" sourceRef="Activity_0r4uwv3" targetRef="Activity_0odi4wu" />
     <bpmn:sequenceFlow id="Flow_00ag692" sourceRef="Activity_0odi4wu" targetRef="Gateway_1idl78d" />
-    <bpmn:sequenceFlow id="Flow_19vu6m3" name="Accepted" sourceRef="Gateway_1idl78d" targetRef="Activity_04aecky" />
-    <bpmn:sequenceFlow id="Flow_0yg9igu" name="Not accept" sourceRef="Gateway_1idl78d" targetRef="Gateway_1u7xsxa" />
+    <bpmn:sequenceFlow id="Flow_19vu6m3" name="Accepted" sourceRef="Gateway_1idl78d" targetRef="Activity_04aecky">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${suggestionAccept}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0yg9igu" name="Not accept" sourceRef="Gateway_1idl78d" targetRef="Gateway_1u7xsxa">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!suggestionAccept}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_15e5y6s" sourceRef="StartEvent_1" targetRef="Gateway_1u7xsxa" />
     <bpmn:sequenceFlow id="Flow_1l8idc1" sourceRef="Gateway_1u7xsxa" targetRef="Activity_02j0nsf" />
     <bpmn:sequenceFlow id="Flow_0uq5vdy" sourceRef="Activity_02j0nsf" targetRef="Activity_0r4uwv3" />
@@ -28,7 +32,7 @@
       <bpmn:incoming>Flow_1l8idc1</bpmn:incoming>
       <bpmn:outgoing>Flow_0uq5vdy</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sendTask id="Activity_0r4uwv3" name="Inform software-architect">
+    <bpmn:sendTask id="Activity_0r4uwv3" name="Inform software architect" camunda:delegateExpression="${informSoftwareArchitect}">
       <bpmn:incoming>Flow_0uq5vdy</bpmn:incoming>
       <bpmn:outgoing>Flow_0ucc3is</bpmn:outgoing>
     </bpmn:sendTask>
