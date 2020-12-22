@@ -28,7 +28,7 @@
     <bpmn:sequenceFlow id="Flow_1l8idc1" sourceRef="Gateway_1u7xsxa" targetRef="Activity_02j0nsf" />
     <bpmn:sequenceFlow id="Flow_0uq5vdy" sourceRef="Activity_02j0nsf" targetRef="Activity_0r4uwv3" />
     <bpmn:sequenceFlow id="Flow_0bkil6e" sourceRef="Activity_04aecky" targetRef="Event_0yesu3n" />
-    <bpmn:userTask id="Activity_02j0nsf" name="Edit technic suggestion">
+    <bpmn:userTask id="Activity_02j0nsf" name="Edit technic suggestion" camunda:formKey="CreateSuggestionComponent">
       <bpmn:incoming>Flow_1l8idc1</bpmn:incoming>
       <bpmn:outgoing>Flow_0uq5vdy</bpmn:outgoing>
     </bpmn:userTask>
@@ -36,7 +36,7 @@
       <bpmn:incoming>Flow_0uq5vdy</bpmn:incoming>
       <bpmn:outgoing>Flow_0ucc3is</bpmn:outgoing>
     </bpmn:sendTask>
-    <bpmn:userTask id="Activity_0odi4wu" name="Accept or discard">
+    <bpmn:userTask id="Activity_0odi4wu" name="Accept or discard" camunda:formKey="ReviewSuggestionComponent">
       <bpmn:incoming>Flow_0ucc3is</bpmn:incoming>
       <bpmn:outgoing>Flow_00ag692</bpmn:outgoing>
     </bpmn:userTask>
