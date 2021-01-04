@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { ReviewSuggestionComponent } from './review-suggestion.component';
 
 describe('ReviewSuggestionComponent', () => {
@@ -8,9 +7,8 @@ describe('ReviewSuggestionComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ReviewSuggestionComponent ]
-    })
-    .compileComponents();
+      declarations: [ReviewSuggestionComponent]
+    }).compileComponents();
   });
 
   beforeEach(() => {
