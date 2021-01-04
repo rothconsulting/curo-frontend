@@ -12,7 +12,6 @@ open class CuroDemoApplication : SpringBootServletInitializer() {
         @JvmStatic
         fun main(args: Array<String>) {
             SpringApplication.run(CuroDemoApplication::class.java, *args)
-
         }
     }
 
