@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
@@ -20,7 +20,7 @@ jar {
 }
 
 ext {
-	camunda_version = "7.12.0"
+	camunda_version = "7.14.0"
 }
 
 repositories {

@@ -28,7 +28,7 @@ class AuthenticationController {
         }
     }
 
-    @GetMapping("/login_methods")
+    @GetMapping("/login-methods")
     fun getAuthMethods(): List<LoginMethod> {
         return loginMethods.map { LoginMethod(it.getId(), it.getLoginMethodName(), it.useUsernamePassword()) }
     }
