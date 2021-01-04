@@ -1,0 +1,4 @@
+rootProject.name = "curo-spring-boot-starter-module"
+
+include "library"
+include "demo"

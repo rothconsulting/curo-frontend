@@ -1,0 +1,4 @@
+# AutoConfigurations
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  ch.umb.curo.starter.CuroAutoConfiguration,\
+  org.camunda.bpm.spring.boot.starter.CamundaBpmAutoConfiguration
