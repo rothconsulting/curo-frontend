@@ -18,8 +18,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
 import { CoreModule } from './core/core.module';
+import { CreateSuggestionComponent } from './demo-forms/create-suggestion/create-suggestion.component';
 import { DemoFormsModule } from './demo-forms/demo-forms.module';
-import { StartFormComponent } from './demo-forms/start-form/start-form.component';
+import { ReviewSuggestionComponent } from './demo-forms/review-suggestion/review-suggestion.component';
 import { SharedModule } from './shared/shared.module';
 
 @NgModule({
@@ -60,7 +61,12 @@ import { SharedModule } from './shared/shared.module';
     },
     {
       provide: CURO_FORM_ACCESSOR,
-      useValue: StartFormComponent,
+      useValue: CreateSuggestionComponent,
+      multi: true
+    },
+    {
+      provide: CURO_FORM_ACCESSOR,
+      useValue: ReviewSuggestionComponent,
       multi: true
     }
   ],

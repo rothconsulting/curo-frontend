@@ -38,7 +38,7 @@ export class TaskService {
    * Set the assignee of a task.
    */
   assignTask(id: string, assignee: string): Observable<void> {
-    return this.httpClient.post<void>(`${this.basePath}/tasks/${id}/assignee`, {
+    return this.httpClient.put<void>(`${this.basePath}/tasks/${id}/assignee`, {
       assignee
     });
   }

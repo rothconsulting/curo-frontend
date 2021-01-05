@@ -83,7 +83,7 @@ describe('TaskService', () => {
       const req = httpTestingController.expectOne(
         `/curo-api/tasks/${id}/assignee`
       );
-      expect(req.request.method).toEqual('POST');
+      expect(req.request.method).toEqual('PUT');
       expect(req.request.body).toEqual({ assignee });
 
       req.flush(null);

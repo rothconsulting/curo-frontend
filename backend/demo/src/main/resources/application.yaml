@@ -2,7 +2,7 @@ spring:
   application:
     name: Curo
     description: ""
-    version: 1
+    version: 0.0.1
 
 curo:
   print-stacktrace: false
