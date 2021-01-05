@@ -1,1 +1,62 @@
-<p>review-suggestion works!</p>
+<app-task-bar title="Review suggestion"
+              (assignTask)="assign()"
+              (completeTask)="complete()"></app-task-bar>
+
+<mat-card>
+  <mat-card-content>
+    <form [formGroup]="form">
+      <div class="container">
+        <div class="col-6">
+          <div>
+            <mat-form-field>
+              <mat-label>Title</mat-label>
+              <input matInput
+                     formControlName="title"
+                     readonly
+                     type="text">
+            </mat-form-field>
+          </div>
+          <div>
+            <mat-form-field>
+              <mat-label>Category</mat-label>
+              <input matInput
+                     formControlName="category"
+                     readonly
+                     type="text">
+            </mat-form-field>
+          </div>
+          <div>
+            <mat-form-field>
+              <mat-label>Description</mat-label>
+              <textarea matInput
+                        cdkTextareaAutosize
+                        formControlName="description"
+                        readonly></textarea>
+            </mat-form-field>
+          </div>
+          <div>
+            <mat-label>URL</mat-label>
+            <div>
+              <a [href]="url"
+                 target="_blank">{{url}}</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <mat-radio-group formControlName="suggestionAccept">
+            <mat-radio-button class="radio"
+                              [value]="true">Accept</mat-radio-button>
+            <mat-radio-button class="radio"
+                              [value]="false">Reject</mat-radio-button>
+          </mat-radio-group>
+          <mat-form-field>
+            <mat-label>Comments</mat-label>
+            <textarea matInput
+                      cdkTextareaAutosize
+                      formControlName="comments"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

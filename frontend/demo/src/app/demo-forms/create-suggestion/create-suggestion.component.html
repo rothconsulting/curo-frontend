@@ -1,4 +1,6 @@
-<h1>Create suggestion</h1>
+<app-task-bar title="Create suggestion"
+              (assignTask)="assign()"
+              (completeTask)="complete()"></app-task-bar>
 
 <mat-card>
   <mat-card-content>
@@ -36,12 +38,12 @@
                    type="text">
           </mat-form-field>
         </div>
-        <div class="col-12">
+        <div class="col-12"
+             *ngIf="comments">
           <h2>Comments</h2>
+          <pre class="comment">{{comments}}</pre>
         </div>
       </div>
     </form>
-
-    <pre>{{form.value | json}}</pre>
   </mat-card-content>
 </mat-card>

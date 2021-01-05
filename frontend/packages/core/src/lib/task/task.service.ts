@@ -37,7 +37,7 @@ export class TaskService {
   /**
    * Set the assignee of a task.
    */
-  assignTask(id: string, assignee: string): Observable<void> {
+  assignTask(id: string, assignee?: string | null): Observable<void> {
     return this.httpClient.put<void>(`${this.basePath}/tasks/${id}/assignee`, {
       assignee
     });
@@ -55,6 +55,16 @@ export class TaskService {
       `${this.basePath}/tasks/${id}/status`,
       variables,
       { params: params as Params }
+    );
+  }
+
+  /**
+   * Saves the variables of a task.
+   */
+  saveVariables(id: string, variables?: any): Observable<void> {
+    return this.httpClient.patch<void>(
+      `${this.basePath}/tasks/${id}/variables`,
+      variables
     );
   }
 }

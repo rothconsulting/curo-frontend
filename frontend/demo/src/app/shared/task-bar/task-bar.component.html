@@ -1,0 +1,11 @@
+<h1 class="mb-0">{{title}}</h1>
+<div>
+  <button mat-icon-button
+          class="assign"
+          (click)="assign()">
+    <mat-icon>person_add_alt_1</mat-icon>
+  </button>
+  <button mat-raised-button
+          color="accent"
+          (click)="complete()">{{completeLabel}} <mat-icon>chevron_right</mat-icon></button>
+</div>

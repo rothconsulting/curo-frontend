@@ -1,3 +1,4 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +16,7 @@ describe('AppComponent', () => {
       imports: [
         RouterTestingModule,
         NoopAnimationsModule,
+        HttpClientTestingModule,
         MatButtonModule,
         MatIconModule,
         MatListModule,

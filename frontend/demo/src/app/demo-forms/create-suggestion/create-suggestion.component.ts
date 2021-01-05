@@ -26,6 +26,9 @@ import {
 })
 export class CreateSuggestionComponent implements OnInit, OnDestroy {
   form: FormGroup;
+  comments?: string;
+  taskId$: Observable<string>;
+
   private valueChangesSubscription?: Subscription;
 
   constructor(
@@ -34,6 +37,10 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
     private matSnackBar: MatSnackBar,
     fb: FormBuilder
   ) {
+    this.taskId$ = this.activatedRoute.params.pipe(
+      map((params) => params.taskId)
+    );
+
     this.form = fb.group({
       title: [null, Validators.required],
       category: [],
@@ -43,15 +50,7 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const taskId$ = this.activatedRoute.params.pipe(
-      map((params) => params.taskId)
-    );
-
-    taskId$
-      .pipe(switchMap((taskId) => this.taskService.assignTask(taskId, 'demo')))
-      .subscribe();
-
-    taskId$
+    this.taskId$
       .pipe(
         switchMap((taskId) =>
           this.taskService.getTask(taskId, {
@@ -64,13 +63,15 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
       .subscribe(
         (variables: any) => {
           this.form.patchValue(variables);
-          this.registerValueChanges(taskId$);
+          this.registerValueChanges();
+          this.comments = variables.comments;
         },
         () => {
-          this.registerValueChanges(taskId$);
+          this.registerValueChanges();
           this.matSnackBar.open('Variables could not be loaded', 'Done', {
             duration: 2000
           });
+          this.comments = undefined;
         }
       );
   }
@@ -79,11 +80,11 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
     this.valueChangesSubscription?.unsubscribe();
   }
 
-  registerValueChanges(taskId$: Observable<string>): void {
+  registerValueChanges(): void {
     this.valueChangesSubscription = this.form.valueChanges
       .pipe(
         debounceTime(1000),
-        withLatestFrom(taskId$),
+        withLatestFrom(this.taskId$),
         switchMap(([variables, taskId]) =>
           this.taskService
             .saveVariables(taskId, variables)
@@ -101,5 +102,43 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
           });
         }
       });
+  }
+
+  assign(): void {
+    this.taskId$
+      .pipe(
+        take(1),
+        switchMap((taskId) =>
+          this.taskService
+            .assignTask(taskId, 'demo')
+            .pipe(catchError((error) => of(error)))
+        )
+      )
+      .subscribe((data) => {
+        if (data?.error) {
+          this.matSnackBar.open('Task could not be assigned', 'Done', {
+            duration: 2000
+          });
+        } else {
+          this.matSnackBar.open('Task assigned successfully', 'Done', {
+            duration: 2000
+          });
+        }
+      });
+  }
+
+  complete(): void {
+    if (this.form.valid) {
+      this.taskId$
+        .pipe(
+          take(1),
+          switchMap((taskId) =>
+            this.taskService.completeTask(taskId, this.form.value)
+          )
+        )
+        .subscribe();
+    } else {
+      this.form.markAllAsTouched();
+    }
   }
 }
