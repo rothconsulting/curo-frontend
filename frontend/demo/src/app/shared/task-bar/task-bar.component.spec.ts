@@ -22,4 +22,18 @@ describe('TaskBarComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should emit complete task', () => {
+    component.completeTask.subscribe((value: any) =>
+      expect(value).toBeUndefined()
+    );
+    component.complete();
+  });
+
+  it('should emit assign task', () => {
+    component.assignTask.subscribe((userId: string) =>
+      expect(userId).toBeUndefined()
+    );
+    component.assign();
+  });
 });
