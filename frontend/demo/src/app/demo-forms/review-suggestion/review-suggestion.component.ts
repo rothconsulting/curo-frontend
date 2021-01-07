@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TaskService } from '@umb-ag/curo-core';
 import { Observable, of, Subscription } from 'rxjs';
 import {
@@ -32,6 +32,7 @@ export class ReviewSuggestionComponent implements OnInit, OnDestroy {
   private valueChangesSubscription?: Subscription;
 
   constructor(
+    private router: Router,
     private activatedRoute: ActivatedRoute,
     private taskService: TaskService,
     private matSnackBar: MatSnackBar,
@@ -138,7 +139,9 @@ export class ReviewSuggestionComponent implements OnInit, OnDestroy {
             this.taskService.completeTask(taskId, this.form.value)
           )
         )
-        .subscribe();
+        .subscribe(() => {
+          this.router.navigate(['..'], { relativeTo: this.activatedRoute });
+        });
     } else {
       this.form.markAllAsTouched();
     }
