@@ -35,9 +35,9 @@ export class GenericFormComponent {
       );
 
       if (component) {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory<
-          CuroFormAccessor
-        >(component);
+        const componentFactory = this.componentFactoryResolver.resolveComponentFactory<CuroFormAccessor>(
+          component
+        );
 
         this.formHost.createComponent(componentFactory);
       }
