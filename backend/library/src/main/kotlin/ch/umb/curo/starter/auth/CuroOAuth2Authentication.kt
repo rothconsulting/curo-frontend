@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletResponse
 /**
  * Authenticates a request against the provided process engine's identity service by applying OAuth2 Bearer authentication.
  *
+ * Please not that this class is instantiated (Class.forName) by {@link org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter#init(FilterConfig)} and therefore its not running in the spring context
+ *
  * @author itsmefox
  *
  */
