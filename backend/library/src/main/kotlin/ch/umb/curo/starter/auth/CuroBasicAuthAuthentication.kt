@@ -1,9 +1,14 @@
 package ch.umb.curo.starter.auth
 
+import ch.umb.curo.starter.SpringContext
+import ch.umb.curo.starter.property.CuroProperties
 import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
+import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -20,8 +25,7 @@ import javax.ws.rs.core.HttpHeaders
  * @author itsmefox
  *
  */
-@Component
-class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), CuroLoginMethod {
+open class CuroBasicAuthAuthentication: HttpBasicAuthenticationProvider(), CuroLoginMethod {
 
     private val BASIC_AUTH_HEADER_PREFIX = "Basic "
     private val CURO_BASIC_AUTH_HEADER_PREFIX = "CuroBasic "

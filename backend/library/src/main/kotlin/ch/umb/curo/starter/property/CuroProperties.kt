@@ -13,4 +13,6 @@ open class CuroProperties {
     var frontendEnabled = true
     var printStacktrace = true
 
+    var auth: CuroAuthProperties = CuroAuthProperties()
+
 }
