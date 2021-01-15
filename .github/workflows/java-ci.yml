@@ -38,7 +38,7 @@ jobs:
         run: ./gradlew clean build test
 
       - name: "Upload Artifact"
-          uses: actions/upload-artifact@v2
-          with:
-            name: libs
-            path: backend/library/libs
+        uses: actions/upload-artifact@v2
+        with:
+          name: libs
+          path: backend/library/libs
