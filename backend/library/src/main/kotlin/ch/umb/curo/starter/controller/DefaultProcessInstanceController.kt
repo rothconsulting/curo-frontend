@@ -31,7 +31,7 @@ class DefaultProcessInstanceController : ProcessInstanceController {
             val response = ProcessStartResponse()
             response.processInstanceId = newInstance.rootProcessInstanceId
             response.businessKey = newInstance.businessKey
-            if(returnVariables){
+            if (returnVariables) {
                 val variablesTyped = runtimeService.getVariablesTyped(newInstance.id)
                 val variables: HashMap<String, Any?> = hashMapOf()
 

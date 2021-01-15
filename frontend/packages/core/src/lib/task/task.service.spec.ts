@@ -111,4 +111,21 @@ describe('TaskService', () => {
       req.flush({});
     });
   });
+
+  describe('saveVariables', () => {
+    it('should save variables of a task', () => {
+      const id = '1234';
+      const variables = { firstname: 'Demo' };
+
+      service.saveVariables(id, variables).subscribe();
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/variables`
+      );
+      expect(req.request.method).toEqual('PATCH');
+      expect(req.request.body).toEqual(variables);
+
+      req.flush({});
+    });
+  });
 });
