@@ -19,10 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.RestController
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import javax.servlet.http.HttpServletResponse
-
 
 @RestController
 @ConditionalOnMissingClass
@@ -97,7 +94,7 @@ class DefaultTaskController : TaskController {
 
     override fun completeTask(id: String, body: HashMap<String, Any>?, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+            ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
@@ -106,7 +103,7 @@ class DefaultTaskController : TaskController {
         }
 
         //Save variables
-        if(body != null) {
+        if (body != null) {
             val taskVariables = taskService.getVariablesTyped(task.id)
             val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
             val objectVariablesNames = objectVariables.map { it.key }
@@ -197,7 +194,7 @@ class DefaultTaskController : TaskController {
 
     override fun saveVariables(id: String, body: HashMap<String, Any>, response: HttpServletResponse) {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-                ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+            ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication

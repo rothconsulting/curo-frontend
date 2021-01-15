@@ -1,4 +1,4 @@
-package ch.umb.solutions.curo.libraries.sharedprocess.exceptions
+package ch.umb.curo.starter.exception
 
 class CamundaVariableException : RuntimeException {
 

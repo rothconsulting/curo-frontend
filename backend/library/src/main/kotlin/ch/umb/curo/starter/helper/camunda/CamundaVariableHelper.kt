@@ -1,6 +1,6 @@
 package ch.umb.curo.starter.helper.camunda
 
-import ch.umb.solutions.curo.libraries.sharedprocess.exceptions.CamundaVariableException
+import ch.umb.curo.starter.exception.CamundaVariableException
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import java.lang.reflect.Modifier
 import java.util.*
