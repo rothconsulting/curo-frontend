@@ -136,10 +136,7 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
         }
     }
 
-    override fun augmentResponseByAuthenticationChallenge(
-        response: HttpServletResponse, engine: ProcessEngine
-    ) {
-        //response.setHeader(HttpHeaders.WWW_AUTHENTICATE, CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\"")
+    override fun augmentResponseByAuthenticationChallenge(response: HttpServletResponse, engine: ProcessEngine) {
     }
 
     override fun getId(): String {
