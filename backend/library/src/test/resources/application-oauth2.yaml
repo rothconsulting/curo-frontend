@@ -4,6 +4,15 @@ spring:
     description: ""
     version: 1
 curo:
+  auth:
+    type: 'oauth2'
+    oauth2:
+      verifyJwt: false
+      userIdClaim: preferred_username
+      jwkUrl: https://auth.curo.world/auth/realms/test/protocol/openid-connect/certs
+      allowedIssuers:
+        - https://auth.curo.world/auth/realms/test
+      printErrorsToLog: true
   print-stacktrace: false
 
 camunda:
