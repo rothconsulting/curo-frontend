@@ -30,6 +30,14 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
 
+/**
+ * Testing of the Curo Oauth2 Authentication
+ *
+ * TODO:
+ * [ ] verifyJwt part
+ *
+ * @author itsmefox
+ */
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,13 +49,7 @@ class CuroOAuth2AuthenticationTest {
     lateinit var mockMvc: MockMvc
 
     @Autowired
-    lateinit var mapper: ObjectMapper
-
-    @Autowired
     lateinit var taskService: TaskService
-
-    @Autowired
-    lateinit var historyService: HistoryService
 
     @Autowired
     lateinit var runtimeService: RuntimeService

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component
  * Provides Spring context to non spring context classes.
  *
  * @author itsmefox
- *
  */
 @Component
 class SpringContext : ApplicationContextAware {
