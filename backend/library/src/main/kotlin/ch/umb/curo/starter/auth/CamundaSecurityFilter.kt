@@ -28,7 +28,7 @@ open class CamundaSecurityFilter {
     @Bean
     open fun <T : Filter> processEngineAuthenticationFilter(): FilterRegistrationBean<T> {
 
-        logger.info("Active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
+        logger.info("CURO active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
 
         val registration = FilterRegistrationBean<T>()
         registration.setName("camunda-auth")
