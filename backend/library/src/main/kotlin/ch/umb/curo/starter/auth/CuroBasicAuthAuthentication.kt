@@ -4,24 +4,21 @@ import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
-import org.springframework.stereotype.Component
-import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.HttpHeaders
 
 /**
- * <p>
  * Authenticates a request against the provided process engine's identity service by applying http basic authentication.
  * Not only http basic authentication with keyword Basic is allowed, it is also allowed to use the CuroBasic keyword.
  * This is needed that Curo can call Camunda directly without the browser prompting the BasicAuth dialog when password or username is wrong.
- * </p>
+ *
+ * Please not that this class is instantiated (Class.forName) by {@link org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter#init(FilterConfig)} and therefore its not running in the spring context
  *
  * @author itsmefox
  *
  */
-@Component
-class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), CuroLoginMethod {
+open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), CuroLoginMethod {
 
     private val BASIC_AUTH_HEADER_PREFIX = "Basic "
     private val CURO_BASIC_AUTH_HEADER_PREFIX = "CuroBasic "
@@ -53,7 +50,7 @@ class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), CuroLogin
     }
 
     override fun augmentResponseByAuthenticationChallenge(
-            response: HttpServletResponse, engine: ProcessEngine) {
+        response: HttpServletResponse, engine: ProcessEngine) {
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\"")
     }
 
