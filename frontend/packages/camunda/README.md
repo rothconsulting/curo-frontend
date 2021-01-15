@@ -1,6 +1,6 @@
 # Camunda
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.1.
+This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.6.
 
 ## Code scaffolding
 

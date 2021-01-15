@@ -14,9 +14,6 @@ import javax.servlet.http.HttpServletResponse
 @RequestMapping("/curo-api")
 class AuthenticationController {
 
-    @Autowired
-    private lateinit var loginMethods: List<CuroLoginMethod>
-
     @PostMapping("/authenticate", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun authenticate(@RequestParam username: String, @RequestParam password: String, response: HttpServletResponse): ResponseEntity<String> {
         val engine = EngineUtil.lookupProcessEngine(null)
@@ -26,11 +23,6 @@ class AuthenticationController {
         } else {
             ResponseEntity("{}", HttpStatus.UNAUTHORIZED)
         }
-    }
-
-    @GetMapping("/login-methods")
-    fun getAuthMethods(): List<LoginMethod> {
-        return loginMethods.map { LoginMethod(it.getId(), it.getLoginMethodName(), it.useUsernamePassword()) }
     }
 
 }
