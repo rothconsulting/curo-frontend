@@ -4,7 +4,6 @@ import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
