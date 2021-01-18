@@ -21,17 +21,17 @@ open class CuroAutoConfiguration {
     @Autowired
     lateinit var properties: CuroProperties
 
-    @Bean("CuroAuthenticationProvider")
-    @ConditionalOnMissingBean(name = ["CuroAuthenticationProvider"])
+    @Bean
+    @ConditionalOnMissingBean
     open fun defaultAuthenticationProvider(): AuthenticationProvider {
-        when (properties.auth.type) {
+        return when (properties.auth.type) {
             "basic" -> {
-                return CuroBasicAuthAuthentication()
+                CuroBasicAuthAuthentication()
             }
             "oauth2" -> {
-                return CuroOAuth2Authentication()
+                CuroOAuth2Authentication()
             }
-            else -> return CuroBasicAuthAuthentication()
+            else -> CuroBasicAuthAuthentication()
         }
     }
 

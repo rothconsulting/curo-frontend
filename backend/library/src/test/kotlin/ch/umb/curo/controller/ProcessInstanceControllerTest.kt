@@ -122,9 +122,7 @@ class ProcessInstanceControllerTest {
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
             jsonPath("$.variables.obj.name") { isString }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-
-            //This is String because the object does not exist and Curo does not know the data type
-            jsonPath("$.variables.obj.usable") { isString }
+            jsonPath("$.variables.obj.usable") { isBoolean }
             jsonPath("$.variables.obj.usable") { value(obj.usable.toString()) }
         }
     }

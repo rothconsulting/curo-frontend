@@ -17,24 +17,25 @@ import javax.servlet.Filter
  *
  */
 @Configuration
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 open class CamundaSecurityFilter {
 
     @Autowired
-    @Qualifier("CuroAuthenticationProvider")
     lateinit var authenticationProvider: AuthenticationProvider
 
     private var logger = LoggerFactory.getLogger(this::class.java)!!
 
     @Bean
+    @Suppress("UNCHECKED_CAST")
     open fun <T : Filter> processEngineAuthenticationFilter(): FilterRegistrationBean<T> {
 
-        logger.info("CURO active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
+        logger.info("CURO: active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
 
         val registration = FilterRegistrationBean<T>()
         registration.setName("camunda-auth")
         registration.filter = getProcessEngineAuthenticationFilter() as T
         registration.addInitParameter("authentication-provider", authenticationProvider::class.java.canonicalName)
-        registration.addUrlPatterns("/rest/*", "/curo-api/*")
+        registration.addUrlPatterns("/engine-rest/*", "/curo-api/*")
         return registration
     }
 
