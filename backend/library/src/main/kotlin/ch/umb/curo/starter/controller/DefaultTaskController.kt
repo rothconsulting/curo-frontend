@@ -1,9 +1,11 @@
 package ch.umb.curo.starter.controller
 
 import ch.umb.curo.starter.exception.ApiException
+import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
+import ch.umb.curo.starter.service.FlowToNextService
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
@@ -30,6 +32,9 @@ class DefaultTaskController : TaskController {
 
     @Autowired
     lateinit var historyService: HistoryService
+
+    @Autowired
+    lateinit var flowToNextService: FlowToNextService
 
     @Autowired
     lateinit var runtimeService: RuntimeService
@@ -92,7 +97,12 @@ class DefaultTaskController : TaskController {
         TODO("Not yet implemented")
     }
 
-    override fun completeTask(id: String, body: HashMap<String, Any>?, returnVariables: Boolean, flowToNext: Boolean): CompleteTaskResponse {
+    override fun completeTask(id: String,
+                              body: HashMap<String, Any>?,
+                              returnVariables: Boolean,
+                              flowToNext: Boolean,
+                              flowToNextIgnoreAssignee: Boolean,
+                              flowToNextTimeOut: Int): CompleteTaskResponse {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
             ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
@@ -148,11 +158,16 @@ class DefaultTaskController : TaskController {
             null
         }
 
-        //TODO: add flowToNext
-
         val response = CompleteTaskResponse()
-        response.variables = variables
 
+        if (flowToNext) {
+            val flowToNextResult = flowToNextService.getNextTask(task, flowToNextIgnoreAssignee, flowToNextTimeOut)
+            response.flowToNext = flowToNextResult.nextTasks
+            response.flowToEnd = flowToNextResult.flowToEnd
+            response.flowToNextTimeoutExceeded = flowToNextResult.timeoutExceeded
+        }
+
+        response.variables = variables
         return response
     }
 
@@ -227,6 +242,13 @@ class DefaultTaskController : TaskController {
         }
 
         response.status = HttpStatus.OK.value()
+    }
+
+    override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean): FlowToNextResult {
+        val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
+        val assignee = if (!flowToNextIgnoreAssignee) currentUser.userId else null
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        return flowToNextService.searchNextTask(task.processInstanceId, assignee)
     }
 
     enum class AssignmentType {

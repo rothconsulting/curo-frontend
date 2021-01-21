@@ -54,9 +54,9 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
      */
     enum class CuroErrorCode constructor(val errorCode: ErrorCode, val defaultMessage: String = "") {
         TASK_NOT_FOUND(ErrorCode.NOT_FOUND, "Task not found"),
-        PROCESS_DEFINITION_NOT_FOUND(ErrorCode.NOT_FOUND, "Task not found"),
+        PROCESS_DEFINITION_NOT_FOUND(ErrorCode.NOT_FOUND, "Process definition not found"),
         NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user"),
-        CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already exsiting variable type")
+        CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already existing variable type")
     }
 
     companion object {
