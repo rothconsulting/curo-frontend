@@ -1,9 +1,7 @@
-package ch.umb.curo
+package ch.umb.curo.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.joda.time.DateTime
@@ -71,7 +69,7 @@ class CuroOAuth2AuthenticationTest {
 
     @Test
     fun `OAuth 2 - Valid token`() {
-        val token = getToken("https://auth.curo.world/auth/realms/test", DateTime.now().plusHours(1), true)
+        val token = getToken("https://auth.curo.world/auth/realms/test", DateTime.now().plusHours(1))
 
         val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
         val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -84,13 +82,49 @@ class CuroOAuth2AuthenticationTest {
         }
     }
 
-    private fun getToken(issuer: String, expires: DateTime, isAccessToken: Boolean = true): String {
+    @Test
+    fun `OAuth 2 - Expired token`() {
+        val token = getToken("https://auth.curo.world/auth/realms/test", DateTime.now().minusHours(1))
+
+        mockMvc.get("/curo-api/tasks/1234") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "Bearer $token")
+        }.andExpect {
+            status { isEqualTo(401) }
+        }
+    }
+
+    @Test
+    fun `OAuth 2 - Wrong issuer`() {
+        val token = getToken("DIFFERENT_BUT_WRONG_ISSUER", DateTime.now().plusHours(1))
+
+        mockMvc.get("/curo-api/tasks/1234") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "Bearer $token")
+        }.andExpect {
+            status { isEqualTo(401) }
+        }
+    }
+
+    @Test
+    fun `OAuth 2 - Unknown user`() {
+        val token = getToken("https://auth.curo.world/auth/realms/test", DateTime.now().plusHours(1), "Fox")
+
+        mockMvc.get("/curo-api/tasks/1234") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "Bearer $token")
+        }.andExpect {
+            status { isEqualTo(401) }
+        }
+    }
+
+    private fun getToken(issuer: String, expires: DateTime, username: String = "demo", isAccessToken: Boolean = true): String {
         val newJWT = JWT.create()
         newJWT.withIssuer(issuer)
 
         if (isAccessToken) {
             newJWT.withClaim("email", "info@curo.world")
-            newJWT.withClaim("preferred_username", "demo")
+            newJWT.withClaim("preferred_username", username)
             newJWT.withClaim("typ", "Bearer")
             newJWT.withExpiresAt(expires.toDate())
         } else {
@@ -108,7 +142,7 @@ class CuroOAuth2AuthenticationTest {
     @Throws(IOException::class, GeneralSecurityException::class)
     fun getPrivateKey(): RSAPrivateKey {
         var privateKeyContent = String(privateKey.inputStream.readBytes())
-        privateKeyContent = privateKeyContent.replace("\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "");
+        privateKeyContent = privateKeyContent.replace("\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
         val kf = KeyFactory.getInstance("RSA")
 
         val keySpecPKCS8 = PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyContent))

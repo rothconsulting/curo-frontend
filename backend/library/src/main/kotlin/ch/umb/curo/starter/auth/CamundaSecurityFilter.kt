@@ -4,7 +4,6 @@ import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,24 +16,30 @@ import javax.servlet.Filter
  *
  */
 @Configuration
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 open class CamundaSecurityFilter {
 
     @Autowired
-    @Qualifier("CuroAuthenticationProvider")
     lateinit var authenticationProvider: AuthenticationProvider
 
     private var logger = LoggerFactory.getLogger(this::class.java)!!
 
+    companion object {
+        const val ENGINE_REST_URL: String = "/engine-rest/*"
+        const val CURO_API_URL: String = "/curo-api/*"
+    }
+
     @Bean
+    @Suppress("UNCHECKED_CAST")
     open fun <T : Filter> processEngineAuthenticationFilter(): FilterRegistrationBean<T> {
 
-        logger.info("CURO active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
+        logger.info("CURO: active CuroAuthenticationProvider: ${authenticationProvider::class.java.canonicalName}")
 
         val registration = FilterRegistrationBean<T>()
         registration.setName("camunda-auth")
         registration.filter = getProcessEngineAuthenticationFilter() as T
         registration.addInitParameter("authentication-provider", authenticationProvider::class.java.canonicalName)
-        registration.addUrlPatterns("/rest/*", "/curo-api/*")
+        registration.addUrlPatterns(ENGINE_REST_URL, CURO_API_URL)
         return registration
     }
 

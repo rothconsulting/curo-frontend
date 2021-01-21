@@ -53,7 +53,7 @@ import { SharedModule } from './shared/shared.module';
     },
     {
       provide: CAMUNDA_BASE_PATH,
-      useValue: '/api/rest'
+      useValue: '/api/engine-rest'
     },
     {
       provide: CURO_BASE_PATH,

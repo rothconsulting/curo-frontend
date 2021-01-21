@@ -4,9 +4,7 @@ import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import ch.umb.curo.starter.auth.CuroOAuth2Authentication
 import ch.umb.curo.starter.property.CuroProperties
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
-import org.camunda.bpm.spring.boot.starter.CamundaBpmAutoConfiguration
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -21,17 +19,17 @@ open class CuroAutoConfiguration {
     @Autowired
     lateinit var properties: CuroProperties
 
-    @Bean("CuroAuthenticationProvider")
-    @ConditionalOnMissingBean(name = ["CuroAuthenticationProvider"])
+    @Bean
+    @ConditionalOnMissingBean
     open fun defaultAuthenticationProvider(): AuthenticationProvider {
-        when (properties.auth.type) {
+        return when (properties.auth.type) {
             "basic" -> {
-                return CuroBasicAuthAuthentication()
+                CuroBasicAuthAuthentication()
             }
             "oauth2" -> {
-                return CuroOAuth2Authentication()
+                CuroOAuth2Authentication()
             }
-            else -> return CuroBasicAuthAuthentication()
+            else -> CuroBasicAuthAuthentication()
         }
     }
 
