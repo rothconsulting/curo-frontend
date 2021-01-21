@@ -24,6 +24,11 @@ open class CamundaSecurityFilter {
 
     private var logger = LoggerFactory.getLogger(this::class.java)!!
 
+    companion object {
+        const val ENGINE_REST_URL: String = "/engine-rest/*"
+        const val CURO_API_URL: String = "/curo-api/*"
+    }
+
     @Bean
     @Suppress("UNCHECKED_CAST")
     open fun <T : Filter> processEngineAuthenticationFilter(): FilterRegistrationBean<T> {
@@ -34,7 +39,7 @@ open class CamundaSecurityFilter {
         registration.setName("camunda-auth")
         registration.filter = getProcessEngineAuthenticationFilter() as T
         registration.addInitParameter("authentication-provider", authenticationProvider::class.java.canonicalName)
-        registration.addUrlPatterns("/engine-rest/*", "/curo-api/*")
+        registration.addUrlPatterns(ENGINE_REST_URL, CURO_API_URL)
         return registration
     }
 

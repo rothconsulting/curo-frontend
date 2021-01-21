@@ -1,5 +1,6 @@
 package ch.umb.curo.starter
 
+import ch.umb.curo.starter.auth.CamundaSecurityFilter
 import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
 import org.slf4j.LoggerFactory
@@ -32,8 +33,8 @@ open class WebAppConfig : ServletContextInitializer {
         this.servletContext = servletContext
 
         val filterRegistration = servletContext.addFilter("Authentication Filter", ProcessEngineAuthenticationFilter::class.java)
-        filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/engine-rest/*", "/curo-api/*")
+        filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, CamundaSecurityFilter.ENGINE_REST_URL, CamundaSecurityFilter.CURO_API_URL)
         filterRegistration.initParameters = hashMapOf(Pair("authentication-provider", CuroBasicAuthAuthentication::class.java.canonicalName))
-        logger.debug("CURO: Filter {} for URL {} registered.", "Authentication Filter", "/engine-rest/* , /curo-api/*")
+        logger.debug("CURO: Filter {} for URL {} registered.", "Authentication Filter", "${CamundaSecurityFilter.ENGINE_REST_URL}, ${CamundaSecurityFilter.CURO_API_URL}")
     }
 }
