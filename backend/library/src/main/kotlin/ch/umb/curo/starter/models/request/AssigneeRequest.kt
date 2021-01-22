@@ -1,6 +1,6 @@
 package ch.umb.curo.starter.models.request
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.io.Serializable
 
 class AssigneeRequest : Serializable {
@@ -8,7 +8,7 @@ class AssigneeRequest : Serializable {
     /**
      * Assignee
      **/
-    @ApiModelProperty("Assignee")
+    @Schema(description = "Assignee")
     var assignee: String? = null
 
 }

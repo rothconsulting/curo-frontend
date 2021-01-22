@@ -162,9 +162,9 @@ class DefaultTaskController : TaskController {
 
         if (flowToNext) {
             val flowToNextResult = flowToNextService.getNextTask(task, flowToNextIgnoreAssignee, flowToNextTimeOut)
-            response.flowToNext = flowToNextResult.nextTasks
+            response.flowToNext = flowToNextResult.flowToNext
             response.flowToEnd = flowToNextResult.flowToEnd
-            response.flowToNextTimeoutExceeded = flowToNextResult.timeoutExceeded
+            response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
         }
 
         response.variables = variables
@@ -247,7 +247,7 @@ class DefaultTaskController : TaskController {
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!flowToNextIgnoreAssignee) currentUser.userId else null
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         return flowToNextService.searchNextTask(task.processInstanceId, assignee)
     }
 

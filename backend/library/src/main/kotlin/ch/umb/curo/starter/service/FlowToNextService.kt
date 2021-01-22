@@ -28,7 +28,7 @@ class FlowToNextService(private val taskService: TaskService,
 
                 while (possibleTaskIds.isEmpty() && !processEnded) {
                     val searchResult = searchNextTask(processInstanceId, assignee)
-                    possibleTaskIds = searchResult.nextTasks
+                    possibleTaskIds = searchResult.flowToNext
                     processEnded = searchResult.flowToEnd
 
                     if (possibleTaskIds.isEmpty()) {
@@ -44,7 +44,7 @@ class FlowToNextService(private val taskService: TaskService,
             }
         }
 
-        return result ?: FlowToNextResult(timeoutExceeded = true)
+        return result ?: FlowToNextResult(flowToNextTimeoutExceeded = true)
     }
 
     fun searchNextTask(processInstanceId: String,

@@ -59,9 +59,9 @@ class DefaultProcessInstanceController : ProcessInstanceController {
                 val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
                 val assignee = if (!flowToNextIgnoreAssignee) currentUser.userId else null
                 val flowToNextResult = flowToNextService.getNextTask(newInstance.rootProcessInstanceId, assignee, flowToNextTimeOut)
-                response.flowToNext = flowToNextResult.nextTasks
+                response.flowToNext = flowToNextResult.flowToNext
                 response.flowToEnd = flowToNextResult.flowToEnd
-                response.flowToNextTimeoutExceeded = flowToNextResult.timeoutExceeded
+                response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
             }
 
             return response

@@ -19,6 +19,18 @@ import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.result.isEqualTo
 import java.util.*
 import kotlin.collections.LinkedHashMap
+import org.apache.tomcat.jni.Poll.poll
+
+import camundajar.impl.scala.concurrent.Await.result
+import ch.umb.curo.starter.models.response.CompleteTaskResponse
+import com.google.gson.Gson
+
+import org.apache.tomcat.jni.SSLConf.assign
+
+import org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete
+
+
+
 
 
 @ExtendWith(SpringExtension::class)
@@ -368,6 +380,40 @@ class DefaultTaskControllerTest {
     }
 
     @Test
+    fun `completeTask() - complete task with flowToNext should work`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.setAssignee(task.id, "demo")
+
+        variables["name"] = "CHANGED"
+
+        val result = mockMvc.post("/curo-api/tasks/${task.id}/status") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+            param("flowToNext", "true")
+            param("flowToNextIgnoreAssignee", "true")
+        }.andExpect {
+            status { isEqualTo(200) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.flowToNext") { isArray }
+            jsonPath("$.flowToNext") { isNotEmpty }
+            jsonPath("$.flowToEnd") { isBoolean }
+            jsonPath("$.flowToEnd") { value(false) }
+        }.andReturn()
+
+        //Check if completed
+        val historicTask = historyService.createHistoricTaskInstanceQuery().taskId(task.id).singleResult()
+        assert(historicTask?.deleteReason == "completed")
+
+        val response = mapper.readValue(result.response.contentAsString, CompleteTaskResponse::class.java)
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        assert(response.flowToNext?.firstOrNull() == nextTask.id)
+    }
+
+    @Test
     fun `assignTask() - assign task without authorization should not work`() {
         mockMvc.put("/curo-api/tasks/12345/assignee") {
             accept = MediaType.APPLICATION_JSON
@@ -587,7 +633,30 @@ class DefaultTaskControllerTest {
         val taskVariables = taskService.getVariablesTyped(task.id)
         assert((taskVariables["name"] ?:"") == "UMB AG")
         assert((mapper.readValue(taskVariables["newData"] as String, DataModel::class.java)).name == "NEW_DATA")
+    }
 
+    @Test
+    fun `nextTask() - poll for next task`() {
+        val (variables, data, obj) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.complete(task.id)
+
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${task.id}/next") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            param("flowToNextIgnoreAssignee", "true")
+        }.andExpect {
+            status { isEqualTo(200) }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.flowToNext") { isArray }
+            jsonPath("$.flowToNext") { isNotEmpty }
+            jsonPath("$.flowToNext.[0]") { value(nextTask.id) }
+            jsonPath("$.flowToEnd") { isBoolean }
+            jsonPath("$.flowToEnd") { value(false) }
+        }
     }
 
     private fun getVariables(): Triple<HashMap<String, Any>, LinkedHashMap<String, Any>, DataModel> {
