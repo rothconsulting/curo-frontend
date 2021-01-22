@@ -4,6 +4,7 @@ import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.ProcessStartRequest
 import ch.umb.curo.starter.models.response.ProcessStartResponse
+import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.FlowToNextService
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -22,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController
 class DefaultProcessInstanceController : ProcessInstanceController {
 
     @Autowired
+    lateinit var properties: CuroProperties
+
+    @Autowired
     lateinit var runtimeService: RuntimeService
 
     @Autowired
@@ -33,8 +37,8 @@ class DefaultProcessInstanceController : ProcessInstanceController {
     override fun startProcess(body: ProcessStartRequest,
                               returnVariables: Boolean,
                               flowToNext: Boolean,
-                              flowToNextIgnoreAssignee: Boolean,
-                              flowToNextTimeOut: Int): ProcessStartResponse {
+                              flowToNextIgnoreAssignee: Boolean?,
+                              flowToNextTimeOut: Int?): ProcessStartResponse {
         try {
             val newInstance = runtimeService.startProcessInstanceByKey(body.processDefinitionKey, body.businessKey, body.variables)
 
@@ -57,8 +61,8 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
             if (flowToNext) {
                 val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
-                val assignee = if (!flowToNextIgnoreAssignee) currentUser.userId else null
-                val flowToNextResult = flowToNextService.getNextTask(newInstance.rootProcessInstanceId, assignee, flowToNextTimeOut)
+                val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
+                val flowToNextResult = flowToNextService.getNextTask(newInstance.rootProcessInstanceId, assignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
                 response.flowToNext = flowToNextResult.flowToNext
                 response.flowToEnd = flowToNextResult.flowToEnd
                 response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
@@ -72,9 +76,9 @@ class DefaultProcessInstanceController : ProcessInstanceController {
         }
     }
 
-    override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean): FlowToNextResult {
+    override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
-        val assignee = if (!flowToNextIgnoreAssignee) currentUser.userId else null
+        val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
         return flowToNextService.searchNextTask(id, assignee)
     }
 }

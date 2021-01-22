@@ -1,6 +1,7 @@
 package ch.umb.curo.starter.service
 
 import ch.umb.curo.starter.models.FlowToNextResult
+import ch.umb.curo.starter.property.CuroProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class FlowToNextService(private val taskService: TaskService,
+class FlowToNextService(private val properties: CuroProperties,
+                        private val taskService: TaskService,
                         private val runtimeService: RuntimeService) {
 
     fun getNextTask(lastTask: Task, ignoreAssignee: Boolean = false, timeout: Int): FlowToNextResult {
@@ -32,7 +34,7 @@ class FlowToNextService(private val taskService: TaskService,
                     processEnded = searchResult.flowToEnd
 
                     if (possibleTaskIds.isEmpty()) {
-                        delay(500)
+                        delay(properties.flowToNext.interval.toLong())
                     }
                 }
 

@@ -394,7 +394,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
             param("flowToNext", "true")
-            param("flowToNextIgnoreAssignee", "true")
+            //param("flowToNextIgnoreAssignee", "true")
         }.andExpect {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }

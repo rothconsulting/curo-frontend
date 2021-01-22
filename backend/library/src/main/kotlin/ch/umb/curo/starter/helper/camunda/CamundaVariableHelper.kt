@@ -152,6 +152,10 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
         delegateExecution.setVariable(variableName.value, value)
     }
 
+    fun  <T : Any> init(variableName: CamundaVariableListDefinition<T>) {
+        delegateExecution.setVariable(variableName.value, variableName.type.getDeclaredConstructor().newInstance())
+    }
+
 }
 
 fun DelegateExecution.variableHelper(): CamundaVariableHelper {

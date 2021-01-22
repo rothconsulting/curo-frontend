@@ -30,12 +30,12 @@ interface ProcessInstanceController {
         flowToNext: Boolean = false,
 
         @Parameter(description = "Define if flowToNext should ignore the first task assignee.", required = false)
-        @RequestParam("flowToNextIgnoreAssignee", required = false, defaultValue = "false")
-        flowToNextIgnoreAssignee: Boolean = false,
+        @RequestParam("flowToNextIgnoreAssignee", required = false)
+        flowToNextIgnoreAssignee: Boolean? = null,
 
         @Parameter(description = "Define how long in seconds flowToNext should wait.", required = false)
-        @RequestParam("flowToNextTimeOut", required = false, defaultValue = "30")
-        flowToNextTimeOut: Int = 30): ProcessStartResponse?
+        @RequestParam("flowToNextTimeOut", required = false)
+        flowToNextTimeOut: Int? = null): ProcessStartResponse?
 
     @Operation(summary = "Get next task", operationId = "nextTask", description = "", security = [SecurityRequirement(name = "CuroBasic")])
     @GetMapping("/{id}/next", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -46,5 +46,5 @@ interface ProcessInstanceController {
 
         @Parameter(description = "Define if flowToNext should ignore task assignee.", required = false)
         @RequestParam("flowToNextIgnoreAssignee", required = false, defaultValue = "false")
-        flowToNextIgnoreAssignee: Boolean = false): FlowToNextResult
+        flowToNextIgnoreAssignee: Boolean? = null): FlowToNextResult
 }

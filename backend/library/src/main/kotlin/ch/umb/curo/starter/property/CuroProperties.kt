@@ -14,5 +14,6 @@ open class CuroProperties {
     var printStacktrace = true
 
     var auth: CuroAuthProperties = CuroAuthProperties()
+    var flowToNext: CuroFlowToNextProperties = CuroFlowToNextProperties()
 
 }
