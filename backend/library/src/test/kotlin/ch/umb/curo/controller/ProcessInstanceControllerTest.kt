@@ -82,7 +82,7 @@ class ProcessInstanceControllerTest {
         }.andExpect {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.processInstanceId") { isNotEmpty }
+            jsonPath("$.processInstanceId") { isNotEmpty() }
             jsonPath("$.businessKey") { value(processStartRequest.businessKey.toString()) }
         }
     }
@@ -104,25 +104,25 @@ class ProcessInstanceControllerTest {
         }.andExpect {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.processInstanceId") { isNotEmpty }
+            jsonPath("$.processInstanceId") { isNotEmpty() }
             jsonPath("$.businessKey") { value(processStartRequest.businessKey.toString()) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { isBoolean() }
             jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
-            jsonPath("$.variables.data") { isMap }
-            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data") { isMap() }
+            jsonPath("$.variables.data.id") { isString() }
             jsonPath("$.variables.data.id") { value(data["id"].toString()) }
-            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { isString() }
             jsonPath("$.variables.data.name") { value(data["name"].toString()) }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
-            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { isString() }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable.toString()) }
         }
     }

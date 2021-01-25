@@ -3,19 +3,20 @@ name: ng CI
 on:
   push:
     paths:
-      - "frontend/**"
-      - ".github/workflows/**"
-
-defaults:
-  run:
-    working-directory: frontend
+      - 'frontend/**'
+      - '.github/workflows/ng-ci.yml'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 14.x
+  OC_VERSION: 4.6
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -24,9 +25,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run lint
-
+        
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -37,7 +41,11 @@ jobs:
       - run: npm run test.ci
 
   build:
+    needs: [ lint, test ]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -46,22 +54,63 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run build
-
-      - name: "Upload Artifact"
+      - name: Upload Artifact
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v2
         with:
           name: dist
           path: frontend/dist/demo
-#
-#  containerize:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Check out the repo
-#        uses: actions/checkout@v2
-#      - name: Download all workflow run artifacts
-#        uses: actions/download-artifact@v2
-#      - name: Push to Docker Hub
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: false
+          retention-days: 1
+
+  containerize:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: frontend/dist/demo
+      - name: Login to registry-curo.umb.cloud
+        uses: docker/login-action@v1
+        with:
+          registry: registry-curo.umb.cloud
+          username: 'curoadmin'
+          password: ${{ secrets.UMB_NEXUS_CUROADMIN }}
+      - name: Push to registry-curo.umb.cloud
+        uses: docker/build-push-action@v2
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: registry-curo.umb.cloud/curo-reborn/frontend:latest
+
+  deploy:
+    needs: containerize
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Install oc
+        uses: redhat-actions/oc-installer@v1
+        with:
+          oc_version: ${{ env.OC_VERSION }}
+      - name: Openshift Hosts
+        run: echo "${{ secrets.OPENSHIFT_HOSTS }}" | sudo tee /etc/hosts
+      - name: Authenticate and set context
+        uses: redhat-actions/oc-login@v1
+        env:
+          OPENSHIFT_NAMESPACE: curo-reborn
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+          insecure_skip_tls_verify: true
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+      - name: Deploy
+        run: oc tag --source=docker registry-curo.umb.cloud/curo-reborn/frontend:latest frontend:latest

@@ -98,7 +98,7 @@ class DefaultTaskControllerTest {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { doesNotExist() }
             jsonPath("$.name") { value(task.name) }
-            jsonPath("$.due") { isNotEmpty }
+            jsonPath("$.due") { isNotEmpty() }
             jsonPath("$.variables") { doesNotExist() }
         }
     }
@@ -117,23 +117,23 @@ class DefaultTaskControllerTest {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { isBoolean() }
             jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
-            jsonPath("$.variables.data") { isMap }
-            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data") { isMap() }
+            jsonPath("$.variables.data.id") { isString() }
             jsonPath("$.variables.data.id") { value(data["id"].toString()) }
-            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { isString() }
             jsonPath("$.variables.data.name") { value(data["name"].toString()) }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
-            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { isString() }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
         }.andDo { print() }
     }
@@ -155,14 +155,14 @@ class DefaultTaskControllerTest {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
             jsonPath("$.variables.isActive") { doesNotExist() }
             jsonPath("$.variables.data") { doesNotExist() }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
         }.andDo { print() }
     }
@@ -252,14 +252,14 @@ class DefaultTaskControllerTest {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.status") { value("completed") }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
             jsonPath("$.variables.isActive") { doesNotExist() }
             jsonPath("$.variables.data") { doesNotExist() }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
         }.andDo { print() }
     }
@@ -344,23 +344,23 @@ class DefaultTaskControllerTest {
         }.andExpect {
             status { isEqualTo(200) }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { isBoolean() }
             jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
-            jsonPath("$.variables.data") { isMap }
-            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data") { isMap() }
+            jsonPath("$.variables.data.id") { isString() }
             jsonPath("$.variables.data.id") { value(data["id"].toString()) }
-            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { isString() }
             jsonPath("$.variables.data.name") { value(data["name"].toString()) }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
-            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { isString() }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
         }
 
