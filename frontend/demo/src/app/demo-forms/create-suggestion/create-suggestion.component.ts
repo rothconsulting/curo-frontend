@@ -134,11 +134,19 @@ export class CreateSuggestionComponent implements OnInit, OnDestroy {
         .pipe(
           take(1),
           switchMap((taskId) =>
-            this.taskService.completeTask(taskId, this.form.value)
+            this.taskService.completeTask(taskId, this.form.value, {
+              flowToNext: true,
+              flowToNextIgnoreAssignee: true
+            })
           )
         )
-        .subscribe(() => {
-          this.router.navigate(['..'], { relativeTo: this.activatedRoute });
+        .subscribe((task) => {
+          this.router.navigate(
+            ['..', task.flowToNext ? task.flowToNext[0] : ''],
+            {
+              relativeTo: this.activatedRoute
+            }
+          );
         });
     } else {
       this.form.markAllAsTouched();
