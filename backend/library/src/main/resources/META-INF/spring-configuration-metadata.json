@@ -1,0 +1,90 @@
+{
+  "groups": [
+    {
+      "name": "curo",
+      "type": "ch.umb.curo.starter.property.CuroProperties",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.auth",
+      "type": "ch.umb.curo.starter.property.CuroAuthProperties",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties",
+      "sourceMethod": "getAuth()"
+    },
+    {
+      "name": "curo.auth.oauth2",
+      "type": "ch.umb.curo.starter.property.CuroOAuth2Properties",
+      "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties",
+      "sourceMethod": "getOauth2()"
+    },
+    {
+      "name": "curo.flow-to-next",
+      "type": "ch.umb.curo.starter.property.CuroFlowToNextProperties",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties",
+      "sourceMethod": "getFlowToNext()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "curo.auth.oauth2.allowed-issuers",
+      "type": "java.util.ArrayList<java.lang.String>",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
+    },
+    {
+      "name": "curo.auth.oauth2.jwk-url",
+      "type": "java.lang.String",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
+    },
+    {
+      "name": "curo.auth.oauth2.print-errors-to-log",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-id-claim",
+      "type": "java.lang.String",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
+    },
+    {
+      "name": "curo.auth.oauth2.verify-jwt",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
+    },
+    {
+      "name": "curo.auth.type",
+      "type": "java.lang.String",
+      "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties"
+    },
+    {
+      "name": "curo.flow-to-next.default-timeout",
+      "type": "java.lang.Integer",
+      "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
+    },
+    {
+      "name": "curo.flow-to-next.ignore-assignee",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
+    },
+    {
+      "name": "curo.flow-to-next.interval",
+      "type": "java.lang.Integer",
+      "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
+    },
+    {
+      "name": "curo.frontend-enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.ignore-object-type",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.print-stacktrace",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    }
+  ],
+  "hints": []
+}
