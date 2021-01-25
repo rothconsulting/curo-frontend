@@ -403,6 +403,40 @@ class DefaultTaskControllerTest {
     }
 
     @Test
+    fun `completeTask() - complete task with flowToEnd should work`() {
+        val (variables) = getVariables()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        var task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.setAssignee(task.id, "demo")
+        taskService.complete(task.id)
+
+        task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        taskService.setAssignee(task.id, "demo")
+
+        variables["name"] = "CHANGED"
+
+        val result = mockMvc.post("/curo-api/tasks/${task.id}/status") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(variables)
+            param("flowToNext", "true")
+            param("flowToNextIgnoreAssignee", "true")
+        }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.flowToNext") { isArray() }
+            jsonPath("$.flowToNext") { isEmpty() }
+            jsonPath("$.flowToEnd") { isBoolean() }
+            jsonPath("$.flowToEnd") { value(true) }
+        }.andReturn()
+
+        //Check if completed
+        val historicTask = historyService.createHistoricTaskInstanceQuery().taskId(task.id).singleResult()
+        assert(historicTask?.deleteReason == "completed")
+    }
+
+    @Test
     fun `assignTask() - assign task without authorization should not work`() {
         mockMvc.put("/curo-api/tasks/12345/assignee") {
             accept = MediaType.APPLICATION_JSON

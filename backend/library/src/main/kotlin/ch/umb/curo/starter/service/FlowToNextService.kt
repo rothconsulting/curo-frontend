@@ -5,6 +5,7 @@ import ch.umb.curo.starter.property.CuroProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.runtime.ProcessInstance
@@ -15,7 +16,8 @@ import org.springframework.stereotype.Service
 @Service
 class FlowToNextService(private val properties: CuroProperties,
                         private val taskService: TaskService,
-                        private val runtimeService: RuntimeService) {
+                        private val runtimeService: RuntimeService,
+                        private val historyService: HistoryService) {
 
     fun getNextTask(lastTask: Task, ignoreAssignee: Boolean = false, timeout: Int): FlowToNextResult {
         val assignee = if (!ignoreAssignee) lastTask.assignee else null
@@ -55,14 +57,17 @@ class FlowToNextService(private val properties: CuroProperties,
         val possibleTaskIds: List<String>
         val possibleProcessInstanceIds = arrayListOf(processInstanceId)
         var superProcessInstance: ProcessInstance?
+        var superProcessInstanceID = processInstanceId
         do {
             superProcessInstance = runtimeService.createProcessInstanceQuery().subProcessInstanceId(processInstanceId).singleResult()
             if (superProcessInstance != null) {
                 possibleProcessInstanceIds.add(superProcessInstance.id)
+                superProcessInstanceID = superProcessInstance.id
             }
         } while (superProcessInstance != null)
 
-        processEnded = superProcessInstance?.isEnded == true
+        val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(superProcessInstanceID).singleResult()
+        processEnded = superHistoryProcessInstance?.state == "COMPLETED"
 
         possibleTaskIds = if (assignee != null) {
             taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray()).taskAssignee(assignee).list()
