@@ -3,27 +3,26 @@ name: Java CI
 on:
   push:
     paths:
-      - "backend/**"
-      - ".github/workflows/**"
+      - "backend**"
+      - ".github/workflows/java-ci.yml"
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: backend
+env:
+  OC_VERSION: 4.6
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v2
-
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
           java-version: 11
           architecture: x64
-
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
@@ -33,12 +32,69 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
       - name: Build with Gradle
+        env:
+          UMB_NEXUS_USER: "curoadmin"
+          UMB_NEXUS_PASSWORD: ${{ secrets.UMB_NEXUS_CUROADMIN }}
         run: ./gradlew clean build test
-
-      - name: "Upload Artifact"
+      - name: Upload Artifact
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v2
         with:
           name: libs
-          path: backend/library/libs
+          path: backend/demo/build/libs
+          retention-days: 1
+
+  containerize:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: libs
+          path: backend/demo/build/libs
+      - name: Login to registry-curo.umb.cloud
+        uses: docker/login-action@v1
+        with:
+          registry: registry-curo.umb.cloud
+          username: "curoadmin"
+          password: ${{ secrets.UMB_NEXUS_CUROADMIN }}
+      - name: Push to registry-curo.umb.cloud
+        uses: docker/build-push-action@v2
+        with:
+          context: ./backend
+          file: ./backend/deployment/Dockerfile
+          push: true
+          tags: registry-curo.umb.cloud/curo-reborn/backend:latest
+
+  deploy:
+    needs: containerize
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Install oc
+        uses: redhat-actions/oc-installer@v1
+        with:
+          oc_version: ${{ env.OC_VERSION }}
+      - name: Openshift Hosts
+        run: echo "${{ secrets.OPENSHIFT_HOSTS }}" | sudo tee -a /etc/hosts
+      - name: Authenticate and set context
+        uses: redhat-actions/oc-login@v1
+        env:
+          OPENSHIFT_NAMESPACE: curo-reborn
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+          insecure_skip_tls_verify: true
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+      - name: Deploy
+        run: oc tag --source=docker registry-curo.umb.cloud/curo-reborn/backend:latest backend:latest
+

@@ -1,6 +1,7 @@
 package ch.umb.curo.starter.property
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 
 
 @ConfigurationProperties(CuroProperties.PREFIX)
@@ -15,7 +16,10 @@ open class CuroProperties {
 
     var ignoreObjectType = false
 
+    @NestedConfigurationProperty
     var auth: CuroAuthProperties = CuroAuthProperties()
+
+    @NestedConfigurationProperty
     var flowToNext: CuroFlowToNextProperties = CuroFlowToNextProperties()
 
 }

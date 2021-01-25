@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.*
-import org.springframework.test.web.servlet.result.isEqualTo
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -75,7 +74,7 @@ class DefaultTaskControllerTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "CuroBasic $basicLogin")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
             jsonPath("$.processInstanceId") { value(newInstance.rootProcessInstanceId) }
@@ -94,11 +93,11 @@ class DefaultTaskControllerTest {
             param("attributes", "name")
             param("attributes", "due")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { doesNotExist() }
             jsonPath("$.name") { value(task.name) }
-            jsonPath("$.due") { isNotEmpty }
+            jsonPath("$.due") { isNotEmpty() }
             jsonPath("$.variables") { doesNotExist() }
         }
     }
@@ -114,26 +113,26 @@ class DefaultTaskControllerTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "CuroBasic $basicLogin")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { isBoolean() }
             jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
-            jsonPath("$.variables.data") { isMap }
-            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data") { isMap() }
+            jsonPath("$.variables.data.id") { isString() }
             jsonPath("$.variables.data.id") { value(data["id"].toString()) }
-            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { isString() }
             jsonPath("$.variables.data.name") { value(data["name"].toString()) }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
-            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { isString() }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
         }.andDo { print() }
     }
@@ -152,17 +151,17 @@ class DefaultTaskControllerTest {
             param("variables", "age")
             param("variables", "obj")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
             jsonPath("$.variables.isActive") { doesNotExist() }
             jsonPath("$.variables.data") { doesNotExist() }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
         }.andDo { print() }
     }
@@ -205,7 +204,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             param("historic", "true")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
             jsonPath("$.processInstanceId") { value(newInstance.rootProcessInstanceId) }
@@ -224,7 +223,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             param("historic", "true")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.id") { value(task.id) }
             jsonPath("$.processInstanceId") { value(newInstance.rootProcessInstanceId) }
@@ -248,18 +247,18 @@ class DefaultTaskControllerTest {
             param("variables", "obj")
             param("historic", "true")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.status") { value("completed") }
             jsonPath("$.id") { value(task.id) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
             jsonPath("$.variables.isActive") { doesNotExist() }
             jsonPath("$.variables.data") { doesNotExist() }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
         }.andDo { print() }
     }
@@ -316,7 +315,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
 
@@ -342,25 +341,25 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.variables.name") { isString }
+            jsonPath("$.variables.name") { isString() }
             jsonPath("$.variables.name") { value(variables["name"].toString()) }
-            jsonPath("$.variables.isActive") { isBoolean }
+            jsonPath("$.variables.isActive") { isBoolean() }
             jsonPath("$.variables.isActive") { value(variables["isActive"] as Boolean) }
-            jsonPath("$.variables.age") { isNumber }
+            jsonPath("$.variables.age") { isNumber() }
             jsonPath("$.variables.age") { value(variables["age"] as Int) }
-            jsonPath("$.variables.data") { isMap }
-            jsonPath("$.variables.data.id") { isString }
+            jsonPath("$.variables.data") { isMap() }
+            jsonPath("$.variables.data.id") { isString() }
             jsonPath("$.variables.data.id") { value(data["id"].toString()) }
-            jsonPath("$.variables.data.name") { isString }
+            jsonPath("$.variables.data.name") { isString() }
             jsonPath("$.variables.data.name") { value(data["name"].toString()) }
-            jsonPath("$.variables.obj") { isMap }
-            jsonPath("$.variables.obj.id") { isString }
+            jsonPath("$.variables.obj") { isMap() }
+            jsonPath("$.variables.obj.id") { isString() }
             jsonPath("$.variables.obj.id") { value(obj.id.toString()) }
-            jsonPath("$.variables.obj.name") { isString }
+            jsonPath("$.variables.obj.name") { isString() }
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
-            jsonPath("$.variables.obj.usable") { isBoolean }
+            jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
         }
 
@@ -386,11 +385,11 @@ class DefaultTaskControllerTest {
             param("flowToNext", "true")
             param("flowToNextIgnoreAssignee", "true")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.flowToNext") { isArray }
-            jsonPath("$.flowToNext") { isNotEmpty }
-            jsonPath("$.flowToEnd") { isBoolean }
+            jsonPath("$.flowToNext") { isArray() }
+            jsonPath("$.flowToNext") { isNotEmpty() }
+            jsonPath("$.flowToEnd") { isBoolean() }
             jsonPath("$.flowToEnd") { value(false) }
         }.andReturn()
 
@@ -442,7 +441,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -468,7 +467,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -494,7 +493,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -520,7 +519,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -546,7 +545,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
@@ -616,7 +615,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val taskVariables = taskService.getVariablesTyped(task.id)
@@ -642,7 +641,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
         }
 
         val taskVariables = taskService.getVariablesTyped(task.id)
@@ -664,12 +663,12 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             param("flowToNextIgnoreAssignee", "true")
         }.andExpect {
-            status { isEqualTo(200) }
+            status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.flowToNext") { isArray }
-            jsonPath("$.flowToNext") { isNotEmpty }
+            jsonPath("$.flowToNext") { isArray() }
+            jsonPath("$.flowToNext") { isNotEmpty() }
             jsonPath("$.flowToNext.[0]") { value(nextTask.id) }
-            jsonPath("$.flowToEnd") { isBoolean }
+            jsonPath("$.flowToEnd") { isBoolean() }
             jsonPath("$.flowToEnd") { value(false) }
         }
     }
