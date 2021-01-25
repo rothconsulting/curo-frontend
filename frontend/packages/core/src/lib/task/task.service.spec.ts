@@ -112,6 +112,21 @@ describe('TaskService', () => {
     });
   });
 
+  describe('nextTask', () => {
+    it('should query the next user task', () => {
+      const id = '1234';
+
+      service.nextTask(id, true).subscribe((data) => expect(data).toEqual({}));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/next?flowToNextIgnoreAssignee=true`
+      );
+      expect(req.request.method).toEqual('GET');
+
+      req.flush({});
+    });
+  });
+
   describe('saveVariables', () => {
     it('should save variables of a task', () => {
       const id = '1234';

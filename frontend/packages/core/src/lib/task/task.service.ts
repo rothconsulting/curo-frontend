@@ -3,6 +3,7 @@ import { Inject, Injectable, Optional } from '@angular/core';
 import { Params } from '@angular/router';
 import { Observable } from 'rxjs';
 import { CURO_BASE_PATH } from '../curo-base-path';
+import { FlowToNext } from './flow-to-next';
 import { Task } from './task';
 
 @Injectable({
@@ -49,12 +50,30 @@ export class TaskService {
   completeTask(
     id: string,
     variables?: any,
-    params?: { flowToNext?: boolean; returnVariables?: boolean }
-  ): Observable<Task | void> {
-    return this.httpClient.post<Task | void>(
+    params?: {
+      returnVariables?: boolean;
+      flowToNext?: boolean;
+      flowToNextIgnoreAssignee?: boolean;
+      flowToNextTimeOut?: number;
+    }
+  ): Observable<(Task & FlowToNext) | void> {
+    return this.httpClient.post<(Task & FlowToNext) | void>(
       `${this.basePath}/tasks/${id}/status`,
       variables,
       { params: params as Params }
+    );
+  }
+
+  /**
+   * Query for next user task.
+   */
+  nextTask(
+    id: string,
+    flowToNextIgnoreAssignee?: boolean
+  ): Observable<FlowToNext> {
+    return this.httpClient.get<FlowToNext>(
+      `${this.basePath}/tasks/${id}/next`,
+      { params: { flowToNextIgnoreAssignee } as Params }
     );
   }
 

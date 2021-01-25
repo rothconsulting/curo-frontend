@@ -55,4 +55,19 @@ describe('ProcessService', () => {
       req.flush({});
     });
   });
+
+  describe('nextTask', () => {
+    it('should query the next user task', () => {
+      const id = '1234';
+
+      service.nextTask(id, true).subscribe((data) => expect(data).toEqual({}));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/process-instances/${id}/next?flowToNextIgnoreAssignee=true`
+      );
+      expect(req.request.method).toEqual('GET');
+
+      req.flush({});
+    });
+  });
 });
