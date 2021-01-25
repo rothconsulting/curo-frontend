@@ -140,8 +140,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
                     is CamundaVariable -> getOrNull(it)
                     is CamundaVariableList -> getOrNull(it)
                     else -> null
-                }
-                )
+                })
         }
     }
 

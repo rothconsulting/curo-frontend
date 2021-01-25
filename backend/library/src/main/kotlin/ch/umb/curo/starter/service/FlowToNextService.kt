@@ -69,11 +69,8 @@ class FlowToNextService(private val properties: CuroProperties,
         val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(superProcessInstanceID).singleResult()
         processEnded = superHistoryProcessInstance?.state == "COMPLETED"
 
-        possibleTaskIds = if (assignee != null) {
-            taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray()).taskAssignee(assignee).list()
-        } else {
-            taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray()).list()
-        }.map { it.id }
+        val possibleTaskIdsQuery = taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray())
+        possibleTaskIds = (if (assignee != null) possibleTaskIdsQuery.taskAssignee(assignee) else possibleTaskIdsQuery).list().map { it.id }
 
         return FlowToNextResult(possibleTaskIds, flowToEnd = processEnded)
     }
