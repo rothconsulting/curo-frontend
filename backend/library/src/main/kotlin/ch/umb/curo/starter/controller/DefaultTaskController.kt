@@ -103,7 +103,7 @@ class DefaultTaskController : TaskController {
     }
 
     override fun completeTask(id: String,
-                              body: HashMap<String, Any>?,
+                              body: HashMap<String, Any?>?,
                               returnVariables: Boolean,
                               flowToNext: Boolean,
                               flowToNextIgnoreAssignee: Boolean?,
@@ -120,7 +120,7 @@ class DefaultTaskController : TaskController {
         //Save variables
         if (body != null) {
             val taskVariables = taskService.getVariablesTyped(task.id)
-            val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
+            val objectVariables = taskVariables.filter { it.value != null && !BeanUtils.isSimpleValueType(it.value::class.java) }
             val objectVariablesNames = objectVariables.map { it.key }
 
             body.entries.forEach { entry ->
@@ -134,7 +134,7 @@ class DefaultTaskController : TaskController {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
                     }
                 } else {
-                    if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
+                    if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } else {
                         taskService.setVariable(task.id, entry.key, entry.value)
@@ -213,7 +213,7 @@ class DefaultTaskController : TaskController {
         response.status = 200
     }
 
-    override fun saveVariables(id: String, body: HashMap<String, Any>, response: HttpServletResponse) {
+    override fun saveVariables(id: String, body: HashMap<String, Any?>, response: HttpServletResponse) {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
@@ -224,7 +224,7 @@ class DefaultTaskController : TaskController {
 
         //Save variables
         val taskVariables = taskService.getVariablesTyped(task.id)
-        val objectVariables = taskVariables.filter { !BeanUtils.isSimpleValueType(it.value::class.java) }
+        val objectVariables = taskVariables.filter { it.value != null && !BeanUtils.isSimpleValueType(it.value::class.java) }
         val objectVariablesNames = objectVariables.map { it.key }
 
         body.entries.forEach { entry ->
@@ -244,7 +244,7 @@ class DefaultTaskController : TaskController {
                     throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
                 }
             } else {
-                if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
+                if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
                     try {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } catch (e: UnrecognizedPropertyException) {

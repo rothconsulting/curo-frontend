@@ -60,7 +60,7 @@ interface TaskController {
 
         @Parameter(description = "Body including all variables.", required = false)
         @RequestBody(required = false)
-        body: HashMap<String, Any>?,
+        body: HashMap<String, Any?>?,
 
         @Parameter(description = "Define if variables should be returned on success.", required = false)
         @RequestParam("returnVariables", required = false, defaultValue = "false")
@@ -101,7 +101,7 @@ interface TaskController {
 
         @Parameter(description = "Body with variables", required = false)
         @RequestBody
-        body: HashMap<String, Any>,
+        body: HashMap<String, Any?>,
 
         response: HttpServletResponse)
 
