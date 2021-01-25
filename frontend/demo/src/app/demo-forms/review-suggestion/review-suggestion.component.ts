@@ -136,11 +136,18 @@ export class ReviewSuggestionComponent implements OnInit, OnDestroy {
         .pipe(
           take(1),
           switchMap((taskId) =>
-            this.taskService.completeTask(taskId, this.form.value)
+            this.taskService.completeTask(taskId, this.form.value, {
+              flowToNext: true,
+              flowToNextIgnoreAssignee: true
+            })
           )
         )
-        .subscribe(() => {
-          this.router.navigate(['..'], { relativeTo: this.activatedRoute });
+        .subscribe((task) => {
+          const navigate = ['..'];
+          if (task.flowToNext && task.flowToNext?.length > 0) {
+            navigate.push(task.flowToNext[0]);
+          }
+          this.router.navigate(navigate, { relativeTo: this.activatedRoute });
         });
     } else {
       this.form.markAllAsTouched();

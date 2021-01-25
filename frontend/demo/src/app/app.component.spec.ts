@@ -51,7 +51,13 @@ describe('AppComponent', () => {
       component.startProcess();
 
       expect(processService.startProcess).toHaveBeenCalledWith(
-        'new-technic-suggestion'
+        'new-technic-suggestion',
+        undefined,
+        undefined,
+        {
+          flowToNext: true,
+          flowToNextIgnoreAssignee: true
+        }
       );
     });
   });

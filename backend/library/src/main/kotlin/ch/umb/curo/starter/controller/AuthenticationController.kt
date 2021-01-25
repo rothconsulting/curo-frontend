@@ -1,5 +1,6 @@
 package ch.umb.curo.starter.controller
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletResponse
 
 @RestController
+@Tag(name = "auth", description = "Curo Auth API")
 @RequestMapping("/curo-api")
 class AuthenticationController {
 
