@@ -32,8 +32,8 @@ export class ProcessService {
       flowToNextIgnoreAssignee?: boolean;
       flowToNextTimeOut?: number;
     }
-  ): Observable<(Task & FlowToNext) | void> {
-    return this.httpClient.post<(Task & FlowToNext) | void>(
+  ): Observable<FlowToNext & Task> {
+    return this.httpClient.post<Task & FlowToNext>(
       `${this.basePath}/process-instances`,
       { processDefinitionKey, variables, businessKey },
       { params: params as Params }

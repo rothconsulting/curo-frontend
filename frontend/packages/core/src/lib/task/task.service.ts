@@ -56,8 +56,8 @@ export class TaskService {
       flowToNextIgnoreAssignee?: boolean;
       flowToNextTimeOut?: number;
     }
-  ): Observable<(Task & FlowToNext) | void> {
-    return this.httpClient.post<(Task & FlowToNext) | void>(
+  ): Observable<Task & FlowToNext> {
+    return this.httpClient.post<Task & FlowToNext>(
       `${this.basePath}/tasks/${id}/status`,
       variables,
       { params: params as Params }
