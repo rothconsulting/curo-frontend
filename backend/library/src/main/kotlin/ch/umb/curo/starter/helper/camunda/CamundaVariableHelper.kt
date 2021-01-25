@@ -2,6 +2,7 @@ package ch.umb.curo.starter.helper.camunda
 
 import ch.umb.curo.starter.exception.CamundaVariableException
 import org.camunda.bpm.engine.delegate.DelegateExecution
+import org.camunda.bpm.engine.variable.impl.value.ObjectValueImpl
 import java.lang.reflect.Modifier
 import java.util.*
 
@@ -134,13 +135,13 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     fun getAllMapWithNullables(camundaVariables: Class<out Any>): Map<String, Any?> {
         return getAllVariables(camundaVariables).associate {
             Pair(
-                    it.value,
-                    when (it) {
-                        is CamundaVariable -> getOrNull(it)
-                        is CamundaVariableList -> getOrNull(it)
-                        else -> null
-                    }
-            )
+                it.value,
+                when (it) {
+                    is CamundaVariable -> getOrNull(it)
+                    is CamundaVariableList -> getOrNull(it)
+                    else -> null
+                }
+                )
         }
     }
 
@@ -152,8 +153,8 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
         delegateExecution.setVariable(variableName.value, value)
     }
 
-    fun  <T : Any> init(variableName: CamundaVariableListDefinition<T>) {
-        delegateExecution.setVariable(variableName.value, variableName.type.getDeclaredConstructor().newInstance())
+    fun <T : Any> initWithNull(variableName: CamundaVariableListDefinition<T>) {
+        delegateExecution.setVariable(variableName.value, ObjectValueImpl(null, "", "application/json", variableName.type.canonicalName, true))
     }
 
 }

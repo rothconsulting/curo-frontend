@@ -17,6 +17,7 @@ import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
@@ -128,13 +129,13 @@ class DefaultTaskController : TaskController {
                         val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
                         taskService.setVariable(task.id, entry.key, obj)
                     } catch (e: InvalidDefinitionException) {
-                        taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } catch (e: UnrecognizedPropertyException) {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
                     }
                 } else {
                     if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
-                        taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } else {
                         taskService.setVariable(task.id, entry.key, entry.value)
                     }
@@ -165,7 +166,8 @@ class DefaultTaskController : TaskController {
         val response = CompleteTaskResponse()
 
         if (flowToNext) {
-            val flowToNextResult = flowToNextService.getNextTask(task, flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
+            val flowToNextResult =
+                flowToNextService.getNextTask(task, flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
             response.flowToNext = flowToNextResult.flowToNext
             response.flowToEnd = flowToNextResult.flowToEnd
             response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
@@ -212,8 +214,7 @@ class DefaultTaskController : TaskController {
     }
 
     override fun saveVariables(id: String, body: HashMap<String, Any>, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-            ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
@@ -232,13 +233,25 @@ class DefaultTaskController : TaskController {
                     val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
                     taskService.setVariable(task.id, entry.key, obj)
                 } catch (e: InvalidDefinitionException) {
-                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                    if(properties.ignoreObjectType){
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                    }else{
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    }
                 } catch (e: UnrecognizedPropertyException) {
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                } catch (e: Exception) {
                     throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
                 }
             } else {
                 if (!BeanUtils.isSimpleValueType(entry.value::class.java)) {
-                    taskService.setVariable(task.id, entry.key, ObjectMapper().writeValueAsString(entry.value))
+                    try {
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                    } catch (e: UnrecognizedPropertyException) {
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    } catch (e: Exception) {
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    }
                 } else {
                     taskService.setVariable(task.id, entry.key, entry.value)
                 }

@@ -5,8 +5,6 @@ spring:
     version: 1
 curo:
   print-stacktrace: false
-  flowToNext:
-    ignoreAssignee: false
 
 camunda:
   bpm:
@@ -19,3 +17,4 @@ camunda:
     default-serialization-format: application/json
     filter:
       create: 🌍 All tasks
+    history-level: full
