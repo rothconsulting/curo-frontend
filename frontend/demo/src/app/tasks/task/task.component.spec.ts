@@ -2,11 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import {
-  CuroCoreModule,
-  CuroFormAccessor,
-  CURO_FORM_ACCESSOR
-} from '@umb-ag/curo-core';
+import { CuroCoreModule, CURO_FORM_ACCESSOR } from '@umb-ag/curo-core';
 import { TaskComponent } from './task.component';
 
 describe('TaskComponent', () => {
@@ -20,7 +16,7 @@ describe('TaskComponent', () => {
       providers: [
         {
           provide: CURO_FORM_ACCESSOR,
-          useValue: TestComponent,
+          useValue: { key: 'TestComponent', component: TestComponent },
           multi: true
         }
       ]
@@ -41,4 +37,4 @@ describe('TaskComponent', () => {
 @Component({
   selector: 'app-test'
 })
-class TestComponent implements CuroFormAccessor {}
+class TestComponent {}

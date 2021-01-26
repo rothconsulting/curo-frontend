@@ -61,12 +61,18 @@ import { SharedModule } from './shared/shared.module';
     },
     {
       provide: CURO_FORM_ACCESSOR,
-      useValue: CreateSuggestionComponent,
+      useValue: {
+        key: 'CreateSuggestionComponent',
+        component: CreateSuggestionComponent
+      },
       multi: true
     },
     {
       provide: CURO_FORM_ACCESSOR,
-      useValue: ReviewSuggestionComponent,
+      useValue: {
+        key: 'ReviewSuggestionComponent',
+        component: ReviewSuggestionComponent
+      },
       multi: true
     }
   ],

@@ -4,7 +4,7 @@ import {
   ViewContainerRef
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CuroFormAccessor, CURO_FORM_ACCESSOR } from '../curo-form-accessor';
+import { CURO_FORM_ACCESSOR } from '../curo-form-accessor';
 import { GenericFormComponent } from './generic-form.component';
 
 describe('GenericFormComponent', () => {
@@ -17,7 +17,10 @@ describe('GenericFormComponent', () => {
       providers: [
         {
           provide: CURO_FORM_ACCESSOR,
-          useValue: TestComponent,
+          useValue: {
+            key: 'TestComponent',
+            component: TestComponent
+          },
           multi: true
         }
       ]
@@ -80,4 +83,4 @@ describe('GenericFormComponent', () => {
 @Component({
   selector: 'cu-test'
 })
-class TestComponent implements CuroFormAccessor {}
+class TestComponent {}

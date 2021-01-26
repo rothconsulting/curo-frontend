@@ -4,7 +4,6 @@ import {
   ComponentFactoryResolver,
   Inject,
   Input,
-  Type,
   ViewChild,
   ViewContainerRef
 } from '@angular/core';
@@ -22,7 +21,7 @@ export class GenericFormComponent {
   constructor(
     private componentFactoryResolver: ComponentFactoryResolver,
     @Inject(CURO_FORM_ACCESSOR)
-    private curoFormAccessors: Type<CuroFormAccessor>[]
+    private curoFormAccessors: CuroFormAccessor[]
   ) {}
 
   @Input()
@@ -30,13 +29,13 @@ export class GenericFormComponent {
     this.formHost.clear();
 
     if (formKey) {
-      const component = this.curoFormAccessors.find(
-        (form) => form.name === formKey
+      const form = this.curoFormAccessors.find(
+        (curoForm) => curoForm.key === formKey
       );
 
-      if (component) {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory<CuroFormAccessor>(
-          component
+      if (form) {
+        const componentFactory = this.componentFactoryResolver.resolveComponentFactory<any>(
+          form.component
         );
 
         this.formHost.createComponent(componentFactory);
