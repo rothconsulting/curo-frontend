@@ -11,13 +11,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
-import org.camunda.bpm.engine.AuthorizationException
-import org.camunda.bpm.engine.HistoryService
-import org.camunda.bpm.engine.RuntimeService
-import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.*
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
+import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
@@ -44,12 +42,14 @@ class DefaultTaskController : TaskController {
     @Autowired
     lateinit var runtimeService: RuntimeService
 
+    private var logger = LoggerFactory.getLogger(this::class.java)!!
+
     override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
         val curoTask = if (loadFromHistoric) {
-            val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.notFound404("Task not found in history")
+            val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throwAndPrintStackTrace(ApiException.notFound404("Task not found in history"))
             CuroTask.fromCamundaHistoricTask(task)
         } else {
-            val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.notFound404("Task not found")
+            val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throwAndPrintStackTrace(ApiException.notFound404("Task not found"))
             CuroTask.fromCamundaTask(task)
         }
 
@@ -109,12 +109,12 @@ class DefaultTaskController : TaskController {
                               flowToNextIgnoreAssignee: Boolean?,
                               flowToNextTimeOut: Int?): CompleteTaskResponse {
         val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-            ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
+            throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE))
         }
 
         //Save variables
@@ -126,12 +126,26 @@ class DefaultTaskController : TaskController {
             body.entries.forEach { entry ->
                 if (entry.key in objectVariablesNames) {
                     try {
-                        val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
-                        taskService.setVariable(task.id, entry.key, obj)
+                        if(taskVariables[entry.key]!! is JacksonJsonNode){
+                            taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                        }else{
+                            val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
+                            taskService.setVariable(task.id, entry.key, obj)
+                        }
                     } catch (e: InvalidDefinitionException) {
-                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                        if (properties.ignoreObjectType) {
+                            taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                        } else {
+                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        }
                     } catch (e: UnrecognizedPropertyException) {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                        if (properties.ignoreObjectType) {
+                            taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                        } else {
+                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        }
+                    } catch (e: Exception) {
+                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
                     }
                 } else {
                     if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
@@ -178,7 +192,8 @@ class DefaultTaskController : TaskController {
     }
 
     override fun assignTask(id: String, assigneeRequest: AssigneeRequest, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
+            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
 
@@ -207,19 +222,20 @@ class DefaultTaskController : TaskController {
                 }
             }
         } catch (e: AuthorizationException) {
-            throw ApiException.unauthorized403("User is not allowed to set assignee")
+            throwAndPrintStackTrace(e, ApiException.unauthorized403("User is not allowed to set assignee"))
         }
 
         response.status = 200
     }
 
     override fun saveVariables(id: String, body: HashMap<String, Any?>, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
+            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
+            throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE))
         }
 
         //Save variables
@@ -230,27 +246,39 @@ class DefaultTaskController : TaskController {
         body.entries.forEach { entry ->
             if (entry.key in objectVariablesNames) {
                 try {
-                    val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
-                    taskService.setVariable(task.id, entry.key, obj)
-                } catch (e: InvalidDefinitionException) {
-                    if(properties.ignoreObjectType){
+                    if(taskVariables[entry.key]!! is JacksonJsonNode){
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     }else{
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                        val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
+                        taskService.setVariable(task.id, entry.key, obj)
+                    }
+                } catch (e: InvalidDefinitionException) {
+                    if (properties.ignoreObjectType) {
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                    } else {
+                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
                     }
                 } catch (e: UnrecognizedPropertyException) {
-                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    if (properties.ignoreObjectType) {
+                        taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                    } else {
+                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                    }
                 } catch (e: Exception) {
-                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                    throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
                 }
             } else {
                 if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
                     try {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } catch (e: UnrecognizedPropertyException) {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                        if (properties.ignoreObjectType) {
+                            taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
+                        } else {
+                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        }
                     } catch (e: Exception) {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
                     }
                 } else {
                     taskService.setVariable(task.id, entry.key, entry.value)
@@ -264,8 +292,21 @@ class DefaultTaskController : TaskController {
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
-        val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
+        val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult()
+            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
         return flowToNextService.searchNextTask(task.processInstanceId, assignee)
+    }
+
+    private fun throwAndPrintStackTrace(apiReturn: ApiException): Nothing {
+        throwAndPrintStackTrace(null, apiReturn)
+    }
+
+    private fun throwAndPrintStackTrace(e: Exception?, apiReturn: ApiException): Nothing {
+        if (properties.printStacktrace) {
+            logger.error("API-Exception: ${apiReturn.errorCode} -> ${apiReturn.message}")
+            e?.printStackTrace()
+        }
+        throw apiReturn
     }
 
     enum class AssignmentType {

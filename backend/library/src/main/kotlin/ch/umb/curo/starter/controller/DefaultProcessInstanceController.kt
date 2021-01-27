@@ -14,6 +14,7 @@ import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.web.bind.annotation.RestController
@@ -33,6 +34,8 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
     @Autowired
     lateinit var repositoryService: RepositoryService
+
+    private var logger = LoggerFactory.getLogger(this::class.java)!!
 
     override fun startProcess(body: ProcessStartRequest,
                               returnVariables: Boolean,
@@ -70,9 +73,9 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
             return response
         } catch (e: ProcessEngineException) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND)
+            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND))
         } catch (e: AuthorizationException) {
-            throw ApiException.unauthorized403("You are not allowed to start this process")
+            throwAndPrintStackTrace(e, ApiException.unauthorized403("You are not allowed to start this process"))
         }
     }
 
@@ -80,5 +83,13 @@ class DefaultProcessInstanceController : ProcessInstanceController {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
         return flowToNextService.searchNextTask(id, assignee)
+    }
+
+    private fun throwAndPrintStackTrace(e: Exception?, apiReturn: ApiException): Nothing {
+        if(properties.printStacktrace){
+            logger.error("API-Exception: ${apiReturn.errorCode} -> ${apiReturn.message}")
+            e?.printStackTrace()
+        }
+        throw apiReturn
     }
 }
