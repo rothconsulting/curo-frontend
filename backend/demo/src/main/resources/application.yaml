@@ -6,6 +6,7 @@ spring:
 
 curo:
   print-stacktrace: true
+  camunda-telemetry: false
 
 camunda:
   bpm:

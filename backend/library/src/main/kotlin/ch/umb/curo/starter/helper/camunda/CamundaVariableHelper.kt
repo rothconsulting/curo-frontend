@@ -1,10 +1,16 @@
 package ch.umb.curo.starter.helper.camunda
 
 import ch.umb.curo.starter.exception.CamundaVariableException
+import ch.umb.curo.starter.helper.camunda.annotation.InitWithEmpty
+import ch.umb.curo.starter.helper.camunda.annotation.InitWithNull
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.variable.impl.value.ObjectValueImpl
+import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import java.lang.reflect.Modifier
 import java.util.*
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 open class CamundaVariableHelper(private val delegateExecution: DelegateExecution) {
 
@@ -44,8 +50,12 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     fun <T : Any> getOrNull(variableDefinition: CamundaVariableDefinition<T>): T? {
         return try {
             val content: Any? = delegateExecution.getVariable(variableDefinition.value)
-            variableDefinition.type.cast(content)
-        } catch (e: ClassCastException) {
+            try {
+                variableDefinition.type.cast(content)
+            } catch (e: ClassCastException) {
+                ObjectMapper().readValue((content as JacksonJsonNode).toString(), variableDefinition.type)
+            }
+        } catch (e: Exception) {
             throw CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
         }
     }
@@ -60,9 +70,17 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     fun <T : Any> getOrThrow(variableDefinition: CamundaVariableDefinition<T>, exception: Throwable): T? {
         return try {
             val content: Any = delegateExecution.getVariable(variableDefinition.value) ?: throw exception
-            variableDefinition.type.cast(content)
-        } catch (e: ClassCastException) {
-            throw CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
+            try {
+                variableDefinition.type.cast(content)
+            } catch (e: ClassCastException) {
+                ObjectMapper().readValue((content as JacksonJsonNode).toString(), variableDefinition.type)
+            }
+        } catch (e: Exception) {
+            throw if (e.cause == exception) {
+                e
+            } else {
+                CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
+            }
         }
     }
 
@@ -78,14 +96,20 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
             if (content != null) {
                 val list: List<*> = content as List<*>
 
-                list.filterNotNull().forEach { variableListDefinition.type.cast(it) }
+                list.filterNotNull().forEach {
+                    try {
+                        variableListDefinition.type.cast(it)
+                    } catch (e: ClassCastException) {
+                        ObjectMapper().readValue((it as JacksonJsonNode).toString(), variableListDefinition.type)
+                    }
+                }
 
                 @Suppress("UNCHECKED_CAST")
                 return list as List<T?>
             } else {
                 return null
             }
-        } catch (e: ClassCastException) {
+        } catch (e: Exception) {
             throw CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
         }
     }
@@ -102,12 +126,22 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
             val content: Any = delegateExecution.getVariable(variableListDefinition.value) ?: throw exception
             val list: List<*> = content as List<*>
 
-            list.filterNotNull().forEach { variableListDefinition.type.cast(it) }
+            list.filterNotNull().forEach {
+                try {
+                    variableListDefinition.type.cast(it)
+                } catch (e: ClassCastException) {
+                    ObjectMapper().readValue((it as JacksonJsonNode).toString(), variableListDefinition.type)
+                }
+            }
 
             @Suppress("UNCHECKED_CAST")
             return list as List<T?>
-        } catch (e: ClassCastException) {
-            throw CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
+        } catch (e: Exception) {
+            throw if (e.cause == exception) {
+                e
+            } else {
+                CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
+            }
         }
     }
 
@@ -152,8 +186,56 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
         delegateExecution.setVariable(variableName.value, value)
     }
 
-    fun <T : Any> initWithNull(variableName: CamundaVariableListDefinition<T>) {
-        delegateExecution.setVariable(variableName.value, ObjectValueImpl(null, "", "application/json", variableName.type.canonicalName, true))
+    fun initVariables(variableClass: Any) {
+        val doAllEmpty = variableClass.javaClass.isAnnotationPresent(InitWithEmpty::class.java)
+        val doAllNull = variableClass.javaClass.isAnnotationPresent(InitWithNull::class.java)
+        variableClass.javaClass.declaredFields
+            .filter { it.isAnnotationPresent(InitWithNull::class.java) || it.isAnnotationPresent(InitWithEmpty::class.java) || doAllEmpty || doAllNull }
+            .filter { it.name != "Companion" }
+            .forEach {
+                it.isAccessible = true
+                val definition = it.get(variableClass) as CamundaVariableDefinition<*>
+                val emptyInit = if (it.isAnnotationPresent(InitWithEmpty::class.java)) {
+                    true
+                } else {
+                    doAllEmpty && !it.isAnnotationPresent(InitWithNull::class.java)
+                }
+
+                when {
+                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && emptyInit -> {
+                        val value = if (it.type.isAssignableFrom(Boolean::class.java)) { //Set Boolean to false
+                            false
+                        } else {
+                            definition.type.getConstructor().newInstance()
+                        }
+                        delegateExecution.setVariable(definition.value, value)
+                    }
+                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && !emptyInit -> delegateExecution.setVariable(definition.value, null)
+                    (it.type == JacksonJsonNode::class.java) && emptyInit -> delegateExecution.setVariable(definition.value,
+                                                                                                           JsonValueImpl(ObjectMapper().writeValueAsString(definition.type.getConstructor()
+                                                                                                                                                               .newInstance()),
+                                                                                                                         "application/json"))
+                    (it.type == JacksonJsonNode::class.java) && !emptyInit -> delegateExecution.setVariable(definition.value, JsonValueImpl("", "application/json"))
+                    else -> {
+                        if (emptyInit) {
+                            delegateExecution.setVariable(definition.value,
+                                                          ObjectValueImpl(definition.type.getConstructor().newInstance(),
+                                                                          ObjectMapper().writeValueAsString(definition.type.getConstructor().newInstance()),
+                                                                          "application/json",
+                                                                          definition.type.canonicalName,
+                                                                          true))
+                        } else {
+                            delegateExecution.setVariable(definition.value, ObjectValueImpl(null, "", "application/json", definition.type.canonicalName, true))
+                        }
+                    }
+                }
+            }
+    }
+
+    companion object {
+        fun initVariables(variableClass: Any, delegateExecution: DelegateExecution) {
+            CamundaVariableHelper(delegateExecution).initVariables(variableClass)
+        }
     }
 
 }

@@ -52,7 +52,7 @@ interface TaskController {
         response: HttpServletResponse)
 
     @Operation(summary = "Complete the given task.", operationId = "completeTask", description = "", security = [SecurityRequirement(name = "CuroBasic")])
-    @PostMapping("/{id}/status", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/{id}/status", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun completeTask(
         @Parameter(description = "ID of task to complete.", required = true)
         @PathVariable("id", required = true)

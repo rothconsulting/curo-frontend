@@ -15,6 +15,7 @@ open class CuroProperties {
     var printStacktrace = true
 
     var ignoreObjectType = false
+    var camundaTelemetry: Boolean? = null
 
     @NestedConfigurationProperty
     var auth: CuroAuthProperties = CuroAuthProperties()

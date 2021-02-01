@@ -7,14 +7,21 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
+import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.springdoc.core.GroupedOpenApi
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.EventListener
+import java.lang.Exception
+import javax.annotation.PostConstruct
 
 @EnableConfigurationProperties(CuroProperties::class)
 @Configuration
@@ -35,6 +42,15 @@ open class CuroAutoConfiguration {
                 CuroOAuth2Authentication()
             }
             else -> CuroBasicAuthAuthentication()
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun setTelemetry() {
+        if(properties.camundaTelemetry != null) {
+            val engine = EngineUtil.lookupProcessEngine(null)
+            val managementService: ManagementService = engine.managementService
+            managementService.toggleTelemetry(properties.camundaTelemetry!!)
         }
     }
 
