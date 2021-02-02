@@ -4,10 +4,13 @@ import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
+import ch.umb.curo.starter.models.response.CuroFilterResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletResponse
@@ -15,6 +18,72 @@ import javax.servlet.http.HttpServletResponse
 @Tag(name = "task", description = "Curo Task API")
 @RequestMapping("/curo-api/tasks")
 interface TaskController {
+
+    @Operation(summary = "Load list of tasks", operationId = "getTasks", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @GetMapping("", produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun getTasks(
+        @Parameter(description = "ID of a task filter", required = true)
+        @RequestParam("id", required = true)
+        id: String,
+
+        @Parameter(description = "Additional filtering for task filtering", required = false)
+        @RequestParam("query", required = false)
+        query: String? = "{}",
+
+        @Parameter(description = "Define which fields should be returned. If not present, all fields of the filter are returned", required = false)
+        @RequestParam("attributes", required = false, defaultValue = "")
+        attributes: ArrayList<String> = arrayListOf(),
+
+        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned", required = false)
+        @RequestParam("variables", required = false, defaultValue = "")
+        variables: ArrayList<String> = arrayListOf(),
+
+        @Parameter(description = "Define the offset where the paginated list should start", required = false)
+        @RequestParam("offset", required = false, defaultValue = "0")
+        offset: Int = 0,
+
+        @Parameter(description = "Define the max amount of results list should return", required = false)
+        @RequestParam("maxResult", required = false, defaultValue = "20")
+        maxResult: Int = 20,
+
+        @Parameter(description = "Defines if additional filter data be included in the response", required = false)
+        @RequestParam("includeFilter", required = false, defaultValue = "false")
+        includeFilter: Boolean = false,
+
+        response: HttpServletResponse): CuroFilterResponse
+
+    @Operation(summary = "Load list of tasks", operationId = "getTasksPost", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @PostMapping("", produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun getTasksPost(
+        @Parameter(description = "ID of a task filter", required = true)
+        @RequestParam("id", required = true)
+        id: String,
+
+        @Parameter(description = "Additional filtering for task filtering", required = false, schema = Schema(implementation = TaskQueryDto::class))
+        @RequestBody
+        query: String? = "{}",
+
+        @Parameter(description = "Define which fields should be returned. If not present, all fields of the filter are returned", required = false)
+        @RequestParam("attributes", required = false, defaultValue = "")
+        attributes: ArrayList<String> = arrayListOf(),
+
+        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned", required = false)
+        @RequestParam("variables", required = false, defaultValue = "")
+        variables: ArrayList<String> = arrayListOf(),
+
+        @Parameter(description = "Define the offset where the paginated list should start", required = false)
+        @RequestParam("offset", required = false, defaultValue = "0")
+        offset: Int = 0,
+
+        @Parameter(description = "Define the max amount of results list should return", required = false)
+        @RequestParam("maxResult", required = false, defaultValue = "20")
+        maxResult: Int = 20,
+
+        @Parameter(description = "Defines if additional filter data be included in the response", required = false)
+        @RequestParam("includeFilter", required = false, defaultValue = "false")
+        includeFilter: Boolean = false,
+
+        response: HttpServletResponse): CuroFilterResponse
 
     @Operation(summary = "Load information about a single task",
                   operationId = "getTask",

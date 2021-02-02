@@ -28,6 +28,40 @@ describe('TaskService', () => {
     httpTestingController.verify();
   });
 
+  describe('getTasks', () => {
+    it('should get a list of tasks', () => {
+      const id = '1234';
+
+      service
+        .getTasks(id, { includeFilter: true })
+        .subscribe((data) => expect(data).toEqual({ total: 0, items: [] }));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks?includeFilter=true&id=${id}`
+      );
+      expect(req.request.method).toEqual('GET');
+
+      req.flush({ total: 0, items: [] });
+    });
+  });
+
+  describe('queryTasks', () => {
+    it('should get a list of tasks', () => {
+      const id = '1234';
+
+      service
+        .queryTasks(id, undefined, { includeFilter: true })
+        .subscribe((data) => expect(data).toEqual({ total: 0, items: [] }));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks?includeFilter=true&id=${id}`
+      );
+      expect(req.request.method).toEqual('POST');
+
+      req.flush({ total: 0, items: [] });
+    });
+  });
+
   describe('getTask', () => {
     it('should get the task for a specific id', () => {
       const id = '1234';

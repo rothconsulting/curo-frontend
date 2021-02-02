@@ -5,6 +5,7 @@ import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroTask
+import ch.umb.curo.starter.models.response.CuroFilterResponse
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.FlowToNextService
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import org.camunda.bpm.engine.*
+import org.camunda.bpm.engine.rest.dto.task.TaskDto
+import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
+import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
@@ -40,9 +44,118 @@ class DefaultTaskController : TaskController {
     lateinit var flowToNextService: FlowToNextService
 
     @Autowired
-    lateinit var runtimeService: RuntimeService
+    lateinit var filterService: FilterService
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     private var logger = LoggerFactory.getLogger(this::class.java)!!
+
+    override fun getTasks(id: String,
+                          query: String?,
+                          attributes: ArrayList<String>,
+                          variables: ArrayList<String>,
+                          offset: Int,
+                          maxResult: Int,
+                          includeFilter: Boolean,
+                          response: HttpServletResponse): CuroFilterResponse {
+        val filter = filterService.getFilter(id) ?: throw ApiException.notFound404("Filter not found")
+
+        if (filter.resourceType !in arrayListOf(EntityTypes.TASK, EntityTypes.HISTORIC_TASK)) {
+            throw ApiException.invalidArgument400(arrayListOf("Filter is not of type TASK or HISTORIC_TASK"))
+        }
+
+        if(query != null && query.isNotEmpty()) {
+            try {
+                objectMapper.readValue(query, TaskQueryDto::class.java)
+            } catch (e: Exception) {
+                throw ApiException.invalidArgument400(arrayListOf("query attribute is not deserializable into TaskQueryDto."))
+            }
+        }
+
+        val description = filter.properties.getOrDefault("description", "") as String
+        val refresh = filter.properties.getOrDefault("refresh", false) as Boolean
+        val properties = filter.properties.filterNot { it.key in arrayListOf("description", "refresh") }
+
+        val variablesToInclude = if ((attributes.contains("variables") || attributes.isEmpty()) && variables.isEmpty()) {
+            if (attributes.isNotEmpty()) {
+                attributes.add("variables")
+            }
+
+            if (!(filter.properties.getOrDefault("showUndefinedVariable", false) as Boolean)) {
+                @Suppress("UNCHECKED_CAST")
+                val filterVariables = filter.properties["variables"] as List<HashMap<String, String>?>?
+                filterVariables?.mapNotNull { it?.getOrDefault("name", null) } ?: variables
+            } else {
+                arrayListOf()
+            }
+        } else {
+            variables
+        }
+
+        val camundaFilterImpl = FilterResourceImpl(null, objectMapper, id, "/")
+
+        //TODO: Support for HISTORIC_TASK
+        val count = camundaFilterImpl.queryCount(query ?: "{}")?.count ?: 0
+
+        if (offset >= count) {
+            return if (includeFilter) {
+                CuroFilterResponse(filter.name, description, refresh, properties, 0, arrayListOf())
+            } else {
+                CuroFilterResponse(total = 0, items = arrayListOf())
+            }
+        }
+
+        val result = camundaFilterImpl.queryJsonList(query ?: "{}", offset, maxResult).map { CuroTask.fromCamundaTaskDto(it as TaskDto) }
+
+        result.map { curoTask ->
+            if (attributes.contains("variables") || attributes.isEmpty()) {
+                curoTask.variables = hashMapOf()
+
+                val taskVariables = taskService.getVariablesTyped(curoTask.id)
+
+                taskVariables.entries.forEach { variable ->
+                    if (variablesToInclude.isEmpty() || variablesToInclude.contains(variable.key)) {
+                        if (variable.value is JacksonJsonNode) {
+                            curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                        } else {
+                            curoTask.variables!![variable.key] = variable.value
+                        }
+                    }
+                }
+            }
+        }
+
+        if (attributes.isNotEmpty()) {
+            //Filter attributes
+            result.map { curoTask ->
+                val attrDefinitions = CuroTask::class.java.declaredFields
+                attrDefinitions.forEach { field ->
+                    if (field.name !in attributes && field.name != "Companion") {
+                        field.isAccessible = true
+                        field.set(curoTask, null)
+                    }
+                }
+            }
+        }
+
+        return if (includeFilter) {
+            CuroFilterResponse(filter.name, description, refresh, properties, count, result)
+        } else {
+            CuroFilterResponse(total = count, items = result)
+        }
+    }
+
+    override fun getTasksPost(id: String,
+                              query: String?,
+                              attributes: ArrayList<String>,
+                              variables: ArrayList<String>,
+                              offset: Int,
+                              maxResult: Int,
+                              includeFilter: Boolean,
+                              response: HttpServletResponse): CuroFilterResponse {
+        return getTasks(id, query, attributes, variables, offset, maxResult, includeFilter, response)
+    }
 
     override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
         val curoTask = if (loadFromHistoric) {

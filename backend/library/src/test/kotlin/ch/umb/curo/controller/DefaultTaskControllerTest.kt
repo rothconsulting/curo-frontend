@@ -5,10 +5,16 @@ import ch.umb.curo.DataModel
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.camunda.bpm.engine.FilterService
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.filter.Filter
+import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
+import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -16,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.test.context.event.annotation.BeforeTestClass
+import org.springframework.test.context.event.annotation.BeforeTestExecution
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.*
 import java.util.*
@@ -43,14 +51,26 @@ class DefaultTaskControllerTest {
     @Autowired
     lateinit var runtimeService: RuntimeService
 
+    @Autowired
+    lateinit var filterService: FilterService
+
     private val basicLogin: String = Base64.getEncoder().encodeToString("demo:demo".toByteArray())
+
+    @AfterEach
+    private fun cleanProcesses() {
+        val list = runtimeService.createProcessInstanceQuery().processDefinitionKey("Process_1").list()
+        list.forEach {
+            runtimeService.suspendProcessInstanceById(it.rootProcessInstanceId)
+            runtimeService.deleteProcessInstance(it.rootProcessInstanceId, "ABORT", true, true, true, true)
+        }
+    }
 
     @Test
     fun `getTask() - loading task without authorization should not work`() {
         mockMvc.get("/curo-api/tasks/12345") {
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isUnauthorized() }
         }
     }
 
@@ -60,7 +80,7 @@ class DefaultTaskControllerTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "CuroBasic $basicLogin")
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -173,7 +193,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             param("historic", "true")
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -189,7 +209,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             param("historic", "false")
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -268,7 +288,7 @@ class DefaultTaskControllerTest {
         mockMvc.post("/curo-api/tasks/12345/status") {
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isUnauthorized() }
         }
     }
 
@@ -279,7 +299,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             contentType = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -294,7 +314,7 @@ class DefaultTaskControllerTest {
             header("Authorization", "CuroBasic $basicLogin")
             contentType = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(403) }
+            status { isForbidden() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -441,7 +461,7 @@ class DefaultTaskControllerTest {
         mockMvc.put("/curo-api/tasks/12345/assignee") {
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isUnauthorized() }
         }
     }
 
@@ -456,7 +476,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound()}
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -595,7 +615,7 @@ class DefaultTaskControllerTest {
         mockMvc.patch("/curo-api/tasks/12345/variables") {
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isUnauthorized() }
         }
     }
 
@@ -609,7 +629,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(404) }
+            status { isNotFound()}
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -627,7 +647,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isEqualTo(403) }
+            status { isForbidden() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -707,6 +727,94 @@ class DefaultTaskControllerTest {
         }
     }
 
+    @Test
+    fun `getTasks() - loading tasks without authorization should not work`() {
+        mockMvc.get("/curo-api/tasks") {
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `getTasks() - loading tasks should work`() {
+        val (variables) = getVariables()
+
+        val filter = createFilter()
+
+        val newInstance1 = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val newInstance2 = runtimeService.startProcessInstanceByKey("Process_1", variables)
+
+        variables["name"] = "UMB"
+        val newInstance3 = runtimeService.startProcessInstanceByKey("Process_1", variables) // Will no be found by the filter
+
+        mockMvc.get("/curo-api/tasks") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            param("id", filter.id)
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.total") { isNumber() }
+            jsonPath("$.total") { value(2) }
+            jsonPath("$.items") { isArray() }
+            jsonPath("$.items") { isNotEmpty() }
+        }
+    }
+
+    @Test
+    fun `getTasks() - loading tasks with filter data should work`() {
+        val filter = createFilter()
+
+        mockMvc.get("/curo-api/tasks") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            param("id", filter.id)
+            param("includeFilter", "true")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.name") { value("Big Filter") }
+            jsonPath("$.description") { value("My Tasks") }
+            jsonPath("$.refresh") { value("false") }
+            jsonPath("$.properties[\"color\"]") { value("#3e4d2f") }
+        }
+
+    }
+
+    @Test
+    fun `getTasks() - loading tasks with additional filter should work`() {
+        val (variables) = getVariables()
+
+        val filter = createFilter()
+
+        runtimeService.startProcessInstanceByKey("Process_1", variables)
+
+        variables["age"] = 100
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks") {
+            accept = MediaType.APPLICATION_JSON
+            header("Authorization", "CuroBasic $basicLogin")
+            param("id", filter.id)
+            param("query", """{"processVariables": [
+                                                {
+                                                  "operator": "eq",
+                                                  "value": 100,
+                                                  "name": "age"
+                                                }
+                                              ]
+                                            }""")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.total") { isNumber() }
+            jsonPath("$.total") { value(1) }
+            jsonPath("$.items") { isArray() }
+            jsonPath("$.items") { isNotEmpty() }
+            jsonPath("$.items.[0].id") { value(nextTask.id) }
+        }
+    }
+
     private fun getVariables(): Triple<HashMap<String, Any>, LinkedHashMap<String, Any>, DataModel> {
         val variables = hashMapOf<String, Any>()
 
@@ -728,5 +836,54 @@ class DefaultTaskControllerTest {
         obj.usable = false
         variables["obj"] = obj
         return Triple(variables, data, obj)
+    }
+
+    private fun createFilter(): Filter {
+        val filterDto = mapper.readValue("""{"resourceType": "Task",
+                                              "name": "Big Filter",
+                                              "owner": "demo",
+                                              "query": {
+                                                "processVariables": [
+                                                  {
+                                                    "name": "name",
+                                                    "value": "Fox",
+                                                    "operator": "eq"
+                                                  }
+                                                ],
+                                                "sorting": [
+                                                  {
+                                                    "sortBy": "processVariable",
+                                                    "sortOrder": "asc",
+                                                    "parameters": {
+                                                      "variable": "age",
+                                                      "type": "Integer"
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "properties": {
+                                                "color": "#3e4d2f",
+                                                "description": "My Tasks",
+                                                "priority": 5,
+                                                "listType": "small",
+                                                "variables": [
+                                                  {
+                                                    "lable": "Name",
+                                                    "name": "name",
+                                                    "type": "text"
+                                                  },
+                                                  {
+                                                    "lable": "Age",
+                                                    "name": "age",
+                                                    "type": "number"
+                                                  }
+                                                ]
+                                              }
+                                            }""".trimIndent(), FilterDto::class.java)
+        val filter = filterService.newTaskFilter()
+        filterDto.updateFilter(filter, EngineUtil.lookupProcessEngine(null))
+        filterService.saveFilter(filter)
+
+        return filter
     }
 }

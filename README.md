@@ -68,6 +68,9 @@ This project is developed by [UMB](https://github.com/umb) using the [Semantic V
 
 See the [CHANGELOG](CHANGELOG.md) file for details.
 
+## Publish to Maven local
+To publish jar artifact to maven local, execute the following command: `./gradlew publishToMavenLocal`
+
 ## Authors 🖥️
 
 * **Patrick Bösch** - *Initial work* - [patrickboesch](https://github.com/patrickboesch)

@@ -1,6 +1,7 @@
 plugins {
     id "idea"
     id "java-library"
+    id "maven-publish"
     id "org.jetbrains.kotlin.jvm" version "1.4.21-2"
     id "org.jetbrains.kotlin.plugin.jpa" version "1.4.21-2"
     id "org.springframework.boot" version "2.4.2"
@@ -9,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.3"
+version = "0.0.4"
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
@@ -35,7 +36,6 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation "org.springframework.boot:spring-boot-starter"
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
@@ -46,7 +46,7 @@ dependencies {
 
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2"
 
-    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:7.14.0"
+    compileOnly "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:7.14.0"
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:7.14.0"
     implementation "org.camunda.spin:camunda-spin-core"
     implementation "org.camunda.spin:camunda-spin-dataformat-json-jackson"
@@ -77,5 +77,24 @@ test {
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
         jvmTarget = "11"
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            def releaseRepo = "" //TODO: release to new nexus
+            def snapshotRepo = "" //TODO: release to new nexus
+            url = version.endsWith('SNAPSHOT') ? snapshotRepo : releaseRepo
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            artifactId = 'curo-spring-boot-starter'
+
+            from components.java
+        }
     }
 }

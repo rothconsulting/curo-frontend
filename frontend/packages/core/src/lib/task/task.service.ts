@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 import { CURO_BASE_PATH } from '../curo-base-path';
 import { FlowToNext } from './flow-to-next';
 import { Task } from './task';
+import { TaskList } from './task-list';
+import { TaskQuery } from './task-query';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +19,46 @@ export class TaskService {
     private httpClient: HttpClient
   ) {
     this.basePath = curoBasePath || '';
+  }
+
+  /**
+   * Load a list of tasks using a camunda filter.
+   */
+  getTasks(
+    filterId: string,
+    params?: {
+      query?: string;
+      attributes?: string[];
+      variables?: string[];
+      offset?: number;
+      maxResult?: number;
+      includeFilter?: boolean;
+    }
+  ): Observable<TaskList> {
+    const newParams = { ...params, id: filterId };
+    return this.httpClient.get<TaskList>(`${this.basePath}/tasks`, {
+      params: newParams as Params
+    });
+  }
+
+  /**
+   * Load a list of tasks using a camunda filter with additional query options.
+   */
+  queryTasks(
+    filterId: string,
+    query?: TaskQuery,
+    params?: {
+      attributes?: string[];
+      variables?: string[];
+      offset?: number;
+      maxResult?: number;
+      includeFilter?: boolean;
+    }
+  ): Observable<TaskList> {
+    const newParams = { ...params, id: filterId };
+    return this.httpClient.post<TaskList>(`${this.basePath}/tasks`, query, {
+      params: newParams as Params
+    });
   }
 
   /**

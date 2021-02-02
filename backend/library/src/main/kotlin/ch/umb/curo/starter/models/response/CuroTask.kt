@@ -3,6 +3,7 @@ package ch.umb.curo.starter.models.response
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 import org.camunda.bpm.engine.history.HistoricTaskInstance
+import org.camunda.bpm.engine.rest.dto.task.TaskDto
 import org.camunda.bpm.engine.task.DelegationState
 import org.camunda.bpm.engine.task.Task
 import org.joda.time.DateTime
@@ -158,6 +159,28 @@ class CuroTask {
             curoTask.due =  DateTime(task.dueDate)
             curoTask.followUp =  DateTime(task.followUpDate)
             curoTask.delegationState = task.delegationState
+            curoTask.parentTaskId = task.parentTaskId
+            curoTask.suspended = task.isSuspended
+            curoTask.formKey = task.formKey
+
+            return curoTask
+        }
+        fun fromCamundaTaskDto(task: TaskDto): CuroTask {
+            val curoTask = CuroTask()
+            curoTask.id = task.id
+            curoTask.executionId = task.executionId
+            curoTask.processInstanceId = task.processInstanceId
+            curoTask.processDefinitionId = task.processDefinitionId
+            curoTask.taskDefinitionKey = task.taskDefinitionKey
+            curoTask.name = task.name
+            curoTask.priority = task.priority.toDouble()
+            curoTask.status = "open"
+            curoTask.assignee = task.assignee
+            curoTask.owner = task.owner
+            curoTask.created = DateTime(task.created)
+            curoTask.due =  DateTime(task.due)
+            curoTask.followUp =  DateTime(task.followUp)
+            curoTask.delegationState = if(task.delegationState != null) DelegationState.valueOf(task.delegationState) else null
             curoTask.parentTaskId = task.parentTaskId
             curoTask.suspended = task.isSuspended
             curoTask.formKey = task.formKey
