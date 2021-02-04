@@ -96,5 +96,5 @@ export interface TaskQuery {
     sortBy?: string;
     sortOrder?: string;
     parameters?: any;
-  };
+  }[];
 }
