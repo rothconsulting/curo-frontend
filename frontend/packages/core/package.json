@@ -1,6 +1,9 @@
 {
   "name": "@umb-ag/curo-core",
-  "version": "0.0.6",
+  "version": "0.0.7",
+  "publishConfig": {
+    "registry": "https://repo.umb.cloud/repository/npm-curo-releases/"
+  },
   "peerDependencies": {
     "@angular/common": "^11.0.0",
     "@angular/core": "^11.0.0"

@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.6"
+version = "0.0.7"
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
@@ -83,7 +83,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 publishing {
     repositories {
         maven {
-            def releaseRepo = "" //TODO: release to new nexus
+            def releaseRepo = "https://repo.umb.cloud/repository/maven-curo-releases/" //TODO: release to new nexus
             def snapshotRepo = "" //TODO: release to new nexus
             url = version.endsWith('SNAPSHOT') ? snapshotRepo : releaseRepo
         }

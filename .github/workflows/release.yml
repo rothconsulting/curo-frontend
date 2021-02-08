@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push: tags
+
+env:
+  NODE_VERSION: 14.x
+
+jobs:
+  frontend:
+    name: Release Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+      - run: npm run build.libs
+      - run: npm publish
+        working-directory: frontend/dist/core
+      - run: npm publish
+        working-directory: frontend/dist/camunda
+
+  backend:
+    name: Release Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+          architecture: x64
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Build with Gradle
+        env:
+          UMB_NEXUS_USER: "curoadmin"
+          UMB_NEXUS_PASSWORD: ${{ secrets.UMB_NEXUS_CUROADMIN }}
+        run: ./gradlew clean build test publish
