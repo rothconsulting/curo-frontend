@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse
  */
 open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
 
-    private var logger = LoggerFactory.getLogger(this::class.java)!!
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val BEARER_HEADER_PREFIX = "Bearer "
 

@@ -4,57 +4,50 @@ import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
-import ch.umb.curo.starter.models.response.CuroTask
 import ch.umb.curo.starter.models.response.CuroFilterResponse
+import ch.umb.curo.starter.models.response.CuroTask
 import ch.umb.curo.starter.property.CuroProperties
+import ch.umb.curo.starter.service.CuroTaskService
 import ch.umb.curo.starter.service.FlowToNextService
-import com.fasterxml.jackson.databind.JsonNode
+import ch.umb.curo.starter.util.ZipUtil
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
-import org.camunda.bpm.engine.*
+import org.apache.commons.io.IOUtils
+import org.camunda.bpm.engine.AuthorizationException
+import org.camunda.bpm.engine.EntityTypes
+import org.camunda.bpm.engine.FilterService
+import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.rest.dto.task.TaskDto
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
 import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl
 import org.camunda.bpm.engine.rest.util.EngineUtil
+import org.camunda.bpm.engine.variable.type.ValueType
+import org.camunda.bpm.engine.variable.value.FileValue
+import org.camunda.bpm.engine.variable.value.TypedValue
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
-import org.springframework.http.HttpStatus
+import org.springframework.http.*
 import org.springframework.web.bind.annotation.RestController
 import javax.servlet.http.HttpServletResponse
 
+
 @RestController
 @ConditionalOnMissingClass
-class DefaultTaskController : TaskController {
-
-    @Autowired
-    lateinit var properties: CuroProperties
-
-    @Autowired
-    lateinit var taskService: TaskService
-
-    @Autowired
-    lateinit var historyService: HistoryService
-
-    @Autowired
-    lateinit var flowToNextService: FlowToNextService
-
-    @Autowired
-    lateinit var filterService: FilterService
-
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
-
-    private var logger = LoggerFactory.getLogger(this::class.java)!!
+class DefaultTaskController(private val properties: CuroProperties,
+                            private val curoTaskService: CuroTaskService,
+                            private val taskService: TaskService,
+                            private val flowToNextService: FlowToNextService,
+                            private val filterService: FilterService,
+                            private val objectMapper: ObjectMapper) : TaskController {
 
     override fun getTasks(id: String,
                           query: String?,
                           attributes: ArrayList<String>,
-                          variables: ArrayList<String>,
+                          variables: List<String>,
                           offset: Int,
                           maxResult: Int,
                           includeFilter: Boolean,
@@ -65,7 +58,7 @@ class DefaultTaskController : TaskController {
             throw ApiException.invalidArgument400(arrayListOf("Filter is not of type TASK or HISTORIC_TASK"))
         }
 
-        if(query != null && query.isNotEmpty()) {
+        if (query != null && query.isNotEmpty()) {
             try {
                 objectMapper.readValue(query, TaskQueryDto::class.java)
             } catch (e: Exception) {
@@ -111,18 +104,7 @@ class DefaultTaskController : TaskController {
         result.map { curoTask ->
             if (attributes.contains("variables") || attributes.isEmpty()) {
                 curoTask.variables = hashMapOf()
-
-                val taskVariables = taskService.getVariablesTyped(curoTask.id)
-
-                taskVariables.entries.forEach { variable ->
-                    if (variablesToInclude.isEmpty() || variablesToInclude.contains(variable.key)) {
-                        if (variable.value is JacksonJsonNode) {
-                            curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                        } else {
-                            curoTask.variables!![variable.key] = variable.value
-                        }
-                    }
-                }
+                curoTaskService.loadVariables(variablesToInclude, curoTask)
             }
         }
 
@@ -149,7 +131,7 @@ class DefaultTaskController : TaskController {
     override fun getTasksPost(id: String,
                               query: String?,
                               attributes: ArrayList<String>,
-                              variables: ArrayList<String>,
+                              variables: List<String>,
                               offset: Int,
                               maxResult: Int,
                               includeFilter: Boolean,
@@ -157,44 +139,19 @@ class DefaultTaskController : TaskController {
         return getTasks(id, query, attributes, variables, offset, maxResult, includeFilter, response)
     }
 
-    override fun getTask(id: String, attributes: ArrayList<String>, variables: ArrayList<String>, loadFromHistoric: Boolean): CuroTask {
+    override fun getTask(id: String, attributes: ArrayList<String>, variables: List<String>, loadFromHistoric: Boolean): CuroTask {
         val curoTask = if (loadFromHistoric) {
-            val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult() ?: throwAndPrintStackTrace(ApiException.notFound404("Task not found in history"))
+            val task = curoTaskService.getHistoricTask(id)
             CuroTask.fromCamundaHistoricTask(task)
         } else {
-            val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult() ?: throwAndPrintStackTrace(ApiException.notFound404("Task not found"))
+            val task = curoTaskService.getTask(id)
             CuroTask.fromCamundaTask(task)
         }
 
         if (attributes.contains("variables") || attributes.isEmpty()) {
             curoTask.variables = hashMapOf()
             //Load variables
-            if (loadFromHistoric) {
-                val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId).list()
-
-                taskVariables.forEach { variable ->
-                    if (variables.isEmpty() || variables.contains(variable.name)) {
-                        if (variable.value is JacksonJsonNode) {
-                            curoTask.variables!![variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                        } else {
-                            curoTask.variables!![variable.name] = variable.value
-                        }
-                    }
-                }
-            } else {
-                val taskVariables = taskService.getVariablesTyped(curoTask.id)
-                //Filter files out
-
-                taskVariables.entries.forEach { variable ->
-                    if (variables.isEmpty() || variables.contains(variable.key)) {
-                        if (variable.value is JacksonJsonNode) {
-                            curoTask.variables!![variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                        } else {
-                            curoTask.variables!![variable.key] = variable.value
-                        }
-                    }
-                }
-            }
+            curoTaskService.loadVariables(variables, curoTask, loadFromHistoric)
         }
 
         if (attributes.isNotEmpty()) {
@@ -211,8 +168,52 @@ class DefaultTaskController : TaskController {
         return curoTask
     }
 
-    override fun getTaskFile(id: String, file: String, response: HttpServletResponse) {
-        TODO("Not yet implemented")
+    override fun getTaskFile(id: String, file: String): ResponseEntity<ByteArray> {
+        val task = getTask(id)
+        val variable = taskService.getVariableTyped<TypedValue>(task.id, file) ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_NOT_FOUND)
+            .throwAndPrintStackTrace(properties.printStacktrace)
+        if (variable.type != ValueType.FILE) {
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NO_FILE).throwAndPrintStackTrace(properties.printStacktrace)
+        }
+        variable as FileValue
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.parseMediaType((variable.mimeType ?: MediaType.APPLICATION_OCTET_STREAM_VALUE) + "; charset=${variable.encoding ?: "utf-8"}")
+        headers.contentDisposition = ContentDisposition.parse("""attachment; filename="${variable.filename}"""")
+
+        return ResponseEntity(IOUtils.toByteArray(variable.value), headers, HttpStatus.OK)
+    }
+
+    override fun getTaskZipFile(id: String, files: List<String>?, name: String, ignoreNotExistingFiles: Boolean): ResponseEntity<ByteArray> {
+        val task = getTask(id)
+
+        if(files == null || files.isEmpty()){
+            throw ApiException.invalidArgument400(arrayListOf("zip files has to include at least one file.")).throwAndPrintStackTrace(properties.printStacktrace)
+        }
+
+        val filesToZip = arrayListOf<Pair<String, ByteArray>>()
+
+        files.forEach { file ->
+            val variable = taskService.getVariableTyped<TypedValue>(task.id, file)
+                ?: if (ignoreNotExistingFiles) {
+                    return@forEach
+                } else {
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_NOT_FOUND).throwAndPrintStackTrace(properties.printStacktrace)
+                }
+            if (variable.type != ValueType.FILE) {
+                throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NO_FILE).throwAndPrintStackTrace(properties.printStacktrace)
+            }
+            variable as FileValue
+            filesToZip.add(Pair(variable.filename, IOUtils.toByteArray(variable.value)))
+        }
+
+        val zip = ZipUtil.zipFiles(filesToZip)
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_OCTET_STREAM
+        headers.contentDisposition = ContentDisposition.parse("""attachment; filename="$name.zip"""")
+
+        return ResponseEntity(zip, headers, HttpStatus.OK)
     }
 
     override fun completeTask(id: String,
@@ -221,13 +222,12 @@ class DefaultTaskController : TaskController {
                               flowToNext: Boolean,
                               flowToNextIgnoreAssignee: Boolean?,
                               flowToNextTimeOut: Int?): CompleteTaskResponse {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
+        val task = curoTaskService.getTask(id)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
-            throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE))
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE).throwAndPrintStackTrace(properties.printStacktrace)
         }
 
         //Save variables
@@ -239,9 +239,9 @@ class DefaultTaskController : TaskController {
             body.entries.forEach { entry ->
                 if (entry.key in objectVariablesNames) {
                     try {
-                        if(taskVariables[entry.key]!! is JacksonJsonNode){
+                        if (taskVariables[entry.key]!! is JacksonJsonNode) {
                             taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
-                        }else{
+                        } else {
                             val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
                             taskService.setVariable(task.id, entry.key, obj)
                         }
@@ -249,16 +249,16 @@ class DefaultTaskController : TaskController {
                         if (properties.ignoreObjectType) {
                             taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                         } else {
-                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                         }
                     } catch (e: UnrecognizedPropertyException) {
                         if (properties.ignoreObjectType) {
                             taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                         } else {
-                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                         }
                     } catch (e: Exception) {
-                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                     }
                 } else {
                     if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
@@ -274,18 +274,9 @@ class DefaultTaskController : TaskController {
 
         // add variables if needed
         val variables = if (returnVariables) {
-            val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(task.processInstanceId).list()
-            val variables: HashMap<String, Any?> = hashMapOf()
-
-            taskVariables.forEach { variable ->
-                if (variable.value is JacksonJsonNode) {
-                    variables[variable.name] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                } else {
-                    variables[variable.name] = variable.value
-                }
-            }
-
-            variables
+            val curoTask = CuroTask.fromCamundaTask(task)
+            curoTaskService.loadVariables(arrayListOf(), curoTask, true)
+            curoTask.variables
         } else {
             null
         }
@@ -305,8 +296,7 @@ class DefaultTaskController : TaskController {
     }
 
     override fun assignTask(id: String, assigneeRequest: AssigneeRequest, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
+        val task = curoTaskService.getTask(id)
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
 
@@ -335,20 +325,19 @@ class DefaultTaskController : TaskController {
                 }
             }
         } catch (e: AuthorizationException) {
-            throwAndPrintStackTrace(e, ApiException.unauthorized403("User is not allowed to set assignee"))
+            ApiException.unauthorized403("User is not allowed to set assignee").throwAndPrintStackTrace(properties.printStacktrace, e)
         }
 
         response.status = 200
     }
 
     override fun saveVariables(id: String, body: HashMap<String, Any?>, response: HttpServletResponse) {
-        val task = taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
-            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
+        val task = curoTaskService.getTask(id)
         //Check if user is assignee
         val engine = EngineUtil.lookupProcessEngine(null)
         val currentUser = engine.identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
-            throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE))
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE).throwAndPrintStackTrace(properties.printStacktrace)
         }
 
         //Save variables
@@ -359,9 +348,9 @@ class DefaultTaskController : TaskController {
         body.entries.forEach { entry ->
             if (entry.key in objectVariablesNames) {
                 try {
-                    if(taskVariables[entry.key]!! is JacksonJsonNode){
+                    if (taskVariables[entry.key]!! is JacksonJsonNode) {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
-                    }else{
+                    } else {
                         val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
                         taskService.setVariable(task.id, entry.key, obj)
                     }
@@ -369,16 +358,16 @@ class DefaultTaskController : TaskController {
                     if (properties.ignoreObjectType) {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } else {
-                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                     }
                 } catch (e: UnrecognizedPropertyException) {
                     if (properties.ignoreObjectType) {
                         taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                     } else {
-                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                     }
                 } catch (e: Exception) {
-                    throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                 }
             } else {
                 if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
@@ -388,10 +377,10 @@ class DefaultTaskController : TaskController {
                         if (properties.ignoreObjectType) {
                             taskService.setVariable(task.id, entry.key, JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json"))
                         } else {
-                            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                         }
                     } catch (e: Exception) {
-                        throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT))
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT).throwAndPrintStackTrace(properties.printStacktrace, e)
                     }
                 } else {
                     taskService.setVariable(task.id, entry.key, entry.value)
@@ -405,21 +394,8 @@ class DefaultTaskController : TaskController {
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
-        val task = historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult()
-            ?: throwAndPrintStackTrace(ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND))
+        val task = curoTaskService.getHistoricTask(id)
         return flowToNextService.searchNextTask(task.processInstanceId, assignee)
-    }
-
-    private fun throwAndPrintStackTrace(apiReturn: ApiException): Nothing {
-        throwAndPrintStackTrace(null, apiReturn)
-    }
-
-    private fun throwAndPrintStackTrace(e: Exception?, apiReturn: ApiException): Nothing {
-        if (properties.printStacktrace) {
-            logger.error("API-Exception: ${apiReturn.errorCode} -> ${apiReturn.message}")
-            e?.printStackTrace()
-        }
-        throw apiReturn
     }
 
     enum class AssignmentType {

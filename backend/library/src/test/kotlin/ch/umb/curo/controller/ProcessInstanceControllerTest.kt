@@ -1,6 +1,6 @@
 package ch.umb.curo.controller
 
-import ch.umb.curo.DataModel
+import ch.umb.curo.model.DataModel
 import ch.umb.curo.starter.models.request.ProcessStartRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.HistoryService
@@ -16,7 +16,6 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.result.isEqualTo
 import java.util.*
 import kotlin.collections.LinkedHashMap
 

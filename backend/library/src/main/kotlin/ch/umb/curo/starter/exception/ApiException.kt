@@ -2,6 +2,8 @@ package ch.umb.curo.starter.exception
 
 import ch.umb.curo.starter.exception.details.BadRequestDetail
 import ch.umb.curo.starter.exception.details.ErrorDetail
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Provides constants and helper methods for common errors in our REST-API.
@@ -25,6 +27,15 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
     private constructor(errorCode: ErrorCode) : this(errorCode.defaultMessage, null, errorCode, null, null) {}
     private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details, null) {}
     private constructor(curoErrorCode: CuroErrorCode, details: ErrorDetail? = null) : this(curoErrorCode.defaultMessage, null, curoErrorCode.errorCode, null, curoErrorCode) {}
+
+    fun throwAndPrintStackTrace(printStacktrace: Boolean, e: Exception? = null, logger: Logger = LoggerFactory.getLogger(this::class.java)!!): ApiException {
+        if (printStacktrace) {
+            logger.error("API-Exception: ${this.errorCode} -> ${this.message}")
+            e?.printStackTrace()
+        }
+
+        return this
+    }
 
     /**
      * Error codes inspired by google's gRPC error model
@@ -55,6 +66,8 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
     enum class CuroErrorCode constructor(val errorCode: ErrorCode, val defaultMessage: String = "") {
         TASK_NOT_FOUND(ErrorCode.NOT_FOUND, "Task not found"),
         PROCESS_DEFINITION_NOT_FOUND(ErrorCode.NOT_FOUND, "Process definition not found"),
+        VARIABLE_NOT_FOUND(ErrorCode.NOT_FOUND, "Variable not found"),
+        VARIABLE_IS_NO_FILE(ErrorCode.NOT_FOUND, "Variable is not a file"),
         NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user"),
         CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already existing variable type")
     }

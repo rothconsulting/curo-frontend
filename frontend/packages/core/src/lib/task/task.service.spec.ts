@@ -177,4 +177,36 @@ describe('TaskService', () => {
       req.flush({});
     });
   });
+
+  describe('getFile', () => {
+    it('should download a file', () => {
+      const id = '1234';
+      const variableName = 'myFile';
+
+      service.getFile(id, variableName).subscribe();
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/file/${variableName}`
+      );
+      expect(req.request.method).toEqual('GET');
+
+      req.flush(null);
+    });
+  });
+
+  describe('getFilesZipped', () => {
+    it('should download a zip file', () => {
+      const id = '1234';
+      const variableName = 'myFile';
+
+      service.getFilesZipped(id, [variableName]).subscribe();
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/zip-files?files=myFile`
+      );
+      expect(req.request.method).toEqual('GET');
+
+      req.flush(null);
+    });
+  });
 });

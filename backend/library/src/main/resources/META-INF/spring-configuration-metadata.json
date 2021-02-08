@@ -56,18 +56,26 @@
       "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties"
     },
     {
+      "name": "curo.camunda-telemetry",
+      "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
       "name": "curo.flow-to-next.default-timeout",
       "type": "java.lang.Integer",
+      "description": "Default timeout in seconds for flowToNext requests Default: 30s",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {
       "name": "curo.flow-to-next.ignore-assignee",
       "type": "java.lang.Boolean",
+      "description": "Should Curo ignore the assignee for flowToNext requests Default: false",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {
       "name": "curo.flow-to-next.interval",
       "type": "java.lang.Integer",
+      "description": "How long in milliseconds should Curo wait between requests to Camunda if flowToNext got requested Default: 500ms",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {

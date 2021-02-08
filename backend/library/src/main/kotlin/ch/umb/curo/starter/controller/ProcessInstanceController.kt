@@ -38,7 +38,7 @@ interface ProcessInstanceController {
         flowToNextTimeOut: Int? = null): ProcessStartResponse?
 
     @Operation(summary = "Get next task", operationId = "nextTask", description = "", security = [SecurityRequirement(name = "CuroBasic")])
-    @GetMapping("/{id}/next", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/{id}/next", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun nextTask(
         @Parameter(description = "ID of the process instance", required = true)
         @PathVariable("id", required = true)

@@ -1,33 +1,41 @@
 package ch.umb.curo.starter.exception
 
 import ch.umb.curo.starter.property.CuroProperties
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.commons.io.IOUtils
 import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.servlet.http.HttpServletRequest
+import org.springframework.web.HttpMediaTypeNotAcceptableException
+import org.springframework.web.bind.annotation.ResponseBody
+import javax.servlet.http.HttpServletResponse
+
 
 @ControllerAdvice
-class GlobalExceptionHandler {
-
-    @Autowired
-    lateinit var properties: CuroProperties
+class GlobalExceptionHandler(private var properties: CuroProperties,
+                             private val mapper: ObjectMapper) {
 
     @ExceptionHandler(ApiException::class)
-    fun handleApiException(apiException: ApiException, request: HttpServletRequest): ResponseEntity<DefaultErrorModel?> {
-        return ResponseEntity(DefaultErrorModel(
+    fun handleApiException(apiException: ApiException, request: HttpServletRequest, response: HttpServletResponse) {
+        val errorResponse = DefaultErrorModel(
                 DateTime.now(),
                 apiException.errorCode.httpMapping,
                 apiException.errorCode.defaultMessage,
                 apiException.curoErrorCode?.name,
                 if (properties.printStacktrace) apiException.cause?.let { stackTraceToString(it) } ?: "" else "",
                 apiException.message ?: "",
-                request.servletPath
-        ), HttpStatus.valueOf(apiException.errorCode.httpMapping))
+                request.servletPath)
+
+        response.status = apiException.errorCode.httpMapping
+        response.contentType = "application/json"
+        response.writer.write(mapper.writeValueAsString(errorResponse))
     }
 
     private fun stackTraceToString(ex: Throwable): String {

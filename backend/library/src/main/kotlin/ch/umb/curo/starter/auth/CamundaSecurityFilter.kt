@@ -22,7 +22,7 @@ open class CamundaSecurityFilter {
     @Autowired
     lateinit var authenticationProvider: AuthenticationProvider
 
-    private var logger = LoggerFactory.getLogger(this::class.java)!!
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
         const val ENGINE_REST_URL: String = "/engine-rest/*"

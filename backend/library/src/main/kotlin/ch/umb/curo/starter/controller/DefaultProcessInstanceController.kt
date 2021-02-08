@@ -35,7 +35,7 @@ class DefaultProcessInstanceController : ProcessInstanceController {
     @Autowired
     lateinit var repositoryService: RepositoryService
 
-    private var logger = LoggerFactory.getLogger(this::class.java)!!
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun startProcess(body: ProcessStartRequest,
                               returnVariables: Boolean,

@@ -1,9 +1,10 @@
 package ch.umb.curo.controller
 
 
-import ch.umb.curo.DataModel
+import ch.umb.curo.model.DataModel
 import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
+import ch.umb.curo.starter.util.ZipUtil
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.FilterService
 import org.camunda.bpm.engine.HistoryService
@@ -12,18 +13,19 @@ import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.filter.Filter
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
 import org.camunda.bpm.engine.rest.util.EngineUtil
+import org.camunda.bpm.engine.variable.impl.value.FileValueImpl
+import org.camunda.bpm.engine.variable.type.ValueType
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.Resource
 import org.springframework.http.MediaType
-import org.springframework.test.context.event.annotation.BeforeTestClass
-import org.springframework.test.context.event.annotation.BeforeTestExecution
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.*
 import java.util.*
@@ -53,6 +55,9 @@ class DefaultTaskControllerTest {
 
     @Autowired
     lateinit var filterService: FilterService
+
+    @Value("classpath:test-image.jpg")
+    lateinit var testImage: Resource
 
     private val basicLogin: String = Base64.getEncoder().encodeToString("demo:demo".toByteArray())
 
@@ -124,8 +129,9 @@ class DefaultTaskControllerTest {
 
     @Test
     fun `getTask() - loading task with id should return variables by default`() {
-        val (variables, data, obj) = getVariables()
+        val (variables, data, obj) = getVariables(true)
 
+        val imageFile = (variables["image"] as FileValueImpl)
         val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
         val task = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
 
@@ -154,6 +160,12 @@ class DefaultTaskControllerTest {
             jsonPath("$.variables.obj.name") { value(obj.name.toString()) }
             jsonPath("$.variables.obj.usable") { isBoolean() }
             jsonPath("$.variables.obj.usable") { value(obj.usable as Boolean) }
+            jsonPath("$.variables.image.fileName") { isString() }
+            jsonPath("$.variables.image.fileName") { value(imageFile.filename.toString()) }
+            jsonPath("$.variables.image.mimeType") { isString() }
+            jsonPath("$.variables.image.mimeType") { value(imageFile.mimeType.toString()) }
+            jsonPath("$.variables.image.encoding") { isString() }
+            jsonPath("$.variables.image.encoding") { value(imageFile.encoding.toString()) }
         }.andDo { print() }
     }
 
@@ -476,7 +488,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(assigneeRequest)
         }.andExpect {
-            status { isNotFound()}
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -629,7 +641,7 @@ class DefaultTaskControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = mapper.writeValueAsString(variables)
         }.andExpect {
-            status { isNotFound()}
+            status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
         }
     }
@@ -815,7 +827,146 @@ class DefaultTaskControllerTest {
         }
     }
 
-    private fun getVariables(): Triple<HashMap<String, Any>, LinkedHashMap<String, Any>, DataModel> {
+    @Test
+    fun `getTaskFile() - loading file without authorization should not work`() {
+        mockMvc.get("/curo-api/tasks/12345/file/awesomeFile") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `getTaskFile() - loading file with wrong task id should result in 404`() {
+        mockMvc.get("/curo-api/tasks/12345/file/awesomeFile") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+        }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `getTaskFile() - loading file with wrong variable name should result in 404`() {
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/file/awesomeFile") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+        }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `getTaskFile() - loading file should work`() {
+        val (variables) = getVariables(true)
+        val testImageBytes = testImage.inputStream.readAllBytes()
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/file/image") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+        }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.parseMediaType("image/jpeg;charset=utf-8")) }
+            content { bytes(testImageBytes) }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file without authorization should not work`() {
+        mockMvc.get("/curo-api/tasks/12345/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file with wrong task id should result in 404`() {
+        mockMvc.get("/curo-api/tasks/12345/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+            param("files", "awesomeFile")
+        }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file without files parameters should result in 404`() {
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+        }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file with wrong variable name should result in 404`() {
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1")
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+            param("files", "awesomeFile")
+        }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file should work`() {
+        val (variables) = getVariables(true)
+        val zippedTestImageBytes = ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+            param("files", "image")
+        }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_OCTET_STREAM) }
+            content { bytes(zippedTestImageBytes) }
+        }
+    }
+
+    @Test
+    fun `getTaskZipFile() - loading zip file with wrong names and ignore flag should work`() {
+        val (variables) = getVariables(true)
+        val zippedTestImageBytes = ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
+        val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
+        val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+
+        mockMvc.get("/curo-api/tasks/${nextTask.id}/zip-files") {
+            accept = MediaType.APPLICATION_OCTET_STREAM
+            header("Authorization", "CuroBasic $basicLogin")
+            param("files", "image")
+            param("files", "wrongVariable")
+            param("ignoreNotExistingFiles", "true")
+        }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_OCTET_STREAM) }
+            content { bytes(zippedTestImageBytes) }
+        }
+    }
+
+    private fun getVariables(includeFile: Boolean = false): Triple<HashMap<String, Any>, LinkedHashMap<String, Any>, DataModel> {
         val variables = hashMapOf<String, Any>()
 
         //String
@@ -835,6 +986,13 @@ class DefaultTaskControllerTest {
         obj.name = "UMB AG"
         obj.usable = false
         variables["obj"] = obj
+
+        //File
+        if(includeFile) {
+            val file = FileValueImpl(testImage.inputStream.readAllBytes(), ValueType.FILE, "testImage.jpeg", "image/jpeg", "utf-8")
+            variables["image"] = file
+        }
+
         return Triple(variables, data, obj)
     }
 

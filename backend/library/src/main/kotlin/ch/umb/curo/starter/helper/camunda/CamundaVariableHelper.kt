@@ -10,6 +10,7 @@ import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import java.lang.reflect.Modifier
 import java.util.*
+import java.util.function.Supplier
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 open class CamundaVariableHelper(private val delegateExecution: DelegateExecution) {
@@ -28,17 +29,42 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     }
 
     /**
+     * @param variableDefinition CamundaVariableDefinition<T> of variable to read
+     * @param defaultValue provide value here if variable is null / not defined
+     * @return result of Camunda variable matching the given definition (name/type)
+     * @throws CamundaVariableException if variable not found and defaultValue is null / not provided
+     * @throws CamundaVariableException if variable can not be casted in defined type
+     */
+    @Throws(CamundaVariableException::class)
+    operator fun <T : Any> get(variableDefinition: CamundaVariableDefinition<T>, defaultValue: Supplier<T?>): T {
+        return getOrNull(variableDefinition) ?: defaultValue.get() ?: throw CamundaVariableException("Camunda variable '" + variableDefinition.value + "' is not defined")
+    }
+
+
+
+    /**
      * @param variableListDefinition CamundaVariableListDefinition<T> of variable list to be read
      * @param defaultValue provide value here if variable is null / not defined
      * @return result of Camunda variable matching the given definition (name/type)
      * @throws CamundaVariableException if variable not found and defaultValue is null / not provided
      * @throws CamundaVariableException if variable can not be casted in defined type
      */
-
     @JvmOverloads
     @Throws(CamundaVariableException::class)
     operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: List<T>? = null): List<T?> {
         return getOrNull(variableListDefinition) ?: defaultValue ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
+    }
+
+    /**
+     * @param variableListDefinition CamundaVariableListDefinition<T> of variable list to be read
+     * @param defaultValue provide value here if variable is null / not defined
+     * @return result of Camunda variable matching the given definition (name/type)
+     * @throws CamundaVariableException if variable not found and defaultValue is null / not provided
+     * @throws CamundaVariableException if variable can not be casted in defined type
+     */
+    @Throws(CamundaVariableException::class)
+    operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: Supplier<List<T>?>): List<T?> {
+        return getOrNull(variableListDefinition) ?: defaultValue.get() ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
     }
 
     /**

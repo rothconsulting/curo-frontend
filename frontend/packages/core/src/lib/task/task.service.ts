@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Inject, Injectable, Optional } from '@angular/core';
 import { Params } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -127,5 +127,39 @@ export class TaskService {
       `${this.basePath}/tasks/${id}/variables`,
       variables
     );
+  }
+
+  /**
+   * Download the file of a variable.
+   */
+  getFile(id: string, variableName: string): Observable<HttpResponse<Blob>> {
+    return this.httpClient.get(
+      `${this.basePath}/tasks/${id}/file/${variableName}`,
+      { observe: 'response', responseType: 'blob' }
+    );
+  }
+
+  /**
+   * Download file variables as zip.
+   */
+  getFilesZipped(
+    id: string,
+    variableNames: string[],
+    name?: string,
+    ignoreNotExistingFiles?: boolean
+  ): Observable<HttpResponse<Blob>> {
+    let params = { files: variableNames };
+    if (name) {
+      params = { ...params, name } as any;
+    }
+    if (ignoreNotExistingFiles !== undefined) {
+      params = { ...params, ignoreNotExistingFiles } as any;
+    }
+
+    return this.httpClient.get(`${this.basePath}/tasks/${id}/zip-files`, {
+      observe: 'response',
+      responseType: 'blob',
+      params
+    });
   }
 }

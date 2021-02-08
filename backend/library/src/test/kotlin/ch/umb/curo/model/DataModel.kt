@@ -1,4 +1,4 @@
-package ch.umb.curo
+package ch.umb.curo.model
 
 class DataModel {
 

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletResponse
 
@@ -34,9 +35,9 @@ interface TaskController {
         @RequestParam("attributes", required = false, defaultValue = "")
         attributes: ArrayList<String> = arrayListOf(),
 
-        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned", required = false)
+        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned. *If all variables are loaded and files are present, these files will be held in-memory for the duration of the call. If you don't want the files in-memory please define all needed variables so only needed files are held in-memory.*", required = false)
         @RequestParam("variables", required = false, defaultValue = "")
-        variables: ArrayList<String> = arrayListOf(),
+        variables: List<String> = arrayListOf(),
 
         @Parameter(description = "Define the offset where the paginated list should start", required = false)
         @RequestParam("offset", required = false, defaultValue = "0")
@@ -67,9 +68,9 @@ interface TaskController {
         @RequestParam("attributes", required = false, defaultValue = "")
         attributes: ArrayList<String> = arrayListOf(),
 
-        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned", required = false)
+        @Parameter(description = "Define which variables should be returned. If not present, all variables of the filter are returned. *If all variables are loaded and files are present, these files will be held in-memory for the duration of the call. If you don't want the files in-memory please define all needed variables so only needed files are held in-memory.*", required = false)
         @RequestParam("variables", required = false, defaultValue = "")
-        variables: ArrayList<String> = arrayListOf(),
+        variables: List<String> = arrayListOf(),
 
         @Parameter(description = "Define the offset where the paginated list should start", required = false)
         @RequestParam("offset", required = false, defaultValue = "0")
@@ -99,16 +100,16 @@ interface TaskController {
         @RequestParam("attributes", required = false, defaultValue = "")
         attributes: ArrayList<String> = arrayListOf(),
 
-        @Parameter(description = "Define which variables should be returned. If not present, all variables are returned", required = false)
+        @Parameter(description = "Define which variables should be returned. If not present, all variables are returned. *If all variables are loaded and files are present, these files will be held in-memory for the duration of the call. If you don't want the files in-memory please define all needed variables so only needed files are held in-memory.*", required = false)
         @RequestParam("variables", required = false, defaultValue = "")
-        variables: ArrayList<String> = arrayListOf(),
+        variables: List<String> = arrayListOf(),
 
         @Parameter(description = "Define if the values should be loaded from historic data endpoint", required = false)
         @RequestParam("historic", required = false, defaultValue = "false")
         loadFromHistoric: Boolean = false): CuroTask
 
-    @Operation(summary = "Load file from a task", operationId = "getTaskFile", description = "")
-    @GetMapping("/{id}/file/{file}", produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @Operation(summary = "Load file from a task", operationId = "getTaskFile", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @GetMapping("/{id}/file/{file}", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE])
     fun getTaskFile(
         @Parameter(description = "ID of task to get the file from", required = true)
         @PathVariable("id", required = true)
@@ -116,9 +117,26 @@ interface TaskController {
 
         @Parameter(description = "Name of the variable which contains the file", required = false)
         @PathVariable("file", required = true)
-        file: String,
+        file: String): ResponseEntity<ByteArray>
 
-        response: HttpServletResponse)
+    @Operation(summary = "Load zip file from a task, based on provided variables", operationId = "getTaskZipFile", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @GetMapping("/{id}/zip-files", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE])
+    fun getTaskZipFile(
+        @Parameter(description = "ID of task to get the file from", required = true)
+        @PathVariable("id", required = true)
+        id: String,
+
+        @Parameter(description = "Name of the variable which contains the file", required = true)
+        @RequestParam("files", required = true)
+        files: List<String>? = arrayListOf(),
+
+        @Parameter(description = "Name of the zip file", required = false)
+        @RequestParam("name", required = false, defaultValue = "files")
+        name: String = "files",
+
+        @Parameter(description = "Should non existing files be ignored ", required = false)
+        @RequestParam("ignoreNotExistingFiles", required = false, defaultValue = "false")
+        ignoreNotExistingFiles: Boolean = false): ResponseEntity<ByteArray>
 
     @Operation(summary = "Complete the given task.", operationId = "completeTask", description = "", security = [SecurityRequirement(name = "CuroBasic")])
     @PostMapping("/{id}/status", produces = [MediaType.APPLICATION_JSON_VALUE])
