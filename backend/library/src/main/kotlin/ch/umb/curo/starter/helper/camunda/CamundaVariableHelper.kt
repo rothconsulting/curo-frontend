@@ -51,7 +51,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      */
     @JvmOverloads
     @Throws(CamundaVariableException::class)
-    operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: List<T>? = null): List<T?> {
+    operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: List<T?>? = null): List<T?> {
         return getOrNull(variableListDefinition) ?: defaultValue ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
     }
 
@@ -90,9 +90,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      * @param variableDefinition CamundaVariableDefinition<T> of variable to read
      * @param exception exception thrown if variable is not present or null
      * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
-     * @throws CamundaVariableException if variable can not be casted in defined type
      */
-    @Throws(CamundaVariableException::class)
     fun <T : Any> getOrThrow(variableDefinition: CamundaVariableDefinition<T>, exception: Throwable): T? {
         return try {
             val content: Any = delegateExecution.getVariable(variableDefinition.value) ?: throw exception
@@ -102,11 +100,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
                 ObjectMapper().readValue((content as JacksonJsonNode).toString(), variableDefinition.type)
             }
         } catch (e: Exception) {
-            throw if (e.cause == exception) {
-                e
-            } else {
-                CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
-            }
+            throw exception
         }
     }
 
@@ -144,10 +138,8 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     /**
      * @param variableListDefinition name of variable to read
      * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
-     * @throws CamundaVariableException if variable can not be casted in defined type
      */
-    @Throws(CamundaVariableException::class)
-    fun <T : Any> getOrThrow(variableListDefinition: CamundaVariableListDefinition<T>, exception: Throwable): List<T?>? {
+    fun <T : Any> getOrThrow(variableListDefinition: CamundaVariableListDefinition<T>, exception: Throwable): List<T?> {
         try {
             val content: Any = delegateExecution.getVariable(variableListDefinition.value) ?: throw exception
             val list: List<*> = content as List<*>
@@ -163,11 +155,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
             @Suppress("UNCHECKED_CAST")
             return list as List<T?>
         } catch (e: Exception) {
-            throw if (e.cause == exception) {
-                e
-            } else {
-                CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
-            }
+            throw exception
         }
     }
 
