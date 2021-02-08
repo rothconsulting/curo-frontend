@@ -88,8 +88,8 @@ publishing {
             url = version.endsWith('SNAPSHOT') ? snapshotRepo : releaseRepo
 
             credentials {
-                username nexusUser
-                password nexusPassword
+                username = project.findProperty("nexusUser") ?: System.getenv("UMB_NEXUS_USER")
+                password = project.findProperty("nexusPassword")  ?: System.getenv("UMB_NEXUS_PASSWORD")
             }
         }
     }
