@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -30,6 +31,9 @@ open class CuroAutoConfiguration {
 
     @Autowired
     lateinit var properties: CuroProperties
+
+    @Autowired
+    lateinit var context: ConfigurableApplicationContext
 
     @Bean
     @ConditionalOnMissingBean
@@ -52,6 +56,11 @@ open class CuroAutoConfiguration {
             val managementService: ManagementService = engine.managementService
             managementService.toggleTelemetry(properties.camundaTelemetry!!)
         }
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun setStringContext() {
+        SpringContext.applicationContext = context
     }
 
     @Bean
