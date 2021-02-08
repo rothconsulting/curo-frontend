@@ -24,7 +24,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run build.libs
-      - run: echo "${{secrets.NPMRC}}" >> .npmrc
+      - run: echo "${{secrets.NPMRC}}" >> ~/.npmrc
       - run: npm publish
         working-directory: frontend/dist/core
       - run: npm publish
