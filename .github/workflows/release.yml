@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  push: tags
+  push:
+    tags:
+      - "*"
 
 env:
   NODE_VERSION: 14.x
