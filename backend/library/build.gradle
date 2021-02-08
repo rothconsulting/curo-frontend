@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.7"
+version = "0.0.8"
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
@@ -83,18 +83,27 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 publishing {
     repositories {
         maven {
-            def releaseRepo = "https://repo.umb.cloud/repository/maven-curo-releases/" //TODO: release to new nexus
+            def releaseRepo = "https://repo.umb.cloud/repository/maven-curo-releases" //TODO: release to new nexus
             def snapshotRepo = "" //TODO: release to new nexus
             url = version.endsWith('SNAPSHOT') ? snapshotRepo : releaseRepo
+
+            credentials {
+                username nexusUser
+                password nexusPassword
+            }
         }
     }
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             groupId = project.group
             version = project.version
             artifactId = 'curo-spring-boot-starter'
 
-            from components.java
+            artifact jar
+
+            pom {
+                name = "curo-spring-boot-starter"
+            }
         }
     }
 }
