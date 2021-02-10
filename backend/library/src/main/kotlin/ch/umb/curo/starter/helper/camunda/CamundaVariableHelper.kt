@@ -6,7 +6,12 @@ import ch.umb.curo.starter.helper.camunda.annotation.InitWithNull
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.variable.impl.value.ObjectValueImpl
+import org.camunda.bpm.engine.variable.type.ValueType
+import org.camunda.bpm.engine.variable.value.ObjectValue
+import org.camunda.bpm.engine.variable.value.TypedValue
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.camunda.spin.plugin.variable.type.JsonValueType
+import org.camunda.spin.plugin.variable.value.JsonValue
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import java.lang.reflect.Modifier
 import java.util.*
@@ -41,7 +46,6 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     }
 
 
-
     /**
      * @param variableListDefinition CamundaVariableListDefinition<T> of variable list to be read
      * @param defaultValue provide value here if variable is null / not defined
@@ -69,38 +73,33 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
 
     /**
      * @param variableDefinition CamundaVariableDefinition<T> of variable to read
+     * @param exception exception thrown if variable is not present or null
+     * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
+     */
+    fun <T : Any> getOrThrow(variableDefinition: CamundaVariableDefinition<T>, exception: Throwable): T {
+        return getOrNull(variableDefinition) ?: throw exception
+    }
+
+    /**
+     * @param variableDefinition CamundaVariableDefinition<T> of variable to read
      * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
      * @throws CamundaVariableException if variable can not be casted in defined type
      */
     @Throws(CamundaVariableException::class)
     fun <T : Any> getOrNull(variableDefinition: CamundaVariableDefinition<T>): T? {
         return try {
-            val content: Any? = delegateExecution.getVariable(variableDefinition.value)
-            try {
-                variableDefinition.type.cast(content)
-            } catch (e: ClassCastException) {
-                ObjectMapper().readValue((content as JacksonJsonNode).toString(), variableDefinition.type)
+            val raw = delegateExecution.getVariableTyped<TypedValue>(variableDefinition.value, true)
+            if (raw != null) {
+                when (raw.type) {
+                    JsonValueType.JSON -> ObjectMapper().readValue((raw as JsonValue).valueSerialized, variableDefinition.type)
+                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized, variableDefinition.type)
+                    else -> variableDefinition.type.cast(raw.value)
+                }
+            }else{
+                null
             }
         } catch (e: Exception) {
             throw CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
-        }
-    }
-
-    /**
-     * @param variableDefinition CamundaVariableDefinition<T> of variable to read
-     * @param exception exception thrown if variable is not present or null
-     * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
-     */
-    fun <T : Any> getOrThrow(variableDefinition: CamundaVariableDefinition<T>, exception: Throwable): T? {
-        return try {
-            val content: Any = delegateExecution.getVariable(variableDefinition.value) ?: throw exception
-            try {
-                variableDefinition.type.cast(content)
-            } catch (e: ClassCastException) {
-                ObjectMapper().readValue((content as JacksonJsonNode).toString(), variableDefinition.type)
-            }
-        } catch (e: Exception) {
-            throw exception
         }
     }
 
@@ -111,23 +110,17 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      */
     @Throws(CamundaVariableException::class)
     fun <T : Any> getOrNull(variableListDefinition: CamundaVariableListDefinition<T>): List<T?>? {
-        try {
-            val content: Any? = delegateExecution.getVariable(variableListDefinition.value)
-            if (content != null) {
-                val list: List<*> = content as List<*>
-
-                list.filterNotNull().forEach {
-                    try {
-                        variableListDefinition.type.cast(it)
-                    } catch (e: ClassCastException) {
-                        ObjectMapper().readValue((it as JacksonJsonNode).toString(), variableListDefinition.type)
-                    }
+        return try {
+            val raw = delegateExecution.getVariableTyped<TypedValue>(variableListDefinition.value, true)
+            if (raw != null) {
+                val mapper = ObjectMapper()
+                when (raw.type) {
+                    JsonValueType.JSON -> mapper.readValue((raw as JsonValue).valueSerialized, mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
+                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized, mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
+                    else -> variableListDefinition.type.cast(raw.value) as List<T?>?
                 }
-
-                @Suppress("UNCHECKED_CAST")
-                return list as List<T?>
             } else {
-                return null
+                null
             }
         } catch (e: Exception) {
             throw CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
@@ -140,23 +133,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      * @return result of Camunda variable matching the given definition (name/type) or null if variable is null / not defined
      */
     fun <T : Any> getOrThrow(variableListDefinition: CamundaVariableListDefinition<T>, exception: Throwable): List<T?> {
-        try {
-            val content: Any = delegateExecution.getVariable(variableListDefinition.value) ?: throw exception
-            val list: List<*> = content as List<*>
-
-            list.filterNotNull().forEach {
-                try {
-                    variableListDefinition.type.cast(it)
-                } catch (e: ClassCastException) {
-                    ObjectMapper().readValue((it as JacksonJsonNode).toString(), variableListDefinition.type)
-                }
-            }
-
-            @Suppress("UNCHECKED_CAST")
-            return list as List<T?>
-        } catch (e: Exception) {
-            throw exception
-        }
+        return getOrNull(variableListDefinition) ?: throw exception
     }
 
     /**
