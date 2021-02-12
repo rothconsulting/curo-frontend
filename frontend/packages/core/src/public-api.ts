@@ -2,6 +2,8 @@
  * Public API Surface of core
  */
 
+export * from './lib/auth/auth-success';
+export * from './lib/auth/auth.service';
 export * from './lib/core.module';
 export * from './lib/curo-base-path';
 export * from './lib/curo-form-accessor';
