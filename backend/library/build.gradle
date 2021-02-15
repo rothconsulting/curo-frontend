@@ -45,7 +45,7 @@ dependencies {
 
     kapt "org.springframework.boot:spring-boot-configuration-processor"
 
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.1"
 
     compileOnly "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:7.14.0"
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:7.14.0"
