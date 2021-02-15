@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0caf9hp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:collaboration id="Collaboration_1x75irk">
+    <bpmn:participant id="Participant_0mypmp2" name="data input" processRef="data-input" />
+  </bpmn:collaboration>
+  <bpmn:process id="data-input" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:extensionElements>
+        <camunda:executionListener delegateExpression="${startListener}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1ro0vam</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_0f4mk4p" name="In Call Active">
+      <bpmn:incoming>Flow_1ro0vam</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nssppf</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_0yesu3n">
+      <bpmn:incoming>Flow_0nssppf</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1ro0vam" sourceRef="StartEvent_1" targetRef="Activity_0f4mk4p" />
+    <bpmn:sequenceFlow id="Flow_0nssppf" sourceRef="Activity_0f4mk4p" targetRef="Event_0yesu3n" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1x75irk">
+      <bpmndi:BPMNShape id="Participant_0mypmp2_di" bpmnElement="Participant_0mypmp2" isHorizontal="true">
+        <dc:Bounds x="140" y="80" width="470" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1ro0vam_di" bpmnElement="Flow_1ro0vam">
+        <di:waypoint x="238" y="157" />
+        <di:waypoint x="350" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nssppf_di" bpmnElement="Flow_0nssppf">
+        <di:waypoint x="450" y="157" />
+        <di:waypoint x="522" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="202" y="139" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_150jgt1_di" bpmnElement="Activity_0f4mk4p">
+        <dc:Bounds x="350" y="117" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0yesu3n_di" bpmnElement="Event_0yesu3n">
+        <dc:Bounds x="522" y="139" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

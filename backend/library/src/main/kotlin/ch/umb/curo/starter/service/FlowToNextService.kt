@@ -66,6 +66,11 @@ class FlowToNextService(private val properties: CuroProperties,
             }
         } while (superProcessInstance != null)
 
+        val deepProcessInstance: List<ProcessInstance>? = runtimeService.createProcessInstanceQuery().superProcessInstanceId(processInstanceId).list()
+        if (deepProcessInstance?.isNotEmpty() == true) {
+            possibleProcessInstanceIds.addAll(deepProcessInstance.map { it.id })
+        }
+
         val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(superProcessInstanceID).singleResult()
         processEnded = superHistoryProcessInstance?.state == "COMPLETED"
 
