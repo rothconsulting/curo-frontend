@@ -33,8 +33,8 @@ open class WebAppConfig : ServletContextInitializer {
         this.servletContext = servletContext
 
         val filterRegistration = servletContext.addFilter("Authentication Filter", ProcessEngineAuthenticationFilter::class.java)
-        filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, CamundaSecurityFilter.ENGINE_REST_URL, CamundaSecurityFilter.CURO_API_URL)
+        filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, CamundaSecurityFilter.ENGINE_REST_URL, *CamundaSecurityFilter.CURO_API_URLS.toTypedArray())
         filterRegistration.initParameters = hashMapOf(Pair("authentication-provider", CuroBasicAuthAuthentication::class.java.canonicalName))
-        logger.debug("CURO: Filter {} for URL {} registered.", "Authentication Filter", "${CamundaSecurityFilter.ENGINE_REST_URL}, ${CamundaSecurityFilter.CURO_API_URL}")
+        logger.debug("CURO: Filter {} for URL {} registered.", "Authentication Filter", "${CamundaSecurityFilter.ENGINE_REST_URL}, ${CamundaSecurityFilter.CURO_API_URLS.joinToString(",") { it }}")
     }
 }

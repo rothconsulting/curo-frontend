@@ -18,6 +18,12 @@
       "sourceMethod": "getOauth2()"
     },
     {
+      "name": "curo.auth.oauth2.user-federation",
+      "type": "ch.umb.curo.starter.property.CuroUserFederationProperties",
+      "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties",
+      "sourceMethod": "getUserFederation()"
+    },
+    {
       "name": "curo.flow-to-next",
       "type": "ch.umb.curo.starter.property.CuroFlowToNextProperties",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties",
@@ -41,6 +47,66 @@
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
+      "name": "curo.auth.oauth2.user-federation.create-non-existing-users",
+      "type": "java.lang.Boolean",
+      "description": "Defines if Curo create non existing users in Camunda",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.email-claim",
+      "type": "java.lang.String",
+      "description": "Claim which is used for email",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Defines if Curo user federation is active",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.first-name-claim",
+      "type": "java.lang.String",
+      "description": "Claim which is used for firstname",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.group-claim",
+      "type": "java.lang.String",
+      "description": "Claim which is used for groups",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.last-name-claim",
+      "type": "java.lang.String",
+      "description": "Claim which is used for lastname",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.load-group-from-roles",
+      "type": "java.lang.Boolean",
+      "description": "Defines if Curo map roles to groups. If not, Curo will use the groupClaim to load a list of groups",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.print-non-existing-groups",
+      "type": "java.lang.Boolean",
+      "description": "Defines if Curo should log non existing jwt groups",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.resource-access-claim",
+      "type": "java.lang.String",
+      "description": "Claim which is used for resource access",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
+      "name": "curo.auth.oauth2.user-federation.resource-name",
+      "type": "java.lang.String",
+      "description": "Defines the resource from the the roles are used",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
       "name": "curo.auth.oauth2.user-id-claim",
       "type": "java.lang.String",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
@@ -58,6 +124,12 @@
     {
       "name": "curo.camunda-telemetry",
       "type": "java.lang.Boolean",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.camunda-user-id-pattern",
+      "type": "java.lang.String",
+      "description": "Shortcut for camunda.bpm.generic-properties.properties.userResourceWhitelistPattern *If email is used for id please use this pattern: '[a-zA-Z0-9-.@_]+'*",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     },
     {

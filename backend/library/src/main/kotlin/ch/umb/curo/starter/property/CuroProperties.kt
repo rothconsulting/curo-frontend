@@ -17,6 +17,12 @@ open class CuroProperties {
     var ignoreObjectType = false
     var camundaTelemetry: Boolean? = null
 
+    /**
+     * Shortcut for camunda.bpm.generic-properties.properties.userResourceWhitelistPattern
+     * *If email is used for id please use this pattern: '[a-zA-Z0-9-.@_]+'*
+     */
+    var camundaUserIdPattern: String? = null
+
     @NestedConfigurationProperty
     var auth: CuroAuthProperties = CuroAuthProperties()
 

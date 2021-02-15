@@ -69,7 +69,8 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
         VARIABLE_NOT_FOUND(ErrorCode.NOT_FOUND, "Variable not found"),
         VARIABLE_IS_NO_FILE(ErrorCode.NOT_FOUND, "Variable is not a file"),
         NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user"),
-        CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already existing variable type")
+        CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already existing variable type"),
+        USER_NOT_FOUND(ErrorCode.NOT_FOUND, "User not found")
     }
 
     companion object {

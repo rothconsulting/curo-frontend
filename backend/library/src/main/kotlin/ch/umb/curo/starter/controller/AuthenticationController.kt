@@ -1,30 +1,20 @@
 package ch.umb.curo.starter.controller
 
+import ch.umb.curo.starter.models.response.AuthenticationSuccessResponse
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.camunda.bpm.engine.rest.util.EngineUtil
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpServletRequest
 
-@RestController
 @Tag(name = "auth", description = "Curo Auth API")
-@RequestMapping("/curo-api")
-class AuthenticationController {
+@RequestMapping("/curo-api/auth")
+interface AuthenticationController {
 
-    @PostMapping("/authenticate", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
-    fun authenticate(@RequestParam username: String, @RequestParam password: String, response: HttpServletResponse): ResponseEntity<String> {
-        val engine = EngineUtil.lookupProcessEngine(null)
-        val checkPassword = engine.identityService.checkPassword(username, password)
-        return if (checkPassword) {
-            ResponseEntity("{}", HttpStatus.OK)
-        } else {
-            ResponseEntity("{}", HttpStatus.UNAUTHORIZED)
-        }
-    }
+    @Operation(summary = "Trigger login success logic", operationId = "success", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @PostMapping("/success", produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun success(request: HttpServletRequest): AuthenticationSuccessResponse
 
 }
