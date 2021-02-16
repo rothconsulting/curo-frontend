@@ -29,6 +29,12 @@ open class CuroProperties {
      */
     var camundaUserIdPattern: String? = null
 
+    /**
+     * Shortcut for camunda.bpm.generic-properties.properties.groupResourceWhitelistPattern
+     * *Recommended pattern: '[a-zA-Z0-9-.@_]+'*
+     */
+    var camundaGroupIdPattern: String? = null
+
     @NestedConfigurationProperty
     var auth: CuroAuthProperties = CuroAuthProperties()
 

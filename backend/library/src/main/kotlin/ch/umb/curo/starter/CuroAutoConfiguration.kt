@@ -76,6 +76,15 @@ open class CuroAutoConfiguration {
         }
     }
 
+    @EventListener(ApplicationStartedEvent::class)
+    fun setCamundaGroupIdPattern() {
+        val engine = EngineUtil.lookupProcessEngine(null)
+        if (properties.camundaGroupIdPattern != null) {
+            logger.info("CURO: Set groupResourceWhitelistPattern to: ${properties.camundaGroupIdPattern}")
+            engine.processEngineConfiguration.groupResourceWhitelistPattern = properties.camundaGroupIdPattern
+        }
+    }
+
     @EventListener(ApplicationReadyEvent::class)
     fun setStringContext() {
         SpringContext.applicationContext = context
