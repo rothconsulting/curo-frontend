@@ -18,6 +18,11 @@ open class CuroProperties {
     var camundaTelemetry: Boolean? = null
 
     /**
+     * Define users which Curo should create on startup.
+     */
+    var initialUsers: ArrayList<CuroInitialUserProperty>? = null
+
+    /**
      * Define groups which Curo should create on startup.
      * If group already exists, Curo will not create it again.
      */

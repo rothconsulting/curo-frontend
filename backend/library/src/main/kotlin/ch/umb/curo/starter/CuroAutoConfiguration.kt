@@ -105,6 +105,35 @@ open class CuroAutoConfiguration {
         }
     }
 
+    @EventListener(ApplicationReadyEvent::class)
+    fun createInitialUsers() {
+        if (properties.initialUsers != null && properties.initialUsers!!.isNotEmpty()) {
+            logger.info("CURO: Create initial users: " + properties.initialUsers!!.joinToString(", ") { it.id })
+            val engine = EngineUtil.lookupProcessEngine(null)
+            properties.initialUsers!!.forEach { userProperty ->
+                if (engine.identityService.createUserQuery().userId(userProperty.id).count() == 0L) {
+                    val user = engine.identityService.newUser(userProperty.id)
+                    user.email = userProperty.email
+                    user.firstName = userProperty.firstname
+                    user.lastName = userProperty.lastname
+                    if (userProperty.password != null) {
+                        user.password = userProperty.password
+                    }
+                    engine.identityService.saveUser(user)
+                    if (userProperty.groups != null && userProperty.groups!!.isNotEmpty()) {
+                        userProperty.groups!!.forEach {
+                            if(engine.identityService.createGroupQuery().groupId(it).count() != 0L){
+                                engine.identityService.createMembership(userProperty.id, it)
+                            }else{
+                                logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Bean
     open fun publicApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
