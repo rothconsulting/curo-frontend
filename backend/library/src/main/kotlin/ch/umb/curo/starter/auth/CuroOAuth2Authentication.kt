@@ -37,7 +37,7 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
 
     override fun extractAuthenticatedUser(request: HttpServletRequest, engine: ProcessEngine): AuthenticationResult {
 
-        val properties = SpringContext.getBean(CuroProperties::class.java)!!
+        val properties = SpringContext.getBean(CuroProperties::class.java) ?: return AuthenticationResult.unsuccessful()
 
         val jwt = resolveToken(request)
         if (jwt == null) {
