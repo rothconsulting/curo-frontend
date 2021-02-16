@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.event.ApplicationStartedEvent
-import org.springframework.boot.context.event.ApplicationStartingEvent
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -80,6 +79,21 @@ open class CuroAutoConfiguration {
     @EventListener(ApplicationReadyEvent::class)
     fun setStringContext() {
         SpringContext.applicationContext = context
+    }
+
+    @EventListener(ApplicationStartedEvent::class)
+    fun createInitialGroups() {
+        if (properties.initialGroups != null && properties.initialGroups!!.isNotEmpty()) {
+            logger.info("CURO: Create initial groups: " + properties.initialGroups!!.joinToString(", ") { it })
+            val engine = EngineUtil.lookupProcessEngine(null)
+            properties.initialGroups!!.forEach {
+                if (engine.identityService.createGroupQuery().groupId(it).count() == 0L) {
+                    val group = engine.identityService.newGroup(it)
+                    group.name = it
+                    engine.identityService.saveGroup(group)
+                }
+            }
+        }
     }
 
     @Bean

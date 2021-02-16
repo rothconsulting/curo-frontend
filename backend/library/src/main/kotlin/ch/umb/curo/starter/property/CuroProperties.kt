@@ -18,6 +18,12 @@ open class CuroProperties {
     var camundaTelemetry: Boolean? = null
 
     /**
+     * Define groups which Curo should create on startup.
+     * If group already exists, Curo will not create it again.
+     */
+    var initialGroups: List<String>? = null
+
+    /**
      * Shortcut for camunda.bpm.generic-properties.properties.userResourceWhitelistPattern
      * *If email is used for id please use this pattern: '[a-zA-Z0-9-.@_]+'*
      */
