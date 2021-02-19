@@ -80,8 +80,12 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
             logger.info("Following jwt groups do not exist on camunda:\n${nonExistingGroups.joinToString("\n") { "- $it" }}")
         }
 
-        val groupsToAdd = jwtGroups.filterNot { it in nonExistingGroups }.filterNot { it in userGroups }
-        val groupsToRemove = userGroups.filterNot { it in jwtGroups }
+        val groupsToAdd = jwtGroups.filterNot { it in nonExistingGroups }.filterNot { it in userGroups }.distinct()
+        var groupsToRemove = userGroups.filterNot { it in jwtGroups }.distinct()
+
+        if(groupsToRemove.contains("camunda-admin") && properties.auth.oauth2.userFederation.dontRevokeCamundaAdminGroup){
+            groupsToRemove = groupsToRemove.filter { it != "camunda-admin" }
+        }
 
         groupsToRemove.forEach {
             identityService.deleteMembership(userId, it)

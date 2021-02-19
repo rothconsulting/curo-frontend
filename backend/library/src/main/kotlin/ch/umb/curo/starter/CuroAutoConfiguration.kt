@@ -120,16 +120,18 @@ open class CuroAutoConfiguration {
                         user.password = userProperty.password
                     }
                     engine.identityService.saveUser(user)
-                    if (userProperty.groups != null && userProperty.groups!!.isNotEmpty()) {
-                        userProperty.groups!!.forEach {
-                            if(engine.identityService.createGroupQuery().groupId(it).count() != 0L){
-                                engine.identityService.createMembership(userProperty.id, it)
-                            }else{
-                                logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
-                            }
+                }
+
+                if (userProperty.groups != null && userProperty.groups!!.isNotEmpty()) {
+                    userProperty.groups!!.forEach {
+                        if(engine.identityService.createGroupQuery().groupId(it).count() != 0L){
+                            engine.identityService.createMembership(userProperty.id, it)
+                        }else{
+                            logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
                         }
                     }
                 }
+
             }
         }
     }

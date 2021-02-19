@@ -33,7 +33,7 @@ class CuroUserFederationProperties {
     var loadGroupFromRoles = true
 
     /**
-     * Claim which is used for groups
+     * Claim which is used for groups if loadGroupFromRoles is disabled
      */
     var groupClaim = "groups"
 
@@ -43,7 +43,7 @@ class CuroUserFederationProperties {
     var resourceAccessClaim = "resource_access"
 
     /**
-     * Defines the resource from the the roles are used
+     * Defines the resource from the the roles are used if loadGroupFromRoles is enabled
      */
     var resourceName = ""
 
@@ -51,5 +51,10 @@ class CuroUserFederationProperties {
      * Defines if Curo should log non existing jwt groups
      */
     var printNonExistingGroups = false
+
+    /**
+     * Don't revoke the camunda-admin group from users even if they don't have this group in their JWT
+     */
+    var dontRevokeCamundaAdminGroup = false
 
 }
