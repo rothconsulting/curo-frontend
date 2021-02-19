@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.12"
+version = "0.0.13"
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
