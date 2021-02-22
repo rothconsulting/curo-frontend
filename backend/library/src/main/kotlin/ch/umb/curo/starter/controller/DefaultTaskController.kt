@@ -1,5 +1,6 @@
 package ch.umb.curo.starter.controller
 
+import ch.umb.curo.starter.auth.CamundaAuthUtil.runWithoutAuthentication
 import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.AssigneeRequest
@@ -32,6 +33,7 @@ import org.springframework.beans.BeanUtils
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.RestController
+import java.util.concurrent.Callable
 import javax.servlet.http.HttpServletResponse
 
 
@@ -284,8 +286,7 @@ class DefaultTaskController(private val properties: CuroProperties,
         val response = CompleteTaskResponse()
 
         if (flowToNext) {
-            val flowToNextResult =
-                flowToNextService.getNextTask(task, flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
+            val flowToNextResult = runWithoutAuthentication({ flowToNextService.getNextTask(task, flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout) })
             response.flowToNext = flowToNextResult.flowToNext
             response.flowToEnd = flowToNextResult.flowToEnd
             response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
@@ -395,7 +396,7 @@ class DefaultTaskController(private val properties: CuroProperties,
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
         val task = curoTaskService.getHistoricTask(id)
-        return flowToNextService.searchNextTask(task.processInstanceId, assignee)
+        return runWithoutAuthentication({ flowToNextService.searchNextTask(task.processInstanceId, assignee) })
     }
 
     enum class AssignmentType {

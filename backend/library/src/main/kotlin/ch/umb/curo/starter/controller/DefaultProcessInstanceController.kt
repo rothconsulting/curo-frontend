@@ -1,5 +1,6 @@
 package ch.umb.curo.starter.controller
 
+import ch.umb.curo.starter.auth.CamundaAuthUtil.runWithoutAuthentication
 import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.models.FlowToNextResult
 import ch.umb.curo.starter.models.request.ProcessStartRequest
@@ -65,28 +66,32 @@ class DefaultProcessInstanceController : ProcessInstanceController {
             if (flowToNext) {
                 val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
                 val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
-                val flowToNextResult = flowToNextService.getNextTask(newInstance.rootProcessInstanceId, assignee, flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
+                val flowToNextResult = runWithoutAuthentication({
+                                                                    flowToNextService.getNextTask(newInstance.rootProcessInstanceId,
+                                                                                                  assignee,
+                                                                                                  flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
+                                                                })
                 response.flowToNext = flowToNextResult.flowToNext
                 response.flowToEnd = flowToNextResult.flowToEnd
                 response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
             }
 
             return response
-        } catch (e: ProcessEngineException) {
-            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND))
         } catch (e: AuthorizationException) {
             throwAndPrintStackTrace(e, ApiException.unauthorized403("You are not allowed to start this process"))
+        } catch (e: ProcessEngineException) {
+            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND))
         }
     }
 
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
         val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
-        return flowToNextService.searchNextTask(id, assignee)
+        return runWithoutAuthentication({ flowToNextService.searchNextTask(id, assignee) })
     }
 
     private fun throwAndPrintStackTrace(e: Exception?, apiReturn: ApiException): Nothing {
-        if(properties.printStacktrace){
+        if (properties.printStacktrace) {
             logger.error("API-Exception: ${apiReturn.errorCode} -> ${apiReturn.message}")
             e?.printStackTrace()
         }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Service
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service
 @Service
 class FlowToNextService(private val properties: CuroProperties,
                         private val taskService: TaskService,
-                        private val runtimeService: RuntimeService,
                         private val historyService: HistoryService) {
 
     fun getNextTask(lastTask: Task, ignoreAssignee: Boolean = false, timeout: Int): FlowToNextResult {
@@ -55,27 +55,45 @@ class FlowToNextService(private val properties: CuroProperties,
                        assignee: String?): FlowToNextResult {
         val processEnded: Boolean
         val possibleTaskIds: List<String>
-        val possibleProcessInstanceIds = arrayListOf(processInstanceId)
-        var superProcessInstance: ProcessInstance?
-        var superProcessInstanceID = processInstanceId
-        do {
-            superProcessInstance = runtimeService.createProcessInstanceQuery().subProcessInstanceId(processInstanceId).singleResult()
-            if (superProcessInstance != null) {
-                possibleProcessInstanceIds.add(superProcessInstance.id)
-                superProcessInstanceID = superProcessInstance.id
-            }
-        } while (superProcessInstance != null)
+        var possibleProcessInstanceIds = mutableListOf(processInstanceId)
+        var rootProcessInstanceId: String = processInstanceId
 
-        val deepProcessInstance: List<ProcessInstance>? = runtimeService.createProcessInstanceQuery().superProcessInstanceId(processInstanceId).list()
-        if (deepProcessInstance?.isNotEmpty() == true) {
-            possibleProcessInstanceIds.addAll(deepProcessInstance.map { it.id })
+        //Search for root
+        var foundRoot: Boolean
+        do {
+            val instance = historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId).singleResult()
+            if (instance != null) {
+                foundRoot = (rootProcessInstanceId == instance.rootProcessInstanceId)
+                rootProcessInstanceId = instance.rootProcessInstanceId
+                possibleProcessInstanceIds.add(rootProcessInstanceId)
+            } else {
+                foundRoot = true
+            }
+        } while (!foundRoot)
+
+        //Clean up list
+        possibleProcessInstanceIds = possibleProcessInstanceIds.distinct().toMutableList()
+
+        //Search leafs
+        val leafProcessInstanceIds = arrayListOf<String>()
+        possibleProcessInstanceIds.forEach {
+            val deepProcessInstance: List<HistoricProcessInstance>? = historyService.createHistoricProcessInstanceQuery().superProcessInstanceId(it).list()
+            if (deepProcessInstance?.isNotEmpty() == true) {
+                leafProcessInstanceIds.addAll(deepProcessInstance.map { it.id })
+            }
         }
 
-        val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(superProcessInstanceID).singleResult()
-        processEnded = superHistoryProcessInstance?.state == "COMPLETED"
+        possibleProcessInstanceIds.addAll(leafProcessInstanceIds)
+
+        //Clean up list
+        possibleProcessInstanceIds = possibleProcessInstanceIds.distinct().toMutableList()
 
         val possibleTaskIdsQuery = taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray())
         possibleTaskIds = (if (assignee != null) possibleTaskIdsQuery.taskAssignee(assignee) else possibleTaskIdsQuery).list().map { it.id }
+
+        //Check if root is completed
+        val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId).singleResult()
+        processEnded = superHistoryProcessInstance?.state == "COMPLETED" && possibleTaskIds.isEmpty()
 
         return FlowToNextResult(possibleTaskIds, flowToEnd = processEnded)
     }
