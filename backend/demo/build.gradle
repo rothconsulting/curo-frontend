@@ -39,6 +39,11 @@ dependencies {
 
     implementation project(':library')
 
+    implementation "org.springdoc:springdoc-openapi-ui:1.5.4"
+
+    implementation "org.zalando:logbook-logstash:2.5.0"
+    implementation "org.zalando:logbook-spring-boot-starter:2.5.0"
+
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:7.14.0"
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:7.14.0"
 

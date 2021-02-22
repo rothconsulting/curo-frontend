@@ -5,10 +5,12 @@ import ch.umb.curo.starter.property.CuroProperties
 import com.auth0.jwt.interfaces.DecodedJWT
 import org.camunda.bpm.engine.IdentityService
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import javax.servlet.http.HttpServletRequest
 
 @Component
+@ConditionalOnProperty(prefix = "curo", value = ["auth.oauth2.user-federation.enabled"], havingValue = "true")
 class CamundaUserFederationInterceptor(private val properties: CuroProperties,
                                        private val identityService: IdentityService) : AuthSuccessInterceptor {
     override val name: String = "Camunda:UserFederation"

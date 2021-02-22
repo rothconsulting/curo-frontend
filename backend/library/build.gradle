@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.13"
+version = "0.0.14"
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
@@ -20,6 +20,17 @@ tasks.jar {enabled = true}
 
 jar {
     baseName 'curo-spring-boot-starter'
+    manifest {
+        attributes "Implementation-Version": "${project.version}"
+    }
+    into("META-INF/maven/$project.group/curo-spring-boot-starter") {
+        from { generatePomFileForMavenJavaPublication }
+        rename ".*", "pom.xml"
+    }
+}
+
+java {
+    withSourcesJar()
 }
 
 ext {
@@ -53,16 +64,10 @@ dependencies {
     implementation "org.camunda.spin:camunda-spin-dataformat-json-jackson"
     implementation "org.camunda.bpm:camunda-engine-plugin-spin"
 
-    implementation "org.springdoc:springdoc-openapi-ui:1.5.4"
-    implementation 'org.springdoc:springdoc-openapi-kotlin:1.5.4'
+    compileOnly 'org.springdoc:springdoc-openapi-kotlin:1.5.4'
 
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
-    implementation "com.auth0:java-jwt:3.13.0"
-    implementation 'com.auth0:jwks-rsa:0.15.0'
-
-    implementation "org.zalando:logbook-logstash:2.5.0"
-    implementation "org.zalando:logbook-spring-boot-starter:2.5.0"
+    compileOnly "com.auth0:java-jwt:3.13.0"
+    compileOnly 'com.auth0:jwks-rsa:0.15.0'
 
     compileOnly "org.mockito:mockito-core:3.7.7"
 
@@ -70,6 +75,8 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-web"
     testImplementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:7.14.0"
     testImplementation "com.h2database:h2"
+    testImplementation "com.auth0:java-jwt:3.13.0"
+    testImplementation 'com.auth0:jwks-rsa:0.15.0'
     testImplementation "org.mockito:mockito-core:3.7.7"
 
 }
@@ -99,11 +106,8 @@ publishing {
     }
     publications {
         mavenJava(MavenPublication) {
-            groupId = project.group
-            version = project.version
+            from components.java
             artifactId = 'curo-spring-boot-starter'
-
-            artifact jar
 
             pom {
                 name = "curo-spring-boot-starter"
