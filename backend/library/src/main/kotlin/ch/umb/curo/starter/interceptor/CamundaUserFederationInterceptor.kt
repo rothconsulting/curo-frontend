@@ -60,7 +60,7 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
                         .throwAndPrintStackTrace(properties.printStacktrace)
                 try {
                     (resourceAccess[properties.auth.oauth2.userFederation.resourceName] as HashMap<String, List<String?>?>?)?.get("roles")?.filterNotNull()
-                }catch(e: Exception){
+                } catch (e: Exception) {
                     throw ApiException.invalidArgument400(arrayListOf("The Claim '${properties.auth.oauth2.userFederation.resourceAccessClaim}' seems not to follow the standard."))
                         .throwAndPrintStackTrace(properties.printStacktrace)
                 }
@@ -85,7 +85,7 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
         val groupsToAdd = jwtGroups.filterNot { it in nonExistingGroups }.filterNot { it in userGroups }.distinct()
         var groupsToRemove = userGroups.filterNot { it in jwtGroups }.distinct()
 
-        if(groupsToRemove.contains("camunda-admin") && properties.auth.oauth2.userFederation.dontRevokeCamundaAdminGroup){
+        if (groupsToRemove.contains("camunda-admin") && properties.auth.oauth2.userFederation.dontRevokeCamundaAdminGroup) {
             groupsToRemove = groupsToRemove.filter { it != "camunda-admin" }
         }
 

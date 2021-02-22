@@ -55,8 +55,25 @@ open class CuroAutoConfiguration {
         }
     }
 
+    @EventListener(ApplicationReadyEvent::class)
+    fun setStringContext() {
+        SpringContext.applicationContext = context
+    }
+
     @EventListener(ApplicationStartedEvent::class)
-    fun setCamundaUserIdPattern() {
+    fun processUserAndGroups(){
+        //Set patterns
+        setCamundaUserIdPattern()
+        setCamundaGroupIdPattern()
+
+        //Create groups
+        createInitialGroups()
+
+        //Create users
+        createInitialUsers()
+    }
+
+    private fun setCamundaUserIdPattern() {
         val engine = EngineUtil.lookupProcessEngine(null)
         if (properties.camundaUserIdPattern != null) {
             logger.info("CURO: Set userResourceWhitelistPattern to: ${properties.camundaUserIdPattern}")
@@ -71,8 +88,7 @@ open class CuroAutoConfiguration {
         }
     }
 
-    @EventListener(ApplicationStartedEvent::class)
-    fun setCamundaGroupIdPattern() {
+    private fun setCamundaGroupIdPattern() {
         val engine = EngineUtil.lookupProcessEngine(null)
         if (properties.camundaGroupIdPattern != null) {
             logger.info("CURO: Set groupResourceWhitelistPattern to: ${properties.camundaGroupIdPattern}")
@@ -80,13 +96,7 @@ open class CuroAutoConfiguration {
         }
     }
 
-    @EventListener(ApplicationReadyEvent::class)
-    fun setStringContext() {
-        SpringContext.applicationContext = context
-    }
-
-    @EventListener(ApplicationStartedEvent::class)
-    fun createInitialGroups() {
+    private fun createInitialGroups() {
         if (properties.initialGroups != null && properties.initialGroups!!.isNotEmpty()) {
             logger.info("CURO: Create initial groups: " + properties.initialGroups!!.joinToString(", ") { it })
             val engine = EngineUtil.lookupProcessEngine(null)
@@ -100,8 +110,7 @@ open class CuroAutoConfiguration {
         }
     }
 
-    @EventListener(ApplicationReadyEvent::class)
-    fun createInitialUsers() {
+    private fun createInitialUsers() {
         if (properties.initialUsers != null && properties.initialUsers!!.isNotEmpty()) {
             logger.info("CURO: Create initial users: " + properties.initialUsers!!.joinToString(", ") { it.id })
             val engine = EngineUtil.lookupProcessEngine(null)
@@ -118,10 +127,14 @@ open class CuroAutoConfiguration {
                 }
 
                 if (userProperty.groups != null && userProperty.groups!!.isNotEmpty()) {
+                    val groups = engine.identityService.createGroupQuery().list().map { it.id }
                     userProperty.groups!!.forEach {
-                        if(engine.identityService.createGroupQuery().groupId(it).count() != 0L){
-                            engine.identityService.createMembership(userProperty.id, it)
-                        }else{
+                        if (engine.identityService.createGroupQuery().groupId(it).count() != 0L) {
+                            //Only add group if user does not have it
+                            if(!groups.contains(it)){
+                                engine.identityService.createMembership(userProperty.id, it)
+                            }
+                        } else {
                             logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
                         }
                     }
