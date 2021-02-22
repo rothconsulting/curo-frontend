@@ -95,7 +95,7 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
                     ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized, variableDefinition.type)
                     else -> variableDefinition.type.cast(raw.value)
                 }
-            }else{
+            } else {
                 null
             }
         } catch (e: Exception) {
@@ -115,8 +115,10 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
             if (raw != null) {
                 val mapper = ObjectMapper()
                 when (raw.type) {
-                    JsonValueType.JSON -> mapper.readValue((raw as JsonValue).valueSerialized, mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
-                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized, mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
+                    JsonValueType.JSON -> mapper.readValue((raw as JsonValue).valueSerialized,
+                                                           mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
+                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized,
+                                                                 mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
                     else -> variableListDefinition.type.cast(raw.value) as List<T?>?
                 }
             } else {
