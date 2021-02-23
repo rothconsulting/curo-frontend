@@ -1,5 +1,6 @@
-package ch.umb.curo.starter
+package ch.umb.curo.starter.config
 
+import ch.umb.curo.starter.CuroAutoConfiguration
 import ch.umb.curo.starter.auth.CamundaSecurityFilter
 import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
@@ -23,11 +24,11 @@ import javax.servlet.ServletContext
 @ConditionalOnMissingClass("org.camunda.bpm.spring.boot.starter.webapp.CamundaBpmWebappAutoConfiguration")
 @ConditionalOnWebApplication
 @AutoConfigureAfter(CuroAutoConfiguration::class)
-open class WebAppConfig : ServletContextInitializer {
+open class WebAppConfiguration : ServletContextInitializer {
 
     lateinit var servletContext: ServletContext
 
-    private val logger = LoggerFactory.getLogger(WebAppConfig::class.java)!!
+    private val logger = LoggerFactory.getLogger(WebAppConfiguration::class.java)!!
 
     override fun onStartup(servletContext: ServletContext) {
         this.servletContext = servletContext

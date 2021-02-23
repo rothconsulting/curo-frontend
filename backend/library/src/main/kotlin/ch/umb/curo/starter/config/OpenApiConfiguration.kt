@@ -1,4 +1,4 @@
-package ch.umb.curo.starter
+package ch.umb.curo.starter.config
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
