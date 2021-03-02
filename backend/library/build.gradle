@@ -58,13 +58,14 @@ dependencies {
 
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.1"
 
-    compileOnly "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:7.14.0"
-    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:7.14.0"
+    compileOnly "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:$camunda_version"
+    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:$camunda_version"
     implementation "org.camunda.spin:camunda-spin-core"
     implementation "org.camunda.spin:camunda-spin-dataformat-json-jackson"
     implementation "org.camunda.bpm:camunda-engine-plugin-spin"
 
     compileOnly 'org.springdoc:springdoc-openapi-kotlin:1.5.4'
+    compileOnly 'org.springdoc:springdoc-openapi-ui:1.5.4'
     compileOnly "com.auth0:java-jwt:3.13.0"
     compileOnly 'com.auth0:jwks-rsa:0.15.0'
 
@@ -72,7 +73,7 @@ dependencies {
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.boot:spring-boot-starter-web"
-    testImplementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:7.14.0"
+    testImplementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:$camunda_version"
     testImplementation "com.h2database:h2"
     testImplementation "com.auth0:java-jwt:3.13.0"
     testImplementation 'com.auth0:jwks-rsa:0.15.0'
