@@ -19,15 +19,10 @@ class PropertiesListener : ApplicationListener<ApplicationContextInitializedEven
                                         "At least one issuer needs to be allowed if oauth2 is active")
         }
 
-        //jwk-url needs to be set if verify-jwt is true
+        //jwk-url need to be valid
         val verifyJwt = event.applicationContext.environment.getProperty("curo.auth.oauth2.verify-jwt", Boolean::class.java) ?: false
         val jwkUrl = event.applicationContext.environment.getProperty("curo.auth.oauth2.jwk-url") ?: ""
-        if (authType == "oauth2" && verifyJwt && jwkUrl.isEmpty()) {
-            throw CuroPropertyException("Curo configuration is missing a needed parameter", "curo.auth.oauth2.jwt-url", "", "jwk-url needs to be set if verify-jwt is active")
-        }
-
-        //jwk-url need to be valid
-        if (authType == "oauth2" && verifyJwt && !isValidURL(jwkUrl)) {
+        if (authType == "oauth2" && verifyJwt && jwkUrl.isNotEmpty() && !isValidURL(jwkUrl)) {
             throw CuroPropertyException("Curo configuration has wrong parameter", "curo.auth.oauth2.jwt-url", jwkUrl, "jwk-url needs to be a valid url")
         }
 

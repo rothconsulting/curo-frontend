@@ -1,7 +1,9 @@
 package ch.umb.curo.starter.auth
 
 import ch.umb.curo.starter.SpringContext
+import ch.umb.curo.starter.models.auth.OpenidConfiguration
 import ch.umb.curo.starter.property.CuroProperties
+import ch.umb.curo.starter.util.JsonBodyHandler
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.UrlJwkProvider
 import com.auth0.jwt.JWT
@@ -13,7 +15,10 @@ import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.net.URL
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
 import java.security.interfaces.RSAPublicKey
 import java.time.Instant
 import java.util.*
@@ -101,17 +106,24 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
             AlgorithmMismatchException::class,
             SignatureVerificationException::class,
             TokenExpiredException::class,
-            InvalidClaimException::class
+            InvalidClaimException::class,
+            JWTVerificationException::class
     )
     fun verifyJwt(encodedJwt: String): DecodedJWT {
         val properties = SpringContext.getBean(CuroProperties::class.java)!!
 
         var jwt = JWT.decode(encodedJwt)
+        val jwkUrl = getCertUrl(jwt.issuer) ?: throw JWTVerificationException("Jwk url is not accessible or defined")
 
-        val provider: JwkProvider = UrlJwkProvider(URL(properties.auth.oauth2.jwkUrl))
+        val provider: JwkProvider = UrlJwkProvider(URL(jwkUrl))
         // Get the kid from received JWT token
         val jwk = provider[jwt.keyId]
-        val algorithm = Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null)
+        val algorithm = when(jwk.algorithm){
+            "RS256" -> Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null)
+            "RS384" -> Algorithm.RSA384(jwk.publicKey as RSAPublicKey, null)
+            "RS512" -> Algorithm.RSA512(jwk.publicKey as RSAPublicKey, null)
+            else -> throw AlgorithmMismatchException("Unknown algorithm ${jwk.algorithm}")
+        }
 
         val verifier: JWTVerifier = JWT.require(algorithm)
             .withIssuer(*properties.auth.oauth2.allowedIssuers.toTypedArray())
@@ -120,6 +132,34 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
         jwt = verifier.verify(encodedJwt)
 
         return jwt
+    }
+    
+    private fun getCertUrl(iss: String): String? {
+        val properties = SpringContext.getBean(CuroProperties::class.java)!!
+        val url = properties.auth.oauth2.jwkUrl
+
+        if(url.isNotEmpty()){
+            return url
+        }
+
+        return try {
+            val client = HttpClient.newHttpClient()
+            val request = HttpRequest.newBuilder(
+                URI.create("$iss/.well-known/openid-configuration"))
+                .header("accept", "application/json")
+                .build()
+            val httpResponse = client.send(request, JsonBodyHandler(OpenidConfiguration::class.java))
+            if(httpResponse.statusCode() == 200) {
+                val openidConfiguration: OpenidConfiguration = httpResponse.body().get()
+                openidConfiguration.jwksUri
+            } else {
+                printErrorsToLog("Was not able to locate .well-known/openid-configuration based on issuer claim")
+                null
+            }
+        }catch (e: Exception) {
+            printErrorsToLog("Was not able to locate .well-known/openid-configuration based on issuer claim")
+            null
+        }
     }
 
     private fun resolveToken(request: HttpServletRequest): String? {
