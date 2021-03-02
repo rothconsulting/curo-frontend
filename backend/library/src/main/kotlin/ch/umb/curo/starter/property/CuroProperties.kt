@@ -37,7 +37,7 @@ open class CuroProperties {
      * Define groups which Curo should create on startup.
      * If group already exists, Curo will not create it again.
      */
-    var initialGroups: List<String>? = null
+    var initialGroups: List<CuroInitialGroupProperty>? = null
 
     /**
      * Shortcut for camunda.bpm.generic-properties.properties.userResourceWhitelistPattern

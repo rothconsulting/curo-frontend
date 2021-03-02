@@ -4,6 +4,7 @@ import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import ch.umb.curo.starter.auth.CuroOAuth2Authentication
 import ch.umb.curo.starter.property.CuroProperties
 import org.camunda.bpm.engine.ManagementService
+import org.camunda.bpm.engine.authorization.Authorization
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.slf4j.LoggerFactory
@@ -61,7 +62,7 @@ open class CuroAutoConfiguration {
     }
 
     @EventListener(ApplicationStartedEvent::class)
-    fun processUserAndGroups(){
+    fun processUserAndGroups() {
         //Set patterns
         setCamundaUserIdPattern()
         setCamundaGroupIdPattern()
@@ -83,7 +84,12 @@ open class CuroAutoConfiguration {
         //show warning if userIdClaim is email or mail and userResourceWhitelistPattern is default
         val isDefaultPattern = engine.processEngineConfiguration.userResourceWhitelistPattern == null ||
                 engine.processEngineConfiguration.userResourceWhitelistPattern == "[a-zA-Z0-9]+|camunda-admin"
-        if (properties.auth.type == "oauth2" && properties.auth.oauth2.userIdClaim in arrayListOf("mail", "email", "preferred_username") && isDefaultPattern) {
+        if (properties.auth.type == "oauth2" && properties.auth.oauth2.userIdClaim in arrayListOf(
+                "mail",
+                "email",
+                "preferred_username"
+            ) && isDefaultPattern
+        ) {
             logger.warn("CURO: email seems to be used as userIdClaim but camundaUserIdPattern is no set. This may result in Curo not be able to authenticate users as the camunda default pattern does not allow email addresses.")
         }
     }
@@ -98,13 +104,35 @@ open class CuroAutoConfiguration {
 
     private fun createInitialGroups() {
         if (properties.initialGroups != null && properties.initialGroups!!.isNotEmpty()) {
-            logger.info("CURO: Create initial groups: " + properties.initialGroups!!.joinToString(", ") { it })
+            logger.info("CURO: Create initial groups: " + properties.initialGroups!!.joinToString(", ") { it.id })
             val engine = EngineUtil.lookupProcessEngine(null)
-            properties.initialGroups!!.forEach {
-                if (engine.identityService.createGroupQuery().groupId(it).count() == 0L) {
-                    val group = engine.identityService.newGroup(it)
-                    group.name = it
-                    engine.identityService.saveGroup(group)
+            properties.initialGroups!!.forEach { group ->
+                if (engine.identityService.createGroupQuery().groupId(group.id).count() == 0L) {
+                    val newGroup = engine.identityService.newGroup(group.id)
+                    newGroup.name = if (group.name.isNotEmpty()) group.name else group.id
+                    if (group.type.isNotEmpty()) newGroup.type = group.type
+                    engine.identityService.saveGroup(newGroup)
+                    logger.debug("CURO: Group '${group.id}' created")
+
+                    group.permissions.forEach { entry ->
+                        val newAuthorization =
+                            engine.authorizationService.createNewAuthorization(Authorization.AUTH_TYPE_GRANT)
+                        newAuthorization.groupId = newGroup.id
+                        newAuthorization.setResource(entry.key)
+                        newAuthorization.resourceId = "*"
+                        newAuthorization.setPermissions(*entry.value.toTypedArray())
+                        engine.authorizationService.saveAuthorization(newAuthorization)
+                        logger.debug(
+                            "CURO: Add permissions for group '${group.id}': ${entry.key.name} -> ${
+                                entry.value.joinToString(
+                                    ", "
+                                ) { it.name }
+                            }"
+                        )
+                    }
+
+                } else {
+                    logger.info("CURO: Group '${group.id}' does already exist")
                 }
             }
         }
@@ -131,7 +159,7 @@ open class CuroAutoConfiguration {
                     userProperty.groups!!.forEach {
                         if (engine.identityService.createGroupQuery().groupId(it).count() != 0L) {
                             //Only add group if user does not have it
-                            if(!groups.contains(it)){
+                            if (!groups.contains(it)) {
                                 engine.identityService.createMembership(userProperty.id, it)
                             }
                         } else {
