@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: Curo
+    description: ""
+    version: 1
+curo:
+  print-stacktrace: false
+  camunda-user-id-pattern: '[a-zA-Z0-9-.@_]+'
+  camunda-group-id-pattern: '[a-zA-Z0-9-.@_]+'
+  initial-groups:
+    - id: worker
+    - id: supporter
+    - id: teamlead
+  initial-users:
+    - id: bob_tower
+      firstname: Bob
+      lastname: Tower
+      email: bob_tower@umb.ch
+      password: testPassword
+      groups: camunda-admin
+    - id: sahra_doe
+      firstname: Sahra
+      lastname: Doe
+      email: sahra_doe@umb.ch
+      groups: worker, supporter
+    - id: richard_m_nunez
+      firstname: Richard M.
+      lastname: Nunez
+      email: richard_m_nunez@umb.ch
+      groups: teamlead
+    - id: demo
+      groups: teamlead, worker, supporter
+
+camunda:
+  bpm:
+    admin-user:
+      email: demo@demo.com
+      first-name: demo
+      last-name: demo
+      password: demo
+      id: demo
+    default-serialization-format: application/json
+    filter:
+      create: 🌍 All tasks
+    history-level: full

@@ -152,22 +152,26 @@ open class CuroAutoConfiguration {
                         user.password = userProperty.password
                     }
                     engine.identityService.saveUser(user)
+                    logger.debug("CURO: User '${user.id}' created")
                 }
 
                 if (userProperty.groups != null && userProperty.groups!!.isNotEmpty()) {
                     val groups = engine.identityService.createGroupQuery().list().map { it.id }
-                    userProperty.groups!!.forEach {
-                        if (engine.identityService.createGroupQuery().groupId(it).count() != 0L) {
-                            //Only add group if user does not have it
-                            if (!groups.contains(it)) {
-                                engine.identityService.createMembership(userProperty.id, it)
-                            }
-                        } else {
+                    userProperty.groups!!.filter { it in groups }.forEach {
+                        //Only add group if user does not have it
+                        if (engine.identityService.createGroupQuery().groupMember(userProperty.id).groupId(it).count() == 0L) {
+                            engine.identityService.createMembership(userProperty.id, it)
+                            logger.debug("CURO: Added user '${userProperty.id}' to group '$it'")
+                        }
+                    }
+
+                    val nonExistingGroups = userProperty.groups!!.filterNot { it in groups }
+                    if(nonExistingGroups.isNotEmpty()){
+                        nonExistingGroups.forEach {
                             logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
                         }
                     }
                 }
-
             }
         }
     }
