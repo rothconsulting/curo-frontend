@@ -34,86 +34,103 @@
     {
       "name": "curo.auth.oauth2.allowed-issuers",
       "type": "java.util.ArrayList<java.lang.String>",
+      "description": "Allowed issuer (iss)",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
       "name": "curo.auth.oauth2.jwk-url",
       "type": "java.lang.String",
+      "description": "JWK Url to use for signature checking",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
       "name": "curo.auth.oauth2.print-errors-to-log",
       "type": "java.lang.Boolean",
+      "description": "Print warnings for wrong tokens and verification failures",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.create-non-existing-users",
       "type": "java.lang.Boolean",
+      "description": "Defines if Curo create non existing users in Camunda",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.dont-revoke-camunda-admin-group",
       "type": "java.lang.Boolean",
+      "description": "Don't revoke the camunda-admin group from users even if they don't have this group in their JWT",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.email-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used for email",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.enabled",
       "type": "java.lang.Boolean",
+      "description": "Defines if Curo user federation is active",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.first-name-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used for firstname",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.group-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used for groups if loadGroupFromRoles is disabled",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.last-name-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used for lastname",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.load-group-from-roles",
       "type": "java.lang.Boolean",
+      "description": "Defines if Curo map roles to groups. If not, Curo will use the groupClaim to load a list of groups",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.print-non-existing-groups",
       "type": "java.lang.Boolean",
+      "description": "Defines if Curo should log non existing jwt groups",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.resource-access-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used for resource access",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-federation.resource-name",
       "type": "java.lang.String",
+      "description": "Defines the resource from the the roles are used if loadGroupFromRoles is enabled",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
       "name": "curo.auth.oauth2.user-id-claim",
       "type": "java.lang.String",
+      "description": "Claim which is used to check against Camunda (user id) Common claims: email, preferred_username",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
       "name": "curo.auth.oauth2.verify-jwt",
       "type": "java.lang.Boolean",
+      "description": "Should Curo check the signature against the defined public key",
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
       "name": "curo.auth.type",
       "type": "java.lang.String",
+      "description": "Type of authentication supported by Curo: basic, oauth2",
       "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties"
     },
     {
@@ -137,16 +154,19 @@
     {
       "name": "curo.flow-to-next.default-timeout",
       "type": "java.lang.Integer",
+      "description": "Default timeout in seconds for flowToNext requests Default: 30s",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {
       "name": "curo.flow-to-next.ignore-assignee",
       "type": "java.lang.Boolean",
+      "description": "Should Curo ignore the assignee for flowToNext requests Default: false",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {
       "name": "curo.flow-to-next.interval",
       "type": "java.lang.Integer",
+      "description": "How long in milliseconds should Curo wait between requests to Camunda if flowToNext got requested Default: 500ms",
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {

@@ -1,6 +1,6 @@
 {
   "name": "@umb-ag/curo-camunda",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "publishConfig": {
     "registry": "https://repo.umb.cloud/repository/npm-curo-releases/"
   },
