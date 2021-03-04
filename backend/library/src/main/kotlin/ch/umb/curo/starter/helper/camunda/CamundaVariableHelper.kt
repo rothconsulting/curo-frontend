@@ -4,7 +4,7 @@ import ch.umb.curo.starter.exception.CamundaVariableException
 import ch.umb.curo.starter.helper.camunda.annotation.InitWithEmpty
 import ch.umb.curo.starter.helper.camunda.annotation.InitWithNull
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.delegate.DelegateExecution
+import org.camunda.bpm.engine.delegate.VariableScope
 import org.camunda.bpm.engine.variable.impl.value.ObjectValueImpl
 import org.camunda.bpm.engine.variable.type.ValueType
 import org.camunda.bpm.engine.variable.value.ObjectValue
@@ -18,7 +18,7 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
-open class CamundaVariableHelper(private val delegateExecution: DelegateExecution) {
+open class CamundaVariableHelper(private val variableScope: VariableScope) {
 
     /**
      * @param variableDefinition CamundaVariableDefinition<T> of variable to read
@@ -30,7 +30,8 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     @JvmOverloads
     @Throws(CamundaVariableException::class)
     operator fun <T : Any> get(variableDefinition: CamundaVariableDefinition<T>, defaultValue: T? = null): T {
-        return getOrNull(variableDefinition) ?: defaultValue ?: throw CamundaVariableException("Camunda variable '" + variableDefinition.value + "' is not defined")
+        return getOrNull(variableDefinition) ?: defaultValue
+        ?: throw CamundaVariableException("Camunda variable '" + variableDefinition.value + "' is not defined")
     }
 
     /**
@@ -42,7 +43,8 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      */
     @Throws(CamundaVariableException::class)
     operator fun <T : Any> get(variableDefinition: CamundaVariableDefinition<T>, defaultValue: Supplier<T?>): T {
-        return getOrNull(variableDefinition) ?: defaultValue.get() ?: throw CamundaVariableException("Camunda variable '" + variableDefinition.value + "' is not defined")
+        return getOrNull(variableDefinition) ?: defaultValue.get()
+        ?: throw CamundaVariableException("Camunda variable '" + variableDefinition.value + "' is not defined")
     }
 
 
@@ -55,8 +57,12 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      */
     @JvmOverloads
     @Throws(CamundaVariableException::class)
-    operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: List<T?>? = null): List<T?> {
-        return getOrNull(variableListDefinition) ?: defaultValue ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
+    operator fun <T : Any> get(
+        variableListDefinition: CamundaVariableListDefinition<T>,
+        defaultValue: List<T?>? = null
+    ): List<T?> {
+        return getOrNull(variableListDefinition) ?: defaultValue
+        ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
     }
 
     /**
@@ -67,8 +73,12 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
      * @throws CamundaVariableException if variable can not be casted in defined type
      */
     @Throws(CamundaVariableException::class)
-    operator fun <T : Any> get(variableListDefinition: CamundaVariableListDefinition<T>, defaultValue: Supplier<List<T>?>): List<T?> {
-        return getOrNull(variableListDefinition) ?: defaultValue.get() ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
+    operator fun <T : Any> get(
+        variableListDefinition: CamundaVariableListDefinition<T>,
+        defaultValue: Supplier<List<T>?>
+    ): List<T?> {
+        return getOrNull(variableListDefinition) ?: defaultValue.get()
+        ?: throw CamundaVariableException("Camunda variable '" + variableListDefinition.value + "' is not defined")
     }
 
     /**
@@ -88,18 +98,27 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     @Throws(CamundaVariableException::class)
     fun <T : Any> getOrNull(variableDefinition: CamundaVariableDefinition<T>): T? {
         return try {
-            val raw = delegateExecution.getVariableTyped<TypedValue>(variableDefinition.value, true)
+            val raw = variableScope.getVariableTyped<TypedValue>(variableDefinition.value, true)
             if (raw != null) {
                 when (raw.type) {
-                    JsonValueType.JSON -> ObjectMapper().readValue((raw as JsonValue).valueSerialized, variableDefinition.type)
-                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized, variableDefinition.type)
+                    JsonValueType.JSON -> ObjectMapper().readValue(
+                        (raw as JsonValue).valueSerialized,
+                        variableDefinition.type
+                    )
+                    ValueType.OBJECT -> ObjectMapper().readValue(
+                        (raw as ObjectValue).valueSerialized,
+                        variableDefinition.type
+                    )
                     else -> variableDefinition.type.cast(raw.value)
                 }
             } else {
                 null
             }
         } catch (e: Exception) {
-            throw CamundaVariableException("Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(), e)
+            throw CamundaVariableException(
+                "Could not cast variable '" + variableDefinition.value + "' to type " + variableDefinition.type.toString(),
+                e
+            )
         }
     }
 
@@ -111,21 +130,28 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     @Throws(CamundaVariableException::class)
     fun <T : Any> getOrNull(variableListDefinition: CamundaVariableListDefinition<T>): List<T?>? {
         return try {
-            val raw = delegateExecution.getVariableTyped<TypedValue>(variableListDefinition.value, true)
+            val raw = variableScope.getVariableTyped<TypedValue>(variableListDefinition.value, true)
             if (raw != null) {
                 val mapper = ObjectMapper()
                 when (raw.type) {
-                    JsonValueType.JSON -> mapper.readValue((raw as JsonValue).valueSerialized,
-                                                           mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
-                    ValueType.OBJECT -> ObjectMapper().readValue((raw as ObjectValue).valueSerialized,
-                                                                 mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)) as List<T?>?
+                    JsonValueType.JSON -> mapper.readValue(
+                        (raw as JsonValue).valueSerialized,
+                        mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)
+                    ) as List<T?>?
+                    ValueType.OBJECT -> ObjectMapper().readValue(
+                        (raw as ObjectValue).valueSerialized,
+                        mapper.typeFactory.constructCollectionType(List::class.java, variableListDefinition.type)
+                    ) as List<T?>?
                     else -> variableListDefinition.type.cast(raw.value) as List<T?>?
                 }
             } else {
                 null
             }
         } catch (e: Exception) {
-            throw CamundaVariableException("Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(), e)
+            throw CamundaVariableException(
+                "Could not cast variable '" + variableListDefinition.value + "' to type " + variableListDefinition.type.toString(),
+                e
+            )
         }
     }
 
@@ -167,16 +193,17 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
                     is CamundaVariable -> getOrNull(it)
                     is CamundaVariableList -> getOrNull(it)
                     else -> null
-                })
+                }
+            )
         }
     }
 
     operator fun <T : Any> set(variableName: CamundaVariableDefinition<T>, value: T?) {
-        delegateExecution.setVariable(variableName.value, value)
+        variableScope.setVariable(variableName.value, value)
     }
 
     operator fun <T : Any> set(variableName: CamundaVariableListDefinition<T>, value: List<T?>) {
-        delegateExecution.setVariable(variableName.value, value)
+        variableScope.setVariable(variableName.value, value)
     }
 
     fun initVariables(variableClass: Any) {
@@ -201,24 +228,43 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
                         } else {
                             definition.type.getConstructor().newInstance()
                         }
-                        delegateExecution.setVariable(definition.value, value)
+                        variableScope.setVariable(definition.value, value)
                     }
-                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && !emptyInit -> delegateExecution.setVariable(definition.value, null)
-                    (it.type == JacksonJsonNode::class.java) && emptyInit -> delegateExecution.setVariable(definition.value,
-                                                                                                           JsonValueImpl(ObjectMapper().writeValueAsString(definition.type.getConstructor()
-                                                                                                                                                               .newInstance()),
-                                                                                                                         "application/json"))
-                    (it.type == JacksonJsonNode::class.java) && !emptyInit -> delegateExecution.setVariable(definition.value, JsonValueImpl("", "application/json"))
+                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && !emptyInit -> variableScope.setVariable(
+                        definition.value,
+                        null
+                    )
+                    (it.type == JacksonJsonNode::class.java) && emptyInit -> variableScope.setVariable(
+                        definition.value,
+                        JsonValueImpl(
+                            ObjectMapper().writeValueAsString(
+                                definition.type.getConstructor()
+                                    .newInstance()
+                            ),
+                            "application/json"
+                        )
+                    )
+                    (it.type == JacksonJsonNode::class.java) && !emptyInit -> variableScope.setVariable(
+                        definition.value,
+                        JsonValueImpl("", "application/json")
+                    )
                     else -> {
                         if (emptyInit) {
-                            delegateExecution.setVariable(definition.value,
-                                                          ObjectValueImpl(definition.type.getConstructor().newInstance(),
-                                                                          ObjectMapper().writeValueAsString(definition.type.getConstructor().newInstance()),
-                                                                          "application/json",
-                                                                          definition.type.canonicalName,
-                                                                          true))
+                            variableScope.setVariable(
+                                definition.value,
+                                ObjectValueImpl(
+                                    definition.type.getConstructor().newInstance(),
+                                    ObjectMapper().writeValueAsString(definition.type.getConstructor().newInstance()),
+                                    "application/json",
+                                    definition.type.canonicalName,
+                                    true
+                                )
+                            )
                         } else {
-                            delegateExecution.setVariable(definition.value, ObjectValueImpl(null, "", "application/json", definition.type.canonicalName, true))
+                            variableScope.setVariable(
+                                definition.value,
+                                ObjectValueImpl(null, "", "application/json", definition.type.canonicalName, true)
+                            )
                         }
                     }
                 }
@@ -226,13 +272,13 @@ open class CamundaVariableHelper(private val delegateExecution: DelegateExecutio
     }
 
     companion object {
-        fun initVariables(variableClass: Any, delegateExecution: DelegateExecution) {
-            CamundaVariableHelper(delegateExecution).initVariables(variableClass)
+        fun initVariables(variableClass: Any, variableScope: VariableScope) {
+            CamundaVariableHelper(variableScope).initVariables(variableClass)
         }
     }
 
 }
 
-fun DelegateExecution.variableHelper(): CamundaVariableHelper {
+fun VariableScope.variableHelper(): CamundaVariableHelper {
     return CamundaVariableHelper(this)
 }

@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory
  *     }
  * </pre></blockquote>
  *
- * @param delegateExecution Real or mocked delegate execution.
+ * @param variableScope Real or mocked delegate execution.
  * @param logging           Should Curo output log during testing
  */
-class CamundaVariableHelperMock(override val delegateExecution: DelegateExecution, override val logging: Boolean = false) : CamundaVariableHelperMockInterface {
+class CamundaVariableHelperMock(override val variableScope: DelegateExecution, override val logging: Boolean = false) : CamundaVariableHelperMockInterface {
 
     override val logger: Logger = LoggerFactory.getLogger(CamundaVariableHelperMock::class.java)
     private val implementation: CamundaVariableHelperMockInterface
@@ -61,7 +61,7 @@ class CamundaVariableHelperMock(override val delegateExecution: DelegateExecutio
 
     private fun getCorrectMockFramework(): CamundaVariableHelperMockInterface {
         return when {
-            Class.forName(this::class.java.classLoader.unnamedModule, "org.mockito.Mockito") != null -> CamundaVariableHelperMockito(delegateExecution, logging)
+            Class.forName(this::class.java.classLoader.unnamedModule, "org.mockito.Mockito") != null -> CamundaVariableHelperMockito(variableScope, logging)
             else -> throw IllegalArgumentException("Curo was not able to find a supported mocking framework!")
         }
     }

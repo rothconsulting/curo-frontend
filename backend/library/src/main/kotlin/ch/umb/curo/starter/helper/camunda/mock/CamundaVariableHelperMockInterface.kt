@@ -3,12 +3,13 @@ package ch.umb.curo.starter.helper.camunda.mock
 import ch.umb.curo.starter.helper.camunda.CamundaVariableDefinition
 import ch.umb.curo.starter.helper.camunda.CamundaVariableListDefinition
 import org.camunda.bpm.engine.delegate.DelegateExecution
+import org.camunda.bpm.engine.delegate.VariableScope
 import org.slf4j.Logger
 
 interface CamundaVariableHelperMockInterface {
 
     val logger: Logger
-    val delegateExecution: DelegateExecution
+    val variableScope: VariableScope
     val logging: Boolean
 
     /**
