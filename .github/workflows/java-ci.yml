@@ -43,6 +43,7 @@ jobs:
         with:
           name: libs
           path: backend/demo/build/libs
+          if-no-files-found: error
           retention-days: 1
 
   containerize:
