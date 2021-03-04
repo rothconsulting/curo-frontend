@@ -47,6 +47,7 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
                 ?: throw ApiException.invalidArgument400(arrayListOf("The Claim '${properties.auth.oauth2.userFederation.lastNameClaim}' does not exist."))
                     .throwAndPrintStackTrace(properties.printStacktrace)
             identityService.saveUser(newUser)
+            logger.debug("CURO: User '$userId' got created")
         }
 
         //Try to unlock user
@@ -76,10 +77,16 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
         val camundaGroups = identityService.createGroupQuery().list().map { it.id }
         val userGroups = identityService.createGroupQuery().groupMember(userId).list().map { it.id }
 
-
-        val nonExistingGroups = jwtGroups.filterNot { it in camundaGroups }
-        if (properties.auth.oauth2.userFederation.printNonExistingGroups && nonExistingGroups.isNotEmpty()) {
-            logger.info("Following jwt groups do not exist on camunda:\n${nonExistingGroups.joinToString("\n") { "- $it" }}")
+        var nonExistingGroups = jwtGroups.filterNot { it in camundaGroups }
+        if(properties.auth.oauth2.userFederation.createNonExistingGroups && nonExistingGroups.isNotEmpty()){
+            nonExistingGroups.forEach {
+                val newGroup = identityService.newGroup(it)
+                identityService.saveGroup(newGroup)
+                logger.debug("CURO: Create group '$it' because it does not exist")
+            }
+            nonExistingGroups = arrayListOf() // reset non existing groups
+        } else if (properties.auth.oauth2.userFederation.printNonExistingGroups && nonExistingGroups.isNotEmpty()) {
+            logger.info("CURO: Following jwt groups do not exist on camunda:\n${nonExistingGroups.joinToString("\n") { "- $it" }}")
         }
 
         val groupsToAdd = jwtGroups.filterNot { it in nonExistingGroups }.filterNot { it in userGroups }.distinct()
@@ -91,10 +98,12 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
 
         groupsToRemove.forEach {
             identityService.deleteMembership(userId, it)
+            logger.debug("CURO: User '$userId' got removed from '$it'")
         }
 
         groupsToAdd.forEach {
             identityService.createMembership(userId, it)
+            logger.debug("CURO: User '$userId' got added to '$it'")
         }
 
         return true

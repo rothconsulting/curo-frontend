@@ -57,4 +57,8 @@ class CuroUserFederationProperties {
      */
     var dontRevokeCamundaAdminGroup = false
 
+    /**
+     * Create non existing jwt groups in camunda
+     */
+    var createNonExistingGroups = false
 }
