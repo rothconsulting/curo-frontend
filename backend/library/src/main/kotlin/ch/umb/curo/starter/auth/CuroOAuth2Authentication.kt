@@ -87,6 +87,11 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
             return AuthenticationResult.unsuccessful()
         }
 
+        //Allow if /curo-api/auth/success
+        if(request.requestURI == "/curo-api/auth/success" && properties.auth.oauth2.userFederation.enabled){
+            return AuthenticationResult.successful(userId)
+        }
+
         val user = engine.identityService.createUserQuery().userId(userId).singleResult()
         return if (user == null) {
             printErrorsToLog("User ($userId) does not exist on Camunda.")

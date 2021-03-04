@@ -17,3 +17,5 @@ export * from './lib/task/task-list';
 export * from './lib/task/task-query';
 export * from './lib/task/task.service';
 export * from './lib/task/variable-query-parameter';
+export * from './lib/user/user';
+export * from './lib/user/user.service';

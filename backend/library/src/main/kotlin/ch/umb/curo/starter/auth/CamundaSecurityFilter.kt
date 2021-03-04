@@ -26,7 +26,7 @@ open class CamundaSecurityFilter {
 
     companion object {
         const val ENGINE_REST_URL: String = "/engine-rest/*"
-        val CURO_API_URLS: List<String> = arrayListOf("/curo-api/tasks/*", "/curo-api/tasks", "/curo-api/process-instances/*", "/curo-api/process-instances", "/curo-api/menus")
+        val CURO_API_URLS: List<String> = arrayListOf("/curo-api/*")
     }
 
     @Bean
