@@ -1,5 +1,6 @@
 package ch.umb.curo.starter.interceptor
 
+import ch.umb.curo.starter.auth.CamundaAuthUtil
 import ch.umb.curo.starter.exception.ApiException
 import ch.umb.curo.starter.property.CuroProperties
 import com.auth0.jwt.interfaces.DecodedJWT
@@ -11,8 +12,10 @@ import javax.servlet.http.HttpServletRequest
 
 @Component
 @ConditionalOnProperty(prefix = "curo", value = ["auth.oauth2.user-federation.enabled"], havingValue = "true")
-class CamundaUserFederationInterceptor(private val properties: CuroProperties,
-                                       private val identityService: IdentityService) : AuthSuccessInterceptor {
+class CamundaUserFederationInterceptor(
+    private val properties: CuroProperties,
+    private val identityService: IdentityService
+) : AuthSuccessInterceptor {
     override val name: String = "Camunda:UserFederation"
     override val async: Boolean = false
     override val order: Int = 10
@@ -24,6 +27,10 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
             return false
         }
 
+        return CamundaAuthUtil.runWithoutAuthentication({ processUserFederation(jwt) })
+    }
+
+    private fun processUserFederation(jwt: DecodedJWT): Boolean {
         val userId = jwt.getClaim(properties.auth.oauth2.userIdClaim).asString()
             ?: throw ApiException.invalidArgument400(arrayListOf("The Claim '${properties.auth.oauth2.userIdClaim}' does not exist."))
                 .throwAndPrintStackTrace(properties.printStacktrace)
@@ -31,7 +38,8 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
         //Check if user exists
         val user = identityService.createUserQuery().userId(userId).singleResult()
         if (!properties.auth.oauth2.userFederation.createNonExistingUsers && user == null) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.USER_NOT_FOUND).throwAndPrintStackTrace(properties.printStacktrace)
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.USER_NOT_FOUND)
+                .throwAndPrintStackTrace(properties.printStacktrace)
         }
 
         if (user == null) {
@@ -60,7 +68,9 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
                     ?: throw ApiException.invalidArgument400(arrayListOf("The Claim '${properties.auth.oauth2.userFederation.resourceAccessClaim}' does not exist."))
                         .throwAndPrintStackTrace(properties.printStacktrace)
                 try {
-                    (resourceAccess[properties.auth.oauth2.userFederation.resourceName] as HashMap<String, List<String?>?>?)?.get("roles")?.filterNotNull()
+                    (resourceAccess[properties.auth.oauth2.userFederation.resourceName] as HashMap<String, List<String?>?>?)?.get(
+                        "roles"
+                    )?.filterNotNull()
                 } catch (e: Exception) {
                     throw ApiException.invalidArgument400(arrayListOf("The Claim '${properties.auth.oauth2.userFederation.resourceAccessClaim}' seems not to follow the standard."))
                         .throwAndPrintStackTrace(properties.printStacktrace)
@@ -78,7 +88,7 @@ class CamundaUserFederationInterceptor(private val properties: CuroProperties,
         val userGroups = identityService.createGroupQuery().groupMember(userId).list().map { it.id }
 
         var nonExistingGroups = jwtGroups.filterNot { it in camundaGroups }
-        if(properties.auth.oauth2.userFederation.createNonExistingGroups && nonExistingGroups.isNotEmpty()){
+        if (properties.auth.oauth2.userFederation.createNonExistingGroups && nonExistingGroups.isNotEmpty()) {
             nonExistingGroups.forEach {
                 val newGroup = identityService.newGroup(it)
                 identityService.saveGroup(newGroup)

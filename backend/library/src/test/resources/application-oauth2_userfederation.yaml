@@ -21,6 +21,8 @@ curo:
 
 camunda:
   bpm:
+    authorization:
+      enabled: true
     admin-user:
       email: demo@demo.com
       first-name: demo

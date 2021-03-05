@@ -57,6 +57,18 @@ open class CuroAutoConfiguration {
     }
 
     @EventListener(ApplicationReadyEvent::class)
+    fun checkAuthorization() {
+        val engine = EngineUtil.lookupProcessEngine(null)
+        if(!engine.processEngineConfiguration.isAuthorizationEnabled){
+            logger.warn("CURO: ⚠️ Authorization is not enabled! ⚠️")
+        }
+
+        if(!engine.processEngineConfiguration.isAuthorizationEnabled){
+            logger.info("CURO: Authorization for custom code is not enabled!")
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
     fun setStringContext() {
         SpringContext.applicationContext = context
     }
