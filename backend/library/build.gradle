@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ch.umb.curo"
-version = "0.0.17"
+version = "0.0.18"
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
@@ -58,11 +58,11 @@ dependencies {
 
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.2"
 
-    compileOnly "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:$camunda_version"
-    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:$camunda_version"
-    implementation "org.camunda.spin:camunda-spin-core"
-    implementation "org.camunda.spin:camunda-spin-dataformat-json-jackson"
-    implementation "org.camunda.bpm:camunda-engine-plugin-spin"
+    api "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:$camunda_version"
+    api "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:$camunda_version"
+    api "org.camunda.spin:camunda-spin-core:1.10.1"
+    api "org.camunda.spin:camunda-spin-dataformat-json-jackson:1.10.1"
+    api "org.camunda.bpm:camunda-engine-plugin-spin:7.14.0"
 
     compileOnly 'org.springdoc:springdoc-openapi-kotlin:1.5.4'
     compileOnly 'org.springdoc:springdoc-openapi-ui:1.5.4'

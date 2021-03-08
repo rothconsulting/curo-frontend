@@ -23,6 +23,11 @@ open class CuroProperties {
     var ignoreObjectType = false
 
     /**
+     * If set, Curo will not override the default serialization format to application/json
+     */
+    var dontSetDefaultSerializationFormat: Boolean = false
+
+    /**
      * If set, Curo will define the camunda telemetry to that value
      */
     var camundaTelemetry: Boolean? = null
