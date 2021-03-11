@@ -1,4 +1,3 @@
-
 package ch.umb.curo.starter.property
 
 import org.springframework.boot.context.properties.NestedConfigurationProperty

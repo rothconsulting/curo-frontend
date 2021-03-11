@@ -3,7 +3,6 @@ package ch.umb.curo.starter.property
 import org.camunda.bpm.engine.authorization.Permissions
 import org.camunda.bpm.engine.authorization.Resources
 import java.util.*
-import kotlin.collections.ArrayList
 
 class CuroInitialGroupProperty {
 

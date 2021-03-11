@@ -14,7 +14,12 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/curo-api/process-instances")
 interface ProcessInstanceController {
 
-    @Operation(summary = "Start new process instance", operationId = "startProcess", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @Operation(
+        summary = "Start new process instance",
+        operationId = "startProcess",
+        description = "",
+        security = [SecurityRequirement(name = "CuroBasic")]
+    )
     @PostMapping("", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun startProcess(
         @Parameter(description = "Process instance start model", required = false)
@@ -35,9 +40,15 @@ interface ProcessInstanceController {
 
         @Parameter(description = "Define how long in seconds flowToNext should wait.", required = false)
         @RequestParam("flowToNextTimeOut", required = false)
-        flowToNextTimeOut: Int? = null): ProcessStartResponse?
+        flowToNextTimeOut: Int? = null
+    ): ProcessStartResponse?
 
-    @Operation(summary = "Get next task", operationId = "nextTask", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @Operation(
+        summary = "Get next task",
+        operationId = "nextTask",
+        description = "",
+        security = [SecurityRequirement(name = "CuroBasic")]
+    )
     @GetMapping("/{id}/next", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun nextTask(
         @Parameter(description = "ID of the process instance", required = true)
@@ -46,5 +57,6 @@ interface ProcessInstanceController {
 
         @Parameter(description = "Define if flowToNext should ignore task assignee.", required = false)
         @RequestParam("flowToNextIgnoreAssignee", required = false, defaultValue = "false")
-        flowToNextIgnoreAssignee: Boolean? = null): FlowToNextResult
+        flowToNextIgnoreAssignee: Boolean? = null
+    ): FlowToNextResult
 }

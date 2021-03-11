@@ -18,7 +18,6 @@ import org.camunda.bpm.engine.variable.type.ValueType
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -356,7 +355,8 @@ class DefaultTaskControllerTest {
         val historicTask = historyService.createHistoricTaskInstanceQuery().taskId(task.id).singleResult()
         assert(historicTask?.deleteReason == "completed")
 
-        val taskVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(newInstance.processInstanceId).list()
+        val taskVariables =
+            historyService.createHistoricVariableInstanceQuery().processInstanceId(newInstance.processInstanceId).list()
         assert(taskVariables.firstOrNull { it.name == "name" }?.value == "CHANGED")
     }
 
@@ -511,7 +511,8 @@ class DefaultTaskControllerTest {
             status { isOk() }
         }
 
-        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        val updatedTask =
+            taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         assert((updatedTask?.assignee ?: "") == "demo")
 
         //Check if correct method was used
@@ -537,7 +538,8 @@ class DefaultTaskControllerTest {
             status { isOk() }
         }
 
-        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        val updatedTask =
+            taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         assert((updatedTask?.assignee ?: "") == "demo")
 
         //Check if correct method was used
@@ -563,7 +565,8 @@ class DefaultTaskControllerTest {
             status { isOk() }
         }
 
-        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        val updatedTask =
+            taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         assert((updatedTask?.assignee ?: "") == "user")
 
         //Check if correct method was used
@@ -589,7 +592,8 @@ class DefaultTaskControllerTest {
             status { isOk() }
         }
 
-        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        val updatedTask =
+            taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         assert((updatedTask?.assignee ?: "") == "")
 
         //Check if correct method was used
@@ -615,7 +619,8 @@ class DefaultTaskControllerTest {
             status { isOk() }
         }
 
-        val updatedTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
+        val updatedTask =
+            taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         assert((updatedTask?.assignee ?: "") == "")
 
         //Check if correct method was used
@@ -759,7 +764,8 @@ class DefaultTaskControllerTest {
         val newInstance2 = runtimeService.startProcessInstanceByKey("Process_1", variables)
 
         variables["name"] = "UMB"
-        val newInstance3 = runtimeService.startProcessInstanceByKey("Process_1", variables) // Will no be found by the filter
+        val newInstance3 =
+            runtimeService.startProcessInstanceByKey("Process_1", variables) // Will no be found by the filter
 
         mockMvc.get("/curo-api/tasks") {
             accept = MediaType.APPLICATION_JSON
@@ -810,14 +816,16 @@ class DefaultTaskControllerTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "CuroBasic $basicLogin")
             param("id", filter.id)
-            param("query", """{"processVariables": [
+            param(
+                "query", """{"processVariables": [
                                                 {
                                                   "operator": "eq",
                                                   "value": 100,
                                                   "name": "age"
                                                 }
                                               ]
-                                            }""")
+                                            }"""
+            )
         }.andExpect {
             status { isOk() }
             jsonPath("$.total") { isNumber() }
@@ -932,7 +940,8 @@ class DefaultTaskControllerTest {
     @Test
     fun `getTaskZipFile() - loading zip file should work`() {
         val (variables) = getVariables(true)
-        val zippedTestImageBytes = ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
+        val zippedTestImageBytes =
+            ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
         val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
         val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
 
@@ -950,7 +959,8 @@ class DefaultTaskControllerTest {
     @Test
     fun `getTaskZipFile() - loading zip file with wrong names and ignore flag should work`() {
         val (variables) = getVariables(true)
-        val zippedTestImageBytes = ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
+        val zippedTestImageBytes =
+            ZipUtil.zipFiles(arrayListOf(Pair("testImage.jpeg", testImage.inputStream.readAllBytes())))
         val newInstance = runtimeService.startProcessInstanceByKey("Process_1", variables)
         val nextTask = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
 
@@ -989,8 +999,14 @@ class DefaultTaskControllerTest {
         variables["obj"] = obj
 
         //File
-        if(includeFile) {
-            val file = FileValueImpl(testImage.inputStream.readAllBytes(), ValueType.FILE, "testImage.jpeg", "image/jpeg", "utf-8")
+        if (includeFile) {
+            val file = FileValueImpl(
+                testImage.inputStream.readAllBytes(),
+                ValueType.FILE,
+                "testImage.jpeg",
+                "image/jpeg",
+                "utf-8"
+            )
             variables["image"] = file
         }
 
@@ -998,7 +1014,8 @@ class DefaultTaskControllerTest {
     }
 
     private fun createFilter(): Filter {
-        val filterDto = mapper.readValue("""{"resourceType": "Task",
+        val filterDto = mapper.readValue(
+            """{"resourceType": "Task",
                                               "name": "Big Filter",
                                               "owner": "demo",
                                               "query": {
@@ -1038,7 +1055,8 @@ class DefaultTaskControllerTest {
                                                   }
                                                 ]
                                               }
-                                            }""".trimIndent(), FilterDto::class.java)
+                                            }""".trimIndent(), FilterDto::class.java
+        )
         val filter = filterService.newTaskFilter()
         filterDto.updateFilter(filter, EngineUtil.lookupProcessEngine(null))
         filterService.saveFilter(filter)

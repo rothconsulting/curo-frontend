@@ -4,7 +4,6 @@ import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import ch.umb.curo.starter.auth.CuroOAuth2Authentication
 import ch.umb.curo.starter.property.CuroProperties
 import org.camunda.bpm.engine.ManagementService
-import org.camunda.bpm.engine.ProcessEngineConfiguration
 import org.camunda.bpm.engine.authorization.Authorization
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
@@ -61,11 +60,11 @@ open class CuroAutoConfiguration {
     @EventListener(ApplicationReadyEvent::class)
     fun checkAuthorization() {
         val engine = EngineUtil.lookupProcessEngine(null)
-        if(!engine.processEngineConfiguration.isAuthorizationEnabled){
+        if (!engine.processEngineConfiguration.isAuthorizationEnabled) {
             logger.warn("CURO: ⚠️ Authorization is not enabled! ⚠️")
         }
 
-        if(!engine.processEngineConfiguration.isAuthorizationEnabled){
+        if (!engine.processEngineConfiguration.isAuthorizationEnabled) {
             logger.info("CURO: Authorization for custom code is not enabled!")
         }
     }
@@ -73,13 +72,15 @@ open class CuroAutoConfiguration {
     @EventListener(ApplicationStartedEvent::class)
     fun setDefaultSerializationFormat() {
         val engine = EngineUtil.lookupProcessEngine(null)
-        val defaultSerializationFormat = context.environment.getProperty("camunda.bpm.default-serialization-format") ?: (engine.processEngineConfiguration as ProcessEngineConfigurationImpl).defaultSerializationFormat
+        val defaultSerializationFormat = context.environment.getProperty("camunda.bpm.default-serialization-format")
+            ?: (engine.processEngineConfiguration as ProcessEngineConfigurationImpl).defaultSerializationFormat
         when {
             (defaultSerializationFormat == "application/json") -> {
                 logger.debug("CURO: Default serialization format is already set to 'application/json'")
             }
             (!properties.dontSetDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
-                (engine.processEngineConfiguration as ProcessEngineConfigurationImpl).defaultSerializationFormat = "application/json"
+                (engine.processEngineConfiguration as ProcessEngineConfigurationImpl).defaultSerializationFormat =
+                    "application/json"
                 logger.info("CURO: Set default serialization format to 'application/json'")
             }
             (properties.dontSetDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
@@ -191,14 +192,16 @@ open class CuroAutoConfiguration {
                     val groups = engine.identityService.createGroupQuery().list().map { it.id }
                     userProperty.groups!!.filter { it in groups }.forEach {
                         //Only add group if user does not have it
-                        if (engine.identityService.createGroupQuery().groupMember(userProperty.id).groupId(it).count() == 0L) {
+                        if (engine.identityService.createGroupQuery().groupMember(userProperty.id).groupId(it)
+                                .count() == 0L
+                        ) {
                             engine.identityService.createMembership(userProperty.id, it)
                             logger.debug("CURO: Added user '${userProperty.id}' to group '$it'")
                         }
                     }
 
                     val nonExistingGroups = userProperty.groups!!.filterNot { it in groups }
-                    if(nonExistingGroups.isNotEmpty()){
+                    if (nonExistingGroups.isNotEmpty()) {
                         nonExistingGroups.forEach {
                             logger.warn("CURO: Group '$it' does not exist and can therefore not be assigned to the user '${userProperty.id}'")
                         }

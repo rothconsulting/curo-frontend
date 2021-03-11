@@ -13,7 +13,12 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/curo-api/auth")
 interface AuthenticationController {
 
-    @Operation(summary = "Trigger login success logic", operationId = "success", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @Operation(
+        summary = "Trigger login success logic",
+        operationId = "success",
+        description = "",
+        security = [SecurityRequirement(name = "CuroBasic")]
+    )
     @PostMapping("/success", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun success(request: HttpServletRequest): AuthenticationSuccessResponse
 

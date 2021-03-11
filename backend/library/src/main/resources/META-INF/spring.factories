@@ -2,9 +2,7 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   ch.umb.curo.starter.CuroAutoConfiguration,\
   org.camunda.bpm.spring.boot.starter.CamundaBpmAutoConfiguration
-
 #Listener
 org.springframework.context.ApplicationListener=ch.umb.curo.starter.property.PropertiesListener
-
 # FailureAnalyzer
 org.springframework.boot.diagnostics.FailureAnalyzer=ch.umb.curo.starter.exception.CuroPropertyExceptionFailureAnalyzer

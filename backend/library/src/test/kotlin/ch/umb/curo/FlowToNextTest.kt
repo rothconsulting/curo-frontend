@@ -2,8 +2,6 @@ package ch.umb.curo
 
 
 import ch.umb.curo.starter.service.FlowToNextService
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.junit.jupiter.api.AfterEach
@@ -14,9 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.util.StopWatch
-import java.util.*
 
 
 @ExtendWith(SpringExtension::class)

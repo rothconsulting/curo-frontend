@@ -24,7 +24,7 @@ class VariableMockTest {
     private lateinit var variableHelperMock: CamundaVariableHelperMock
 
     @BeforeAll
-    fun init(){
+    fun init() {
         variableHelperMock = CamundaVariableHelperMock(delegateExecution, true)
     }
 

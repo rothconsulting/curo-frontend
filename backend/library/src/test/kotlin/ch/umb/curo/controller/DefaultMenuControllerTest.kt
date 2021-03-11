@@ -7,7 +7,6 @@ import org.camunda.bpm.engine.filter.Filter
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
 import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -75,7 +74,8 @@ class DefaultMenuControllerTest {
     }
 
     private fun createFilter(name: String, color: String, priority: Int, icon: String): Filter {
-        val filterDto = mapper.readValue("""{"resourceType": "Task",
+        val filterDto = mapper.readValue(
+            """{"resourceType": "Task",
                                               "name": "$name",
                                               "owner": "demo",
                                               "query": {},
@@ -84,7 +84,8 @@ class DefaultMenuControllerTest {
                                                 "priority": $priority,
                                                 "icon": "$icon"
                                               }
-                                            }""".trimIndent(), FilterDto::class.java)
+                                            }""".trimIndent(), FilterDto::class.java
+        )
         val filter = filterService.newTaskFilter()
         filterDto.updateFilter(filter, EngineUtil.lookupProcessEngine(null))
         filterService.saveFilter(filter)

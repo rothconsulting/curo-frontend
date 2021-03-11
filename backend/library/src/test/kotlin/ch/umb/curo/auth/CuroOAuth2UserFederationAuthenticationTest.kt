@@ -3,8 +3,6 @@ package ch.umb.curo.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import org.camunda.bpm.engine.IdentityService
-import org.camunda.bpm.engine.RuntimeService
-import org.camunda.bpm.engine.TaskService
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -17,7 +15,6 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import java.io.IOException
 import java.security.GeneralSecurityException
@@ -83,7 +80,12 @@ class CuroOAuth2UserFederationAuthenticationTest {
         assert(membership.contains("camunda-admin"))
     }
 
-    private fun getToken(issuer: String, expires: DateTime, username: String = "demo", isAccessToken: Boolean = true): String {
+    private fun getToken(
+        issuer: String,
+        expires: DateTime,
+        username: String = "demo",
+        isAccessToken: Boolean = true
+    ): String {
         val newJWT = JWT.create()
         newJWT.withIssuer(issuer)
 
@@ -93,7 +95,10 @@ class CuroOAuth2UserFederationAuthenticationTest {
             newJWT.withClaim("given_name", "Fox")
             newJWT.withClaim("family_name", "Brown")
             newJWT.withClaim("typ", "Bearer")
-            newJWT.withClaim("resource_access", hashMapOf(Pair("curo-frontend", hashMapOf(Pair("roles", arrayListOf("camunda-admin"))))))
+            newJWT.withClaim(
+                "resource_access",
+                hashMapOf(Pair("curo-frontend", hashMapOf(Pair("roles", arrayListOf("camunda-admin")))))
+            )
             newJWT.withExpiresAt(expires.toDate())
         } else {
             newJWT.withClaim("typ", "Refresh")
@@ -110,7 +115,8 @@ class CuroOAuth2UserFederationAuthenticationTest {
     @Throws(IOException::class, GeneralSecurityException::class)
     fun getPrivateKey(): RSAPrivateKey {
         var privateKeyContent = String(privateKey.inputStream.readBytes())
-        privateKeyContent = privateKeyContent.replace("\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
+        privateKeyContent = privateKeyContent.replace("\n", "").replace("-----BEGIN PRIVATE KEY-----", "")
+            .replace("-----END PRIVATE KEY-----", "")
         val kf = KeyFactory.getInstance("RSA")
 
         val keySpecPKCS8 = PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyContent))
@@ -122,7 +128,8 @@ class CuroOAuth2UserFederationAuthenticationTest {
     @Throws(IOException::class, GeneralSecurityException::class)
     fun getPublicKey(): RSAPublicKey {
         var publicKeyContent = String(publicKey.inputStream.readBytes())
-        publicKeyContent = publicKeyContent.replace("\n", "").replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "")
+        publicKeyContent = publicKeyContent.replace("\n", "").replace("-----BEGIN PUBLIC KEY-----", "")
+            .replace("-----END PUBLIC KEY-----", "")
         val kf = KeyFactory.getInstance("RSA")
 
         val keySpecX509 = X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyContent))

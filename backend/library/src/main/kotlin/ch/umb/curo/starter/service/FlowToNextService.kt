@@ -6,10 +6,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.camunda.bpm.engine.HistoryService
-import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.history.HistoricProcessInstance
-import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Service
 

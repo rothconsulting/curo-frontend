@@ -13,7 +13,8 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @ConditionalOnMissingClass
-class DefaultAuthenticationController(private val authSuccessInterceptors: List<AuthSuccessInterceptor>) : AuthenticationController {
+class DefaultAuthenticationController(private val authSuccessInterceptors: List<AuthSuccessInterceptor>) :
+    AuthenticationController {
 
     @Autowired
     lateinit var properties: CuroProperties

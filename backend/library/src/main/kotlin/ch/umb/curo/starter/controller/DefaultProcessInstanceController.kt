@@ -38,13 +38,16 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    override fun startProcess(body: ProcessStartRequest,
-                              returnVariables: Boolean,
-                              flowToNext: Boolean,
-                              flowToNextIgnoreAssignee: Boolean?,
-                              flowToNextTimeOut: Int?): ProcessStartResponse {
+    override fun startProcess(
+        body: ProcessStartRequest,
+        returnVariables: Boolean,
+        flowToNext: Boolean,
+        flowToNextIgnoreAssignee: Boolean?,
+        flowToNextTimeOut: Int?
+    ): ProcessStartResponse {
         try {
-            val newInstance = runtimeService.startProcessInstanceByKey(body.processDefinitionKey, body.businessKey, body.variables)
+            val newInstance =
+                runtimeService.startProcessInstanceByKey(body.processDefinitionKey, body.businessKey, body.variables)
 
             val response = ProcessStartResponse()
             response.processInstanceId = newInstance.rootProcessInstanceId
@@ -55,7 +58,10 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
                 variablesTyped.entries.forEach { variable ->
                     if (variable.value is JacksonJsonNode) {
-                        variables[variable.key] = ObjectMapper().readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
+                        variables[variable.key] = ObjectMapper().readValue(
+                            (variable.value as JacksonJsonNode).toString(),
+                            JsonNode::class.java
+                        )
                     } else {
                         variables[variable.key] = variable.value
                     }
@@ -65,12 +71,16 @@ class DefaultProcessInstanceController : ProcessInstanceController {
 
             if (flowToNext) {
                 val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
-                val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
+                val assignee = if (!(flowToNextIgnoreAssignee
+                        ?: properties.flowToNext.ignoreAssignee)
+                ) currentUser.userId else null
                 val flowToNextResult = runWithoutAuthentication({
-                                                                    flowToNextService.getNextTask(newInstance.rootProcessInstanceId,
-                                                                                                  assignee,
-                                                                                                  flowToNextTimeOut ?: properties.flowToNext.defaultTimeout)
-                                                                })
+                    flowToNextService.getNextTask(
+                        newInstance.rootProcessInstanceId,
+                        assignee,
+                        flowToNextTimeOut ?: properties.flowToNext.defaultTimeout
+                    )
+                })
                 response.flowToNext = flowToNextResult.flowToNext
                 response.flowToEnd = flowToNextResult.flowToEnd
                 response.flowToNextTimeoutExceeded = flowToNextResult.flowToNextTimeoutExceeded
@@ -80,13 +90,17 @@ class DefaultProcessInstanceController : ProcessInstanceController {
         } catch (e: AuthorizationException) {
             throwAndPrintStackTrace(e, ApiException.unauthorized403("You are not allowed to start this process"))
         } catch (e: ProcessEngineException) {
-            throwAndPrintStackTrace(e, ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND))
+            throwAndPrintStackTrace(
+                e,
+                ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND)
+            )
         }
     }
 
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
         val currentUser = EngineUtil.lookupProcessEngine(null).identityService.currentAuthentication
-        val assignee = if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
+        val assignee =
+            if (!(flowToNextIgnoreAssignee ?: properties.flowToNext.ignoreAssignee)) currentUser.userId else null
         return runWithoutAuthentication({ flowToNextService.searchNextTask(id, assignee) })
     }
 

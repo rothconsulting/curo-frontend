@@ -8,7 +8,8 @@ class BadRequestDetail(vararg val fieldViolations: FieldViolation) : ErrorDetail
     override fun toMessage(): String {
         val sb = StringBuilder()
         for (fieldViolation in fieldViolations) {
-            sb.append("Request field [").append(fieldViolation.fieldName).append("] had invalid value [").append(fieldViolation.value).append("], expected ").append(fieldViolation.expected)
+            sb.append("Request field [").append(fieldViolation.fieldName).append("] had invalid value [")
+                .append(fieldViolation.value).append("], expected ").append(fieldViolation.expected)
         }
         return sb.toString()
     }
@@ -17,7 +18,7 @@ class BadRequestDetail(vararg val fieldViolations: FieldViolation) : ErrorDetail
         return fieldViolations.contentToString()
     }
 
-    class FieldViolation (
+    class FieldViolation(
         var fieldName: String? = null,
         var value: String? = null,
         var expected: String? = null

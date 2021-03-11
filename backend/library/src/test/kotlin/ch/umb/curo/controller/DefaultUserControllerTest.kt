@@ -1,17 +1,10 @@
 package ch.umb.curo.controller
 
 
-import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.models.response.CuroUserResponse
 import ch.umb.curo.starter.property.CuroProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.FilterService
-import org.camunda.bpm.engine.IdentityService
-import org.camunda.bpm.engine.filter.Filter
-import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
-import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc

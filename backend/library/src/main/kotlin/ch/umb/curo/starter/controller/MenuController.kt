@@ -12,7 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping
 @RequestMapping("/curo-api/menus")
 interface MenuController {
 
-    @Operation(summary = "Get menu for the current user", operationId = "getMenu", description = "", security = [SecurityRequirement(name = "CuroBasic")])
+    @Operation(
+        summary = "Get menu for the current user",
+        operationId = "getMenu",
+        description = "",
+        security = [SecurityRequirement(name = "CuroBasic")]
+    )
     @GetMapping("", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun getMenu(): CuroMenu
 

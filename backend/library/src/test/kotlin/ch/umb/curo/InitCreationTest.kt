@@ -13,7 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 class InitCreationTest {
 
     @Test
-    fun testInitCreation(){
+    fun testInitCreation() {
         //Check groups
         val engine = EngineUtil.lookupProcessEngine(null)
         val groups = engine.identityService.createGroupQuery().list().map { it.id }
@@ -26,7 +26,7 @@ class InitCreationTest {
 
         val bobTower = users.firstOrNull { it.id == "bob_tower" }
         assert(bobTower != null)
-        assert(engine.identityService.checkPassword("bob_tower","testPassword"))
+        assert(engine.identityService.checkPassword("bob_tower", "testPassword"))
         val bobTowerGroups = engine.identityService.createGroupQuery().groupMember("bob_tower").list().map { it.id }
         assert(bobTowerGroups.contains("camunda-admin"))
 
@@ -38,7 +38,8 @@ class InitCreationTest {
 
         val richardMNunez = users.firstOrNull { it.id == "richard_m_nunez" }
         assert(richardMNunez != null)
-        val richardMNunezGroups = engine.identityService.createGroupQuery().groupMember("richard_m_nunez").list().map { it.id }
+        val richardMNunezGroups =
+            engine.identityService.createGroupQuery().groupMember("richard_m_nunez").list().map { it.id }
         assert(richardMNunezGroups.contains("teamlead"))
 
         //Check updated groups on existing user

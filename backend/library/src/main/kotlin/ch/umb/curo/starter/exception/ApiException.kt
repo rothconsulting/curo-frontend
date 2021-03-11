@@ -21,14 +21,35 @@ import org.slf4j.LoggerFactory
  *
  * Thread-safe
  */
-class ApiException private constructor(message: String, cause: Throwable?, val errorCode: ErrorCode, details: ErrorDetail?, val curoErrorCode: CuroErrorCode?) : Exception(message, cause, false, false) {
+class ApiException private constructor(
+    message: String,
+    cause: Throwable?,
+    val errorCode: ErrorCode,
+    details: ErrorDetail?,
+    val curoErrorCode: CuroErrorCode?
+) : Exception(message, cause, false, false) {
     private val details: ErrorDetail? = details
 
     private constructor(errorCode: ErrorCode) : this(errorCode.defaultMessage, null, errorCode, null, null) {}
-    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details, null) {}
-    private constructor(curoErrorCode: CuroErrorCode, details: ErrorDetail? = null) : this(curoErrorCode.defaultMessage, null, curoErrorCode.errorCode, null, curoErrorCode) {}
+    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(
+        details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details, null
+    ) {
+    }
 
-    fun throwAndPrintStackTrace(printStacktrace: Boolean, e: Exception? = null, logger: Logger = LoggerFactory.getLogger(this::class.java)!!): ApiException {
+    private constructor(curoErrorCode: CuroErrorCode, details: ErrorDetail? = null) : this(
+        curoErrorCode.defaultMessage,
+        null,
+        curoErrorCode.errorCode,
+        null,
+        curoErrorCode
+    ) {
+    }
+
+    fun throwAndPrintStackTrace(
+        printStacktrace: Boolean,
+        e: Exception? = null,
+        logger: Logger = LoggerFactory.getLogger(this::class.java)!!
+    ): ApiException {
         if (printStacktrace) {
             logger.error("API-Exception: ${this.errorCode} -> ${this.message}")
             e?.printStackTrace()
@@ -45,9 +66,18 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
         FAILED_PRECONDITION(400, "Request can not be executed in the current system state"),
         OUT_OF_RANGE(400, "Client specified an invalid range"),
         UNAUTHENTICATED(401, "Request not authenticated due to missing, invalid, or expired OAuth token"),
-        PERMISSION_DENIED(403, "Client does not have sufficient permission. This can happen because the OAuth token does not have the right scopes, the client doesn't have permission, or the API has not been enabled for the client project."),
-        NOT_FOUND(404, "A specified resource is not found, or the request is rejected by undisclosed reasons, such as whitelisting."),
-        METHOD_NOT_ALLOWED(405, "A request method is not supported for the requested resource, e.g. resource is readonly"),
+        PERMISSION_DENIED(
+            403,
+            "Client does not have sufficient permission. This can happen because the OAuth token does not have the right scopes, the client doesn't have permission, or the API has not been enabled for the client project."
+        ),
+        NOT_FOUND(
+            404,
+            "A specified resource is not found, or the request is rejected by undisclosed reasons, such as whitelisting."
+        ),
+        METHOD_NOT_ALLOWED(
+            405,
+            "A request method is not supported for the requested resource, e.g. resource is readonly"
+        ),
         ABORTED(409, "Concurrency conflict, such as read-modify-write conflict"),
         ALREADY_EXISTS(409, "The resource that a client tried to create already exists"),
         RESOURCE_EXHAUSTED(429, "Either out of resource quota or reaching rate limiting"),
@@ -57,7 +87,10 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
         INTERNAL(500, "Internal server error. Typically a server bug"),
         NOT_IMPLEMENTED(501, "API method not implemented by the server"),
         UNAVAILABLE(503, "Service unavailable. Typically the server is down"),
-        DEADLINE_EXCEEDED(504, "Request deadline exceeded. This will happen only if the caller sets a deadline that is shorter than the method's default deadline (i.e. requested deadline is not enough for the server to process the request) and the request did not finish within the deadline");
+        DEADLINE_EXCEEDED(
+            504,
+            "Request deadline exceeded. This will happen only if the caller sets a deadline that is shorter than the method's default deadline (i.e. requested deadline is not enough for the server to process the request) and the request did not finish within the deadline"
+        );
     }
 
     /**
@@ -69,7 +102,10 @@ class ApiException private constructor(message: String, cause: Throwable?, val e
         VARIABLE_NOT_FOUND(ErrorCode.NOT_FOUND, "Variable not found"),
         VARIABLE_IS_NO_FILE(ErrorCode.NOT_FOUND, "Variable is not a file"),
         NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user"),
-        CANT_SAVE_IN_EXISTING_OBJECT(ErrorCode.INVALID_ARGUMENT, "Can't save variable because it is not castable to already existing variable type"),
+        CANT_SAVE_IN_EXISTING_OBJECT(
+            ErrorCode.INVALID_ARGUMENT,
+            "Can't save variable because it is not castable to already existing variable type"
+        ),
         USER_NOT_FOUND(ErrorCode.NOT_FOUND, "User not found")
     }
 
