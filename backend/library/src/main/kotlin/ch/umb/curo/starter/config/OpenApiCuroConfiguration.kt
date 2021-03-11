@@ -26,17 +26,21 @@ open class OpenApiCuroConfiguration {
     @Bean
     open fun curoOpenAPI(): OpenAPI {
         return OpenAPI()
-            .info(Info().title("Curo API")
-                      .description("")
-                      .version("v0.0.1"))
+            .info(
+                Info().title("Curo API")
+                    .description("")
+                    .version("v0.0.1")
+            )
             .components(
                 Components()
-                    .addSecuritySchemes("CuroBasic",
-                                        SecurityScheme()
-                                            .name("CuroBasic")
-                                            .type(SecurityScheme.Type.HTTP)
-                                            .scheme("basic"))
-                       )
+                    .addSecuritySchemes(
+                        "CuroBasic",
+                        SecurityScheme()
+                            .name("CuroBasic")
+                            .type(SecurityScheme.Type.HTTP)
+                            .scheme("basic")
+                    )
+            )
     }
 
 }

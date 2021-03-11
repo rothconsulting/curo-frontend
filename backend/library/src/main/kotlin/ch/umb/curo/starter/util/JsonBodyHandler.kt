@@ -15,7 +15,12 @@ class JsonBodyHandler<T>(private val targetClass: Class<T>) : HttpResponse.BodyH
     companion object {
         fun <W> asJSON(targetType: Class<W>?): HttpResponse.BodySubscriber<Supplier<W>> {
             val upstream: HttpResponse.BodySubscriber<InputStream> = HttpResponse.BodySubscribers.ofInputStream()
-            return HttpResponse.BodySubscribers.mapping(upstream) { inputStream -> toSupplierOfType(inputStream, targetType) }
+            return HttpResponse.BodySubscribers.mapping(upstream) { inputStream ->
+                toSupplierOfType(
+                    inputStream,
+                    targetType
+                )
+            }
         }
 
         private fun <W> toSupplierOfType(inputStream: InputStream, targetType: Class<W>?): Supplier<W> {

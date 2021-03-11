@@ -25,7 +25,8 @@ open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), Curo
 
     override fun extractAuthenticatedUser(request: HttpServletRequest, engine: ProcessEngine): AuthenticationResult {
 
-        val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION)?.takeIf { it.isNotBlank() } ?: return AuthenticationResult.unsuccessful()
+        val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION)?.takeIf { it.isNotBlank() }
+            ?: return AuthenticationResult.unsuccessful()
 
         //Check for CuroBasic in authorization header else we use normal Basic
         val encodedCredentials = if (authorizationHeader.startsWith(CURO_BASIC_AUTH_HEADER_PREFIX)) {
@@ -50,8 +51,12 @@ open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), Curo
     }
 
     override fun augmentResponseByAuthenticationChallenge(
-        response: HttpServletResponse, engine: ProcessEngine) {
-        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\"")
+        response: HttpServletResponse, engine: ProcessEngine
+    ) {
+        response.setHeader(
+            HttpHeaders.WWW_AUTHENTICATE,
+            CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\""
+        )
     }
 
     override fun getId(): String {

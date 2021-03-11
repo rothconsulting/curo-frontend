@@ -18,28 +18,39 @@ import org.slf4j.LoggerFactory
  *
  * @see ch.umb.curo.starter.helper.camunda.mock.CamundaVariableHelperMock
  */
-class CamundaVariableHelperMockito(override val variableScope: VariableScope, override val logging: Boolean = false) : CamundaVariableHelperMockInterface {
+class CamundaVariableHelperMockito(override val variableScope: VariableScope, override val logging: Boolean = false) :
+    CamundaVariableHelperMockInterface {
 
     override val logger: Logger = LoggerFactory.getLogger(CamundaVariableHelperMock::class.java)
 
     override fun mock(variable: CamundaVariableDefinition<*>, value: Any?) {
         if (logging) logger.info("add mock for variable '${variable.value}' -> $value")
-        doReturn(AbstractTypedValue(value, null)).`when`(variableScope).getVariableTyped<TypedValue>(eq(variable.value), eq(true))
+        doReturn(AbstractTypedValue(value, null)).`when`(variableScope)
+            .getVariableTyped<TypedValue>(eq(variable.value), eq(true))
     }
 
     override fun mockWithJson(variable: CamundaVariableDefinition<*>, value: String) {
         if (logging) logger.info("add mock for variable '${variable.value}' (as json) -> $value")
-        doReturn(JsonValueImpl(value, "application/json")).`when`(variableScope).getVariableTyped<TypedValue>(eq(variable.value), eq(true))
+        doReturn(JsonValueImpl(value, "application/json")).`when`(variableScope)
+            .getVariableTyped<TypedValue>(eq(variable.value), eq(true))
     }
 
     override fun mock(variable: CamundaVariableListDefinition<*>, value: List<*>?) {
         if (logging) logger.info("add mock for list variable '${variable.value}' -> $value")
-        doReturn(ObjectValueImpl(value, ObjectMapper().writeValueAsString(value), "application/json", value?.let { value::class.java.canonicalName } ?: "", true)).`when`(
-            variableScope).getVariableTyped<TypedValue>(eq(variable.value), eq(true))
+        doReturn(
+            ObjectValueImpl(
+                value,
+                ObjectMapper().writeValueAsString(value),
+                "application/json",
+                value?.let { value::class.java.canonicalName } ?: "",
+                true)).`when`(
+            variableScope
+        ).getVariableTyped<TypedValue>(eq(variable.value), eq(true))
     }
 
     override fun mockWithJson(variable: CamundaVariableListDefinition<*>, value: String) {
         if (logging) logger.info("add mock for list variable '${variable.value}' (as json) -> $value")
-        doReturn(JsonValueImpl(value, "application/json")).`when`(variableScope).getVariableTyped<TypedValue>(eq(variable.value), eq(true))
+        doReturn(JsonValueImpl(value, "application/json")).`when`(variableScope)
+            .getVariableTyped<TypedValue>(eq(variable.value), eq(true))
     }
 }

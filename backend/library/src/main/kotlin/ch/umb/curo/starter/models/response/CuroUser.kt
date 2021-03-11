@@ -10,25 +10,25 @@ class CuroUser {
     /**
      * Id of the user
      **/
-    @Schema(description= "Id of the user")
+    @Schema(description = "Id of the user")
     var id: String? = null
 
     /**
      * Firstname of the user
      **/
-    @Schema(description= "Firstname of the user")
+    @Schema(description = "Firstname of the user")
     var firstname: String? = null
 
     /**
      * Lastname of the user
      **/
-    @Schema(description= "Lastname of the user")
+    @Schema(description = "Lastname of the user")
     var lastname: String? = null
 
     /**
      * Email of the user
      **/
-    @Schema(description= "Email of the user")
+    @Schema(description = "Email of the user")
     var email: String? = null
 
 

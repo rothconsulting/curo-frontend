@@ -57,7 +57,8 @@ class CuroMenu : ArrayList<CuroMenu.MenuElement>() {
          * Sub-Elements of the menu element if the type is FOLDER
          **/
         @Schema(description = "Sub-Elements of the menu element if the type is FOLDER")
-        val subElements: ArrayList<MenuElement>? = null)
+        val subElements: ArrayList<MenuElement>? = null
+    )
 
     enum class MenuElementType {
         TASK_FILTER, LINK, FOLDER
@@ -76,7 +77,8 @@ class CuroMenu : ArrayList<CuroMenu.MenuElement>() {
                 type = MenuElementType.TASK_FILTER,
                 order = order,
                 color = color,
-                filterId = filter.id)
+                filterId = filter.id
+            )
         }
     }
 }

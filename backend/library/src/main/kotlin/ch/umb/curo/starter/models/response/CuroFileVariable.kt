@@ -2,12 +2,7 @@ package ch.umb.curo.starter.models.response
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
-import org.camunda.bpm.engine.history.HistoricTaskInstance
-import org.camunda.bpm.engine.rest.dto.task.TaskDto
-import org.camunda.bpm.engine.task.DelegationState
-import org.camunda.bpm.engine.task.Task
 import org.camunda.bpm.engine.variable.value.FileValue
-import org.joda.time.DateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class CuroFileVariable {
@@ -15,19 +10,19 @@ class CuroFileVariable {
     /**
      * Name of the file
      **/
-    @Schema(description= "Name of the file")
+    @Schema(description = "Name of the file")
     var fileName: String? = null
 
     /**
      * MimeType of the file
      **/
-    @Schema(description= "MimeType of the file")
+    @Schema(description = "MimeType of the file")
     var mimeType: String? = null
 
     /**
      * Encoding of the file
      **/
-    @Schema(description= "Encoding of the file")
+    @Schema(description = "Encoding of the file")
     var encoding: String? = null
 
     companion object {

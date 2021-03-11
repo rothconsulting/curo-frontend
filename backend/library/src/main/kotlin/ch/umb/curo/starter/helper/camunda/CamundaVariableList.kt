@@ -2,7 +2,8 @@ package ch.umb.curo.starter.helper.camunda
 
 import kotlin.reflect.KClass
 
-class CamundaVariableList<T : Any> constructor(override val value: String, private val internalType: KClass<T>) : CamundaVariableListDefinition<T> {
+class CamundaVariableList<T : Any> constructor(override val value: String, private val internalType: KClass<T>) :
+    CamundaVariableListDefinition<T> {
     override val type: Class<T>
         get() = internalType.javaObjectType
 

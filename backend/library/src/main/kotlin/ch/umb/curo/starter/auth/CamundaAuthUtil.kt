@@ -8,7 +8,7 @@ object CamundaAuthUtil {
     fun <T> Callable<T>.callWithoutAuthentication(engineName: String? = null): T {
         return runWithoutAuthentication(this, engineName)
     }
-    
+
     fun <T> runWithoutAuthentication(request: Callable<T>, engineName: String? = null): T {
         val identityService = EngineUtil.lookupProcessEngine(engineName).identityService
         val currentUser = identityService.currentAuthentication

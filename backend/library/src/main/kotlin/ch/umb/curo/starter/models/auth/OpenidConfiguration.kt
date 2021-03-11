@@ -8,4 +8,5 @@ class OpenidConfiguration(
     @JsonProperty("issuer")
     val issuer: String = "",
     @JsonProperty("jwks_uri")
-    val jwksUri: String = "")
+    val jwksUri: String = ""
+)

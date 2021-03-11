@@ -2,7 +2,6 @@ package ch.umb.curo.starter.helper.camunda.mock
 
 import ch.umb.curo.starter.helper.camunda.CamundaVariableDefinition
 import ch.umb.curo.starter.helper.camunda.CamundaVariableListDefinition
-import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.VariableScope
 import org.slf4j.Logger
 

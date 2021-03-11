@@ -59,7 +59,7 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
                     throw InvalidClaimException("The Claim 'iss' value doesn't match the required issuer.")
                 }
 
-                if(decodedJwt.expiresAt.before(Date.from(Instant.now()))){
+                if (decodedJwt.expiresAt.before(Date.from(Instant.now()))) {
                     throw TokenExpiredException(String.format("The Token has expired on %s.", decodedJwt.expiresAt))
                 }
 
@@ -88,7 +88,7 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
         }
 
         //Allow if /curo-api/auth/success
-        if(request.requestURI == "/curo-api/auth/success" && properties.auth.oauth2.userFederation.enabled){
+        if (request.requestURI == "/curo-api/auth/success" && properties.auth.oauth2.userFederation.enabled) {
             return AuthenticationResult.successful(userId)
         }
 
@@ -108,11 +108,11 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
      * @return a verified and decoded JWT.
      */
     @Throws(
-            AlgorithmMismatchException::class,
-            SignatureVerificationException::class,
-            TokenExpiredException::class,
-            InvalidClaimException::class,
-            JWTVerificationException::class
+        AlgorithmMismatchException::class,
+        SignatureVerificationException::class,
+        TokenExpiredException::class,
+        InvalidClaimException::class,
+        JWTVerificationException::class
     )
     fun verifyJwt(encodedJwt: String): DecodedJWT {
         val properties = SpringContext.getBean(CuroProperties::class.java)!!
@@ -123,7 +123,7 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
         val provider: JwkProvider = UrlJwkProvider(URL(jwkUrl))
         // Get the kid from received JWT token
         val jwk = provider[jwt.keyId]
-        val algorithm = when(jwk.algorithm){
+        val algorithm = when (jwk.algorithm) {
             "RS256" -> Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null)
             "RS384" -> Algorithm.RSA384(jwk.publicKey as RSAPublicKey, null)
             "RS512" -> Algorithm.RSA512(jwk.publicKey as RSAPublicKey, null)
@@ -138,30 +138,31 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
 
         return jwt
     }
-    
+
     private fun getCertUrl(iss: String): String? {
         val properties = SpringContext.getBean(CuroProperties::class.java)!!
         val url = properties.auth.oauth2.jwkUrl
 
-        if(url.isNotEmpty()){
+        if (url.isNotEmpty()) {
             return url
         }
 
         return try {
             val client = HttpClient.newHttpClient()
             val request = HttpRequest.newBuilder(
-                URI.create("$iss/.well-known/openid-configuration"))
+                URI.create("$iss/.well-known/openid-configuration")
+            )
                 .header("accept", "application/json")
                 .build()
             val httpResponse = client.send(request, JsonBodyHandler(OpenidConfiguration::class.java))
-            if(httpResponse.statusCode() == 200) {
+            if (httpResponse.statusCode() == 200) {
                 val openidConfiguration: OpenidConfiguration = httpResponse.body().get()
                 openidConfiguration.jwksUri
             } else {
                 printErrorsToLog("Was not able to locate .well-known/openid-configuration based on issuer claim")
                 null
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             printErrorsToLog("Was not able to locate .well-known/openid-configuration based on issuer claim")
             null
         }

@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class FlowToNextService(private val properties: CuroProperties,
-                        private val taskService: TaskService,
-                        private val historyService: HistoryService) {
+class FlowToNextService(
+    private val properties: CuroProperties,
+    private val taskService: TaskService,
+    private val historyService: HistoryService
+) {
 
     fun getNextTask(lastTask: Task, ignoreAssignee: Boolean = false, timeout: Int): FlowToNextResult {
         val assignee = if (!ignoreAssignee) lastTask.assignee else null
@@ -51,8 +53,10 @@ class FlowToNextService(private val properties: CuroProperties,
         return result ?: FlowToNextResult(flowToNextTimeoutExceeded = true)
     }
 
-    fun searchNextTask(processInstanceId: String,
-                       assignee: String?): FlowToNextResult {
+    fun searchNextTask(
+        processInstanceId: String,
+        assignee: String?
+    ): FlowToNextResult {
         val processEnded: Boolean
         val possibleTaskIds: List<String>
         var possibleProcessInstanceIds = mutableListOf(processInstanceId)
@@ -61,7 +65,8 @@ class FlowToNextService(private val properties: CuroProperties,
         //Search for root
         var foundRoot: Boolean
         do {
-            val instance = historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId).singleResult()
+            val instance = historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId)
+                .singleResult()
             if (instance != null) {
                 foundRoot = (rootProcessInstanceId == instance.rootProcessInstanceId)
                 rootProcessInstanceId = instance.rootProcessInstanceId
@@ -77,7 +82,8 @@ class FlowToNextService(private val properties: CuroProperties,
         //Search leafs
         val leafProcessInstanceIds = arrayListOf<String>()
         possibleProcessInstanceIds.forEach {
-            val deepProcessInstance: List<HistoricProcessInstance>? = historyService.createHistoricProcessInstanceQuery().superProcessInstanceId(it).list()
+            val deepProcessInstance: List<HistoricProcessInstance>? =
+                historyService.createHistoricProcessInstanceQuery().superProcessInstanceId(it).list()
             if (deepProcessInstance?.isNotEmpty() == true) {
                 leafProcessInstanceIds.addAll(deepProcessInstance.map { it.id })
             }
@@ -88,11 +94,15 @@ class FlowToNextService(private val properties: CuroProperties,
         //Clean up list
         possibleProcessInstanceIds = possibleProcessInstanceIds.distinct().toMutableList()
 
-        val possibleTaskIdsQuery = taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray())
-        possibleTaskIds = (if (assignee != null) possibleTaskIdsQuery.taskAssignee(assignee) else possibleTaskIdsQuery).list().map { it.id }
+        val possibleTaskIdsQuery =
+            taskService.createTaskQuery().processInstanceIdIn(*possibleProcessInstanceIds.toTypedArray())
+        possibleTaskIds =
+            (if (assignee != null) possibleTaskIdsQuery.taskAssignee(assignee) else possibleTaskIdsQuery).list()
+                .map { it.id }
 
         //Check if root is completed
-        val superHistoryProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId).singleResult()
+        val superHistoryProcessInstance =
+            historyService.createHistoricProcessInstanceQuery().processInstanceId(rootProcessInstanceId).singleResult()
         processEnded = superHistoryProcessInstance?.state == "COMPLETED" && possibleTaskIds.isEmpty()
 
         return FlowToNextResult(possibleTaskIds, flowToEnd = processEnded)
