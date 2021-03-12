@@ -190,7 +190,7 @@ class CuroTask {
             return curoTask
         }
 
-        fun fromCamundaHistoricTask(task: HistoricTaskInstance): CuroTask {
+        fun fromCamundaHistoricTask(task: HistoricTaskInstance, formKey: String?): CuroTask {
             val curoTask = CuroTask()
             curoTask.id = task.id
             curoTask.executionId = task.executionId
@@ -210,7 +210,7 @@ class CuroTask {
             curoTask.delegationState = null
             curoTask.parentTaskId = task.parentTaskId
             curoTask.suspended = null
-            curoTask.formKey = null
+            curoTask.formKey = formKey ?: ""
 
             if (curoTask.status == null || curoTask.status!!.isEmpty()) {
                 curoTask.status = "open"

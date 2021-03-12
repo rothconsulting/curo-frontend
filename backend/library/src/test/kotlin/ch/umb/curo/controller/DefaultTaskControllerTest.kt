@@ -241,6 +241,7 @@ class DefaultTaskControllerTest {
             jsonPath("$.id") { value(task.id) }
             jsonPath("$.processInstanceId") { value(newInstance.rootProcessInstanceId) }
             jsonPath("$.status") { value("open") }
+            jsonPath("$.formKey") { value("form/test") }
         }
     }
 

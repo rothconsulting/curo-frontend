@@ -15,10 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import org.apache.commons.io.IOUtils
-import org.camunda.bpm.engine.AuthorizationException
-import org.camunda.bpm.engine.EntityTypes
-import org.camunda.bpm.engine.FilterService
-import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.*
 import org.camunda.bpm.engine.rest.dto.task.TaskDto
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
 import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl
@@ -43,6 +40,7 @@ class DefaultTaskController(
     private val taskService: TaskService,
     private val flowToNextService: FlowToNextService,
     private val filterService: FilterService,
+    private val formService: FormService,
     private val objectMapper: ObjectMapper
 ) : TaskController {
 
@@ -155,7 +153,8 @@ class DefaultTaskController(
     ): CuroTask {
         val curoTask = if (loadFromHistoric) {
             val task = curoTaskService.getHistoricTask(id)
-            CuroTask.fromCamundaHistoricTask(task)
+            val formKey = formService.getTaskFormKey(task.processDefinitionId, task.taskDefinitionKey)
+            CuroTask.fromCamundaHistoricTask(task, formKey)
         } else {
             val task = curoTaskService.getTask(id)
             CuroTask.fromCamundaTask(task)
