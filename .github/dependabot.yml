@@ -23,7 +23,7 @@ updates:
       timezone: "Europe/Zurich"
     target-branch: "main"
     labels:
-      - "github-actions"
+      - "npm"
       - "dependencies"
 
   # Enable version updates for Gradle
