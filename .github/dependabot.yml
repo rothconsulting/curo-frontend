@@ -14,7 +14,7 @@ updates:
       - "github-actions"
       - "dependencies"
 
-  # Enable version updates for GitHub Actions
+  # Enable version updates for npm
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
