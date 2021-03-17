@@ -1,5 +1,7 @@
 package ch.umb.curo.starter.exception
 
+import ch.umb.curo.starter.exception.details.BusinessErrorModel
+import ch.umb.curo.starter.exception.details.DefaultErrorModel
 import ch.umb.curo.starter.property.CuroProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.joda.time.DateTime
@@ -33,6 +35,31 @@ class GlobalExceptionHandler(
         response.writer.write(mapper.writeValueAsString(errorResponse))
     }
 
+    @ExceptionHandler(BusinessLogicException::class)
+    fun handleBusinessLogicException(
+        businessLogicException: BusinessLogicException,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ) {
+        val errorResponse = BusinessErrorModel(
+            DateTime.now(),
+            businessLogicException.statusCode,
+            if (businessLogicException.showOnApi) businessLogicException.internalErrorMessage else "",
+            businessLogicException.errorCode,
+            if (properties.printStacktrace) businessLogicException.cause?.let { stackTraceToString(it) } ?: "" else "",
+            businessLogicException.execution,
+            if (businessLogicException.showOnApi) businessLogicException.publicMessage else "",
+            request.servletPath,
+            if (businessLogicException.showOnApi) businessLogicException.data else null,
+            businessLogicException.showOnApi,
+            businessLogicException.showOnFrontend,
+            businessLogicException.isRepeatable)
+
+        response.status = businessLogicException.statusCode
+        response.contentType = "application/json"
+        response.writer.write(mapper.writeValueAsString(errorResponse))
+    }
+
     private fun stackTraceToString(ex: Throwable): String {
         val sw = StringWriter()
         val pw = PrintWriter(sw)
@@ -40,13 +67,4 @@ class GlobalExceptionHandler(
         return sw.toString()
     }
 
-    class DefaultErrorModel(
-        val timestamp: DateTime,
-        val status: Int,
-        val error: String,
-        val errorCode: String?,
-        val exception: String,
-        val message: String,
-        val path: String
-    )
 }
