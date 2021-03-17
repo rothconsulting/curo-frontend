@@ -35,7 +35,13 @@ import java.util.*
  * @author itsmefox
  */
 @ExtendWith(SpringExtension::class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = [
+        "camunda.bpm.generate-unique-process-engine-name=true",
+        "camunda.bpm.generate-unique-process-application-name=true"
+    ]
+)
 @AutoConfigureMockMvc
 @ActiveProfiles("oauth2")
 class CuroOAuth2AuthenticationTest {

@@ -3,9 +3,9 @@ package ch.umb.curo.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.FilterService
+import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.filter.Filter
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
-import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +23,7 @@ import java.util.*
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("menu")
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 class DefaultMenuControllerTest {
 
     @Autowired
@@ -33,6 +34,9 @@ class DefaultMenuControllerTest {
 
     @Autowired
     lateinit var filterService: FilterService
+
+    @Autowired
+    lateinit var engine: ProcessEngine
 
     private val basicLogin: String = Base64.getEncoder().encodeToString("demo:demo".toByteArray())
 
@@ -87,7 +91,7 @@ class DefaultMenuControllerTest {
                                             }""".trimIndent(), FilterDto::class.java
         )
         val filter = filterService.newTaskFilter()
-        filterDto.updateFilter(filter, EngineUtil.lookupProcessEngine(null))
+        filterDto.updateFilter(filter, engine)
         filterService.saveFilter(filter)
 
         return filter

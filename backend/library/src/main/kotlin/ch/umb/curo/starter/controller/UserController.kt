@@ -9,7 +9,6 @@ import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import javax.servlet.http.HttpServletResponse
 
 @Tag(name = "user", description = "Curo User API")
 @RequestMapping("/curo-api/users")
@@ -28,8 +27,6 @@ interface UserController {
             required = false
         )
         @RequestParam("attributes", required = false, defaultValue = "")
-        attributes: ArrayList<String> = arrayListOf(),
-
-        response: HttpServletResponse
+        attributes: ArrayList<String> = arrayListOf()
     ): CuroUserResponse
 }

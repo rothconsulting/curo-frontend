@@ -10,8 +10,6 @@ open class CuroProperties {
         const val PREFIX = "curo"
     }
 
-    var frontendEnabled = true
-
     /**
      * Should Curo print stacktraces to the log and rest responses
      */

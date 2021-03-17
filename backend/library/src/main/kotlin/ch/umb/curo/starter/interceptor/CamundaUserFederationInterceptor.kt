@@ -27,7 +27,7 @@ class CamundaUserFederationInterceptor(
             return false
         }
 
-        return CamundaAuthUtil.runWithoutAuthentication({ processUserFederation(jwt) })
+        return CamundaAuthUtil.runWithoutAuthentication({ processUserFederation(jwt) }, identityService)
     }
 
     private fun processUserFederation(jwt: DecodedJWT): Boolean {

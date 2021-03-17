@@ -60,9 +60,7 @@ interface TaskController {
 
         @Parameter(description = "Defines if additional filter data be included in the response", required = false)
         @RequestParam("includeFilter", required = false, defaultValue = "false")
-        includeFilter: Boolean = false,
-
-        response: HttpServletResponse
+        includeFilter: Boolean = false
     ): CuroFilterResponse
 
     @Operation(
@@ -109,9 +107,7 @@ interface TaskController {
 
         @Parameter(description = "Defines if additional filter data be included in the response", required = false)
         @RequestParam("includeFilter", required = false, defaultValue = "false")
-        includeFilter: Boolean = false,
-
-        response: HttpServletResponse
+        includeFilter: Boolean = false
     ): CuroFilterResponse
 
     @Operation(

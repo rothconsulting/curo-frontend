@@ -44,7 +44,7 @@ class FlowToNextTest {
         val task1 = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         taskService.complete(task1.id)
 
-        val next1 = flowToNextService.getNextTask(task1, true, 10)
+        val next1 = flowToNextService.getNextTask(task1, null, 10)
         assert(!next1.flowToEnd)
         assert(!next1.flowToNextTimeoutExceeded)
 
@@ -81,7 +81,7 @@ class FlowToNextTest {
         val task1 = taskService.createTaskQuery().processInstanceId(newInstance.rootProcessInstanceId).singleResult()
         taskService.complete(task1.id)
 
-        val next1 = flowToNextService.getNextTask(task1, true, 10)
+        val next1 = flowToNextService.getNextTask(task1, null, 10)
         assert(!next1.flowToEnd)
         assert(!next1.flowToNextTimeoutExceeded)
 
@@ -90,7 +90,7 @@ class FlowToNextTest {
 
         taskService.complete(task2.id)
 
-        val next2 = flowToNextService.getNextTask(task2, true, 10)
+        val next2 = flowToNextService.getNextTask(task2, null, 10)
         assert(!next2.flowToEnd)
         assert(!next2.flowToNextTimeoutExceeded)
 
@@ -99,7 +99,7 @@ class FlowToNextTest {
 
         taskService.complete(task3.id)
 
-        val next3 = flowToNextService.getNextTask(task3, true, 10)
+        val next3 = flowToNextService.getNextTask(task3, null, 10)
         assert(!next3.flowToEnd)
         assert(!next3.flowToNextTimeoutExceeded)
 
@@ -108,7 +108,7 @@ class FlowToNextTest {
 
         taskService.complete(task4.id)
 
-        val next4 = flowToNextService.getNextTask(task4, true, 10)
+        val next4 = flowToNextService.getNextTask(task4, null, 10)
         assert(next4.flowToEnd)
     }
 }

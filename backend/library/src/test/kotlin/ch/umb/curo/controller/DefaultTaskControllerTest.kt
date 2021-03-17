@@ -6,13 +6,9 @@ import ch.umb.curo.starter.models.request.AssigneeRequest
 import ch.umb.curo.starter.models.response.CompleteTaskResponse
 import ch.umb.curo.starter.util.ZipUtil
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.FilterService
-import org.camunda.bpm.engine.HistoryService
-import org.camunda.bpm.engine.RuntimeService
-import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.*
 import org.camunda.bpm.engine.filter.Filter
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
-import org.camunda.bpm.engine.rest.util.EngineUtil
 import org.camunda.bpm.engine.variable.impl.value.FileValueImpl
 import org.camunda.bpm.engine.variable.type.ValueType
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
@@ -36,6 +32,7 @@ import kotlin.collections.LinkedHashMap
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("task")
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 class DefaultTaskControllerTest {
 
     @Autowired
@@ -55,6 +52,9 @@ class DefaultTaskControllerTest {
 
     @Autowired
     lateinit var filterService: FilterService
+
+    @Autowired
+    lateinit var engine: ProcessEngine
 
     @Value("classpath:test-image.jpg")
     lateinit var testImage: Resource
@@ -1059,7 +1059,7 @@ class DefaultTaskControllerTest {
                                             }""".trimIndent(), FilterDto::class.java
         )
         val filter = filterService.newTaskFilter()
-        filterDto.updateFilter(filter, EngineUtil.lookupProcessEngine(null))
+        filterDto.updateFilter(filter, engine)
         filterService.saveFilter(filter)
 
         return filter
