@@ -9,7 +9,11 @@ class DefaultUserController(
     private val curoUserService: CuroUserService,
 ) : UserController {
 
-    override fun getUsers(attributes: ArrayList<String>): CuroUserResponse {
-        return curoUserService.getUsers(attributes)
+    override fun getUsers(emailLike: String,
+                          lastNameLike: String,
+                          firstNameLike: String,
+                          memberOfGroup: ArrayList<String>,
+                          attributes: ArrayList<String>): CuroUserResponse {
+        return curoUserService.getUsers(emailLike, lastNameLike, firstNameLike, memberOfGroup, attributes)
     }
 }
