@@ -21,9 +21,9 @@ open class CuroProperties {
     var ignoreObjectType = false
 
     /**
-     * If set, Curo will not override the default serialization format to application/json
+     * If set, Curo will override the default serialization format to application/json
      */
-    var dontSetDefaultSerializationFormat: Boolean = false
+    var setDefaultSerializationFormat: Boolean = true
 
     /**
      * If set, Curo will define the camunda telemetry to that value
@@ -53,6 +53,16 @@ open class CuroProperties {
      * *Recommended pattern: '[a-zA-Z0-9-.@_]+'*
      */
     var camundaGroupIdPattern: String? = null
+
+    /**
+     * Location in which Curo searches for initial filter json files.
+     */
+    var initialFilterLocation: String = "classpath*:/filters/*"
+
+    /**
+     * Defines if Curo creates filter during startup.
+     */
+    var createInitialFilters: Boolean = true
 
     /**
      * Curo authentication

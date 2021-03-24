@@ -53,9 +53,9 @@ class CuroUserFederationProperties {
     var printNonExistingGroups = false
 
     /**
-     * Don't revoke the camunda-admin group from users even if they don't have this group in their JWT
+     * Revoke the camunda-admin group from users even if they don't have this group in their JWT
      */
-    var dontRevokeCamundaAdminGroup = false
+    var revokeCamundaAdminGroup = true
 
     /**
      * Create non existing jwt groups in camunda

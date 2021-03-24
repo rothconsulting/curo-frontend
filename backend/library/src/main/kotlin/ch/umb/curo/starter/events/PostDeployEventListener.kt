@@ -2,9 +2,14 @@ package ch.umb.curo.starter.events
 
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.StartupDataCreationService
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.camunda.bpm.engine.EntityTypes
+import org.camunda.bpm.engine.FilterService
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.ProcessEngine
+import org.camunda.bpm.engine.exception.NotValidException
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
+import org.camunda.bpm.engine.rest.dto.runtime.FilterDto
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationStartedEvent
 import org.springframework.context.ApplicationListener
@@ -16,7 +21,9 @@ class PostDeployEventListener(
     private val properties: CuroProperties,
     private val context: ConfigurableApplicationContext,
     private val startupDataCreationService: StartupDataCreationService,
-    private val processEngine: ProcessEngine
+    private val processEngine: ProcessEngine,
+    private val filterService: FilterService,
+    private val objectMapper: ObjectMapper,
 ) : ApplicationListener<ApplicationStartedEvent> {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -36,6 +43,9 @@ class PostDeployEventListener(
 
         //Create users
         startupDataCreationService.createInitialUsers(processEngine)
+
+        //Create filter
+        createFilters(processEngine)
     }
 
 
@@ -64,14 +74,67 @@ class PostDeployEventListener(
             (defaultSerializationFormat == "application/json") -> {
                 logger.debug("CURO: Default serialization format is already set to 'application/json'")
             }
-            (!properties.dontSetDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
+            (properties.setDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
                 (engine.processEngineConfiguration as ProcessEngineConfigurationImpl).defaultSerializationFormat =
                     "application/json"
                 logger.info("CURO: Set default serialization format to 'application/json'")
             }
-            (properties.dontSetDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
+            (!properties.setDefaultSerializationFormat && defaultSerializationFormat != "application/json") -> {
                 logger.warn("CURO: ⚠️ Default serialization format is set to '$defaultSerializationFormat' which is not supported by Curo ⚠️")
             }
+        }
+    }
+
+    private fun createFilters(processEngine: ProcessEngine) {
+        if (!properties.createInitialFilters) {
+            logger.debug("CURO: Skip initial filter creation")
+            return
+        }
+        val filterPath = properties.initialFilterLocation
+        val files = context.getResources(filterPath)
+        if (files.isNotEmpty()) {
+            logger.info("CURO: Creating initial filters based on files in '$filterPath'")
+            files.forEach {
+                val filterObj = try {
+                    objectMapper.readValue(it.file, FilterDto::class.java)
+                } catch (e: Exception) {
+                    logger.warn("CURO: Filter file '${it.file.path}' is not a valid FilterEntity json")
+                    return@forEach
+                }
+                try {
+                    val resourceType = filterObj.resourceType
+                    val name = filterObj.name
+
+                    if (filterService.createFilterQuery().filterResourceType(resourceType).filterName(name)
+                            .count() > 0
+                    ) {
+                        logger.debug("CURO: Filter '${it.file.path}' already exists (name: $name, type: $resourceType)")
+                        return@forEach
+                    }
+
+                    val filter = if (EntityTypes.TASK == resourceType) {
+                        filterService.newTaskFilter()
+                    } else {
+                        logger.warn("CURO: Filter file '${it.file.path}' has invalid resource type '$resourceType'")
+                        return@forEach
+                    }
+
+                    try {
+                        filterObj.updateFilter(filter, processEngine)
+                    } catch (e: NotValidException) {
+                        logger.warn("CURO: Filter file '${it.file.path}' has invalid content")
+                        return@forEach
+                    }
+
+                    filterService.saveFilter(filter)
+                } catch (e: Exception) {
+                    logger.warn("CURO: Filter file '${it.file.path}' got rejected by Camunda")
+                    return@forEach
+                }
+
+                logger.debug("CURO: Create initial filter '${it.file.path}'")
+            }
+
         }
     }
 

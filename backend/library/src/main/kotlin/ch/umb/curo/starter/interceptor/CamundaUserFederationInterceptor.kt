@@ -102,7 +102,7 @@ class CamundaUserFederationInterceptor(
         val groupsToAdd = jwtGroups.filterNot { it in nonExistingGroups }.filterNot { it in userGroups }.distinct()
         var groupsToRemove = userGroups.filterNot { it in jwtGroups }.distinct()
 
-        if (groupsToRemove.contains("camunda-admin") && properties.auth.oauth2.userFederation.dontRevokeCamundaAdminGroup) {
+        if (groupsToRemove.contains("camunda-admin") && !properties.auth.oauth2.userFederation.revokeCamundaAdminGroup) {
             groupsToRemove = groupsToRemove.filter { it != "camunda-admin" }
         }
 
