@@ -63,7 +63,7 @@ class PostDeployEventListener(
         }
 
         if (!engine.processEngineConfiguration.isAuthorizationEnabled) {
-            logger.info("CURO: Authorization for custom code is not enabled!")
+            logger.debug("CURO: Authorization for custom code is not enabled!")
         }
     }
 

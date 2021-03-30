@@ -136,6 +136,14 @@ class ApiException private constructor(
             })
         }
 
+        fun internal500(description: String, e: Throwable): ApiException {
+            return ApiException(e.localizedMessage, e, ErrorCode.INTERNAL, object : ErrorDetail {
+                override fun toMessage(): String {
+                    return description
+                }
+            }, null)
+        }
+
         fun unauthorized403(description: String): ApiException {
             return ApiException(ErrorCode.PERMISSION_DENIED, object : ErrorDetail {
                 override fun toMessage(): String {

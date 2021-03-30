@@ -2,6 +2,7 @@ package ch.umb.curo.starter
 
 import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import ch.umb.curo.starter.auth.CuroOAuth2Authentication
+import ch.umb.curo.starter.plugin.VariableInitPlugin
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.DefaultFlowToNextService
 import ch.umb.curo.starter.service.DefaultStartupDataCreationService
@@ -9,9 +10,11 @@ import ch.umb.curo.starter.service.FlowToNextService
 import ch.umb.curo.starter.service.StartupDataCreationService
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ConfigurableApplicationContext
@@ -66,6 +69,11 @@ open class CuroAutoConfiguration {
     @EventListener
     fun setStringContext(event: ApplicationReadyEvent) {
         SpringContext.applicationContext = context
+    }
+
+    @Bean
+    open fun injectVariableInitPlugin(): AbstractProcessEnginePlugin {
+        return VariableInitPlugin(context)
     }
 
 }

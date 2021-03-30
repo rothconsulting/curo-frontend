@@ -8,15 +8,13 @@ import ch.umb.curo.starter.models.response.ProcessStartResponse
 import ch.umb.curo.starter.property.CuroProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.camunda.bpm.engine.AuthorizationException
-import org.camunda.bpm.engine.IdentityService
-import org.camunda.bpm.engine.ProcessEngineException
-import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.*
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 
 class DefaultCuroProcessInstanceService(
     val properties: CuroProperties,
     val runtimeService: RuntimeService,
+    val repositoryService: RepositoryService,
     val flowToNextService: FlowToNextService,
     val identityService: IdentityService
 ) : CuroProcessInstanceService {
@@ -28,6 +26,14 @@ class DefaultCuroProcessInstanceService(
         flowToNextTimeOut: Int?
     ): ProcessStartResponse {
         try {
+
+            if (repositoryService.createProcessDefinitionQuery().processDefinitionKey(body.processDefinitionKey)
+                    .count() == 0L
+            ) {
+                throw ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND)
+                    .throwAndPrintStackTrace(properties.printStacktrace)
+            }
+
             val newInstance =
                 runtimeService.startProcessInstanceByKey(body.processDefinitionKey, body.businessKey, body.variables)
 
@@ -73,8 +79,7 @@ class DefaultCuroProcessInstanceService(
             throw ApiException.unauthorized403("You are not allowed to start this process")
                 .throwAndPrintStackTrace(properties.printStacktrace, e)
         } catch (e: ProcessEngineException) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND)
-                .throwAndPrintStackTrace(properties.printStacktrace, e)
+            throw ApiException.internal500(e.localizedMessage, e).throwAndPrintStackTrace(properties.printStacktrace, e)
         }
     }
 

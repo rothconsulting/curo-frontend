@@ -13,12 +13,16 @@ import org.camunda.spin.impl.json.jackson.JacksonJsonNode
 import org.camunda.spin.plugin.variable.type.JsonValueType
 import org.camunda.spin.plugin.variable.value.JsonValue
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
+import org.jboss.logging.Logger
+import org.springframework.beans.BeanUtils
 import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
 import java.util.*
 import java.util.function.Supplier
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 open class CamundaVariableHelper(private val variableScope: VariableScope) {
+
+    private val logger = Logger.getLogger(this::class.java)
 
     /**
      * @param variableDefinition CamundaVariableDefinition<T> of variable to read
@@ -206,65 +210,114 @@ open class CamundaVariableHelper(private val variableScope: VariableScope) {
         variableScope.setVariable(variableName.value, value)
     }
 
-    fun initVariables(variableClass: Any) {
+    /**
+     * Initialize annotated variables from the provided class. Already existing complex variables with a matching name are converted to the correct type if needed.
+     *
+     * @param variableClass Class with static variables definitions.
+     * @param convertExistingVariables Should Curo try to convert existing complex variables to their correct type.
+     */
+    fun initVariables(variableClass: Any, convertExistingVariables: Boolean = true) {
+        logger.debug("CURO: Processing initialization of '${variableClass::class.java.canonicalName}'")
         val doAllEmpty = variableClass.javaClass.isAnnotationPresent(InitWithEmpty::class.java)
         val doAllNull = variableClass.javaClass.isAnnotationPresent(InitWithNull::class.java)
         variableClass.javaClass.declaredFields
-            .filter { it.isAnnotationPresent(InitWithNull::class.java) || it.isAnnotationPresent(InitWithEmpty::class.java) || doAllEmpty || doAllNull }
             .filter { it.name != "Companion" }
+            .filter {
+                it.type.isAssignableFrom(CamundaVariableDefinition::class.java) || it.type.isAssignableFrom(
+                    CamundaVariableListDefinition::class.java
+                )
+            }
             .forEach {
                 it.isAccessible = true
                 val definition = it.get(variableClass) as CamundaVariableDefinition<*>
-                val emptyInit = if (it.isAnnotationPresent(InitWithEmpty::class.java)) {
-                    true
-                } else {
-                    doAllEmpty && !it.isAnnotationPresent(InitWithNull::class.java)
+
+                if (convertExistingVariables && variableScope.hasVariable(definition.value)) {
+                    val raw = variableScope.getVariableTyped<TypedValue>(definition.value, true)
+                    if (raw.type.isPrimitiveValueType) {
+                        return@forEach
+                    } else {
+                        try {
+                            val castedVariable = ObjectMapper().readValue(
+                                (raw as ObjectValue).valueSerialized,
+                                definition.type
+                            )
+                            variableScope.setVariable(definition.value, castedVariable)
+                            logger.debug("CURO: \t-> Changed variable '${definition.value}' to defined type '${definition.type}'")
+                        } catch (e: Exception) {
+                            logger.debug("CURO: \t-> Changed variable '${definition.value}' to defined type '${definition.type}' failed!! -> Variable got skipped")
+                        } finally {
+                            return@forEach
+                        }
+                    }
                 }
 
-                when {
-                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && emptyInit -> {
-                        val value = if (it.type.isAssignableFrom(Boolean::class.java)) { //Set Boolean to false
-                            false
-                        } else {
-                            definition.type.getConstructor().newInstance()
-                        }
-                        variableScope.setVariable(definition.value, value)
+                if (it.isAnnotationPresent(InitWithNull::class.java) || it.isAnnotationPresent(InitWithEmpty::class.java) || doAllEmpty || doAllNull) {
+                    val emptyInit = if (it.isAnnotationPresent(InitWithEmpty::class.java)) {
+                        true
+                    } else {
+                        doAllEmpty && !it.isAnnotationPresent(InitWithNull::class.java)
                     }
-                    (!it.type.isAssignableFrom(JvmType.Object::class.java)) && !emptyInit -> variableScope.setVariable(
-                        definition.value,
-                        null
-                    )
-                    (it.type == JacksonJsonNode::class.java) && emptyInit -> variableScope.setVariable(
-                        definition.value,
-                        JsonValueImpl(
-                            ObjectMapper().writeValueAsString(
-                                definition.type.getConstructor()
-                                    .newInstance()
-                            ),
-                            "application/json"
-                        )
-                    )
-                    (it.type == JacksonJsonNode::class.java) && !emptyInit -> variableScope.setVariable(
-                        definition.value,
-                        JsonValueImpl("", "application/json")
-                    )
-                    else -> {
-                        if (emptyInit) {
+
+                    when {
+                        (BeanUtils.isSimpleValueType((it.genericType as ParameterizedType).actualTypeArguments[0] as Class<*>)) && emptyInit -> {
+                            val value =
+                                if ((it.genericType as ParameterizedType).actualTypeArguments[0] as Class<*> == Boolean::class.javaObjectType) { //Set Boolean to false
+                                    false
+                                } else {
+                                    definition.type.getConstructor().newInstance()
+                                }
+                            variableScope.setVariable(definition.value, value)
+                            logger.debug("CURO: \t-> Initiate variable '${definition.value}' with empty value")
+                        }
+                        (BeanUtils.isSimpleValueType((it.genericType as ParameterizedType).actualTypeArguments[0] as Class<*>)) && !emptyInit -> {
                             variableScope.setVariable(
                                 definition.value,
-                                ObjectValueImpl(
-                                    definition.type.getConstructor().newInstance(),
-                                    ObjectMapper().writeValueAsString(definition.type.getConstructor().newInstance()),
-                                    "application/json",
-                                    definition.type.canonicalName,
-                                    true
+                                null
+                            )
+                            logger.debug("CURO: \t-> Initiate variable '${definition.value}' with null value")
+                        }
+                        (it.type == JacksonJsonNode::class.java) && emptyInit -> {
+                            variableScope.setVariable(
+                                definition.value,
+                                JsonValueImpl(
+                                    ObjectMapper().writeValueAsString(
+                                        definition.type.getConstructor()
+                                            .newInstance()
+                                    ),
+                                    "application/json"
                                 )
                             )
-                        } else {
+                            logger.debug("CURO: \t-> Initiate variable '${definition.value}' with empty value")
+                        }
+                        (it.type == JacksonJsonNode::class.java) && !emptyInit -> {
                             variableScope.setVariable(
                                 definition.value,
-                                ObjectValueImpl(null, "", "application/json", definition.type.canonicalName, true)
+                                JsonValueImpl("", "application/json")
                             )
+                            logger.debug("CURO: \t-> Initiate variable '${definition.value}' with null value")
+                        }
+                        else -> {
+                            if (emptyInit) {
+                                variableScope.setVariable(
+                                    definition.value,
+                                    ObjectValueImpl(
+                                        definition.type.getConstructor().newInstance(),
+                                        ObjectMapper().writeValueAsString(
+                                            definition.type.getConstructor().newInstance()
+                                        ),
+                                        "application/json",
+                                        definition.type.canonicalName,
+                                        true
+                                    )
+                                )
+                                logger.debug("CURO: \t-> Initiate variable '${definition.value}' with empty value")
+                            } else {
+                                variableScope.setVariable(
+                                    definition.value,
+                                    ObjectValueImpl(null, "", "application/json", definition.type.canonicalName, true)
+                                )
+                                logger.debug("CURO: \t-> Initiate variable '${definition.value}' with null value")
+                            }
                         }
                     }
                 }
@@ -272,13 +325,23 @@ open class CamundaVariableHelper(private val variableScope: VariableScope) {
     }
 
     companion object {
-        fun initVariables(variableClass: Any, variableScope: VariableScope) {
-            CamundaVariableHelper(variableScope).initVariables(variableClass)
+        /**
+         * Initialize annotated variables from the provided class. Already existing complex variables with a matching name are converted to the correct type if needed.
+         *
+         * @param variableClass Class with static variables definitions.
+         * @param variableScope Scope which is used to load and save variables.
+         * @param convertExistingVariables Should Curo try to convert existing complex variables to their correct type.
+         */
+        fun initVariables(variableClass: Any, variableScope: VariableScope, convertExistingVariables: Boolean = true) {
+            CamundaVariableHelper(variableScope).initVariables(variableClass, convertExistingVariables)
         }
     }
 
 }
 
+/**
+ * Get VariableHelper instance for this VariableScope.
+ */
 fun VariableScope.variableHelper(): CamundaVariableHelper {
     return CamundaVariableHelper(this)
 }

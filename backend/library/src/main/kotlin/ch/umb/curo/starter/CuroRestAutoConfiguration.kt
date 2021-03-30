@@ -48,12 +48,14 @@ open class CuroRestAutoConfiguration {
     open fun defaultCuroProcessInstanceService(
         properties: CuroProperties,
         runtimeService: RuntimeService,
+        repositoryService: RepositoryService,
         identityService: IdentityService,
         flowToNextService: FlowToNextService,
     ): CuroProcessInstanceService {
         return DefaultCuroProcessInstanceService(
             properties,
             runtimeService,
+            repositoryService,
             flowToNextService,
             identityService
         )
