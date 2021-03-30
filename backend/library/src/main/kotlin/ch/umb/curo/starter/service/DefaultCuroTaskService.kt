@@ -171,10 +171,10 @@ open class DefaultCuroTaskService(
         val variable = taskService.getVariableTyped<TypedValue>(task.id, file) ?: throw ApiException.curoErrorCode(
             ApiException.CuroErrorCode.VARIABLE_NOT_FOUND
         )
-            .throwAndPrintStackTrace(properties.printStacktrace)
+            .printException(properties.printStacktrace)
         if (variable.type != ValueType.FILE) {
             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NO_FILE)
-                .throwAndPrintStackTrace(properties.printStacktrace)
+                .printException(properties.printStacktrace)
         }
         variable as FileValue
 
@@ -198,7 +198,7 @@ open class DefaultCuroTaskService(
 
         if (files == null || files.isEmpty()) {
             throw ApiException.invalidArgument400(arrayListOf("zip files has to include at least one file."))
-                .throwAndPrintStackTrace(properties.printStacktrace)
+                .printException(properties.printStacktrace)
         }
 
         val filesToZip = arrayListOf<Pair<String, ByteArray>>()
@@ -209,11 +209,11 @@ open class DefaultCuroTaskService(
                     return@forEach
                 } else {
                     throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_NOT_FOUND)
-                        .throwAndPrintStackTrace(properties.printStacktrace)
+                        .printException(properties.printStacktrace)
                 }
             if (variable.type != ValueType.FILE) {
                 throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NO_FILE)
-                    .throwAndPrintStackTrace(properties.printStacktrace)
+                    .printException(properties.printStacktrace)
             }
             variable as FileValue
             filesToZip.add(Pair(variable.filename, IOUtils.toByteArray(variable.value)))
@@ -241,7 +241,7 @@ open class DefaultCuroTaskService(
         val currentUser = identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
-                .throwAndPrintStackTrace(properties.printStacktrace)
+                .printException(properties.printStacktrace)
         }
 
         //Save variables
@@ -273,7 +273,7 @@ open class DefaultCuroTaskService(
                             )
                         } else {
                             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .throwAndPrintStackTrace(properties.printStacktrace, e)
+                                .printException(properties.printStacktrace, e)
                         }
                     } catch (e: UnrecognizedPropertyException) {
                         if (properties.ignoreObjectType) {
@@ -284,11 +284,11 @@ open class DefaultCuroTaskService(
                             )
                         } else {
                             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .throwAndPrintStackTrace(properties.printStacktrace, e)
+                                .printException(properties.printStacktrace, e)
                         }
                     } catch (e: Exception) {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .throwAndPrintStackTrace(properties.printStacktrace, e)
+                            .printException(properties.printStacktrace, e)
                     }
                 } else {
                     if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
@@ -368,7 +368,7 @@ open class DefaultCuroTaskService(
             }
         } catch (e: AuthorizationException) {
             ApiException.unauthorized403("User is not allowed to set assignee")
-                .throwAndPrintStackTrace(properties.printStacktrace, e)
+                .printException(properties.printStacktrace, e)
         }
 
         response.status = HttpStatus.OK.value()
@@ -380,7 +380,7 @@ open class DefaultCuroTaskService(
         val currentUser = identityService.currentAuthentication
         if (task.assignee != currentUser.userId) {
             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
-                .throwAndPrintStackTrace(properties.printStacktrace)
+                .printException(properties.printStacktrace)
         }
 
         //Save variables
@@ -411,7 +411,7 @@ open class DefaultCuroTaskService(
                         )
                     } else {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .throwAndPrintStackTrace(properties.printStacktrace, e)
+                            .printException(properties.printStacktrace, e)
                     }
                 } catch (e: UnrecognizedPropertyException) {
                     if (properties.ignoreObjectType) {
@@ -422,11 +422,11 @@ open class DefaultCuroTaskService(
                         )
                     } else {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .throwAndPrintStackTrace(properties.printStacktrace, e)
+                            .printException(properties.printStacktrace, e)
                     }
                 } catch (e: Exception) {
                     throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                        .throwAndPrintStackTrace(properties.printStacktrace, e)
+                        .printException(properties.printStacktrace, e)
                 }
             } else {
                 if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
@@ -445,11 +445,11 @@ open class DefaultCuroTaskService(
                             )
                         } else {
                             throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .throwAndPrintStackTrace(properties.printStacktrace, e)
+                                .printException(properties.printStacktrace, e)
                         }
                     } catch (e: Exception) {
                         throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .throwAndPrintStackTrace(properties.printStacktrace, e)
+                            .printException(properties.printStacktrace, e)
                     }
                 } else {
                     taskService.setVariable(task.id, entry.key, entry.value)
@@ -483,7 +483,7 @@ open class DefaultCuroTaskService(
     @Throws(ApiException::class)
     private fun getTask(id: String) = (taskService.createTaskQuery().taskId(id).initializeFormKeys().singleResult()
         ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
-            .throwAndPrintStackTrace(properties.printStacktrace))
+            .printException(properties.printStacktrace))
 
     /**
      * Get historic task and trow ApiException if the task does not exist
@@ -496,7 +496,7 @@ open class DefaultCuroTaskService(
     private fun getHistoricTask(id: String) =
         (historyService.createHistoricTaskInstanceQuery().taskId(id).singleResult()
             ?: throw ApiException.curoErrorCode(ApiException.CuroErrorCode.TASK_NOT_FOUND)
-                .throwAndPrintStackTrace(properties.printStacktrace))
+                .printException(properties.printStacktrace))
 
     /**
      * Load variables for the given task.

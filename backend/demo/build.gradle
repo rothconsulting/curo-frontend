@@ -49,6 +49,9 @@ dependencies {
 
     implementation "com.h2database:h2"
 
+    implementation "com.auth0:java-jwt:3.14.0"
+    implementation "com.auth0:jwks-rsa:0.17.0"
+
     testImplementation project(':library')
 }
 

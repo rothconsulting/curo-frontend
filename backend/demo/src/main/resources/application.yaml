@@ -5,8 +5,20 @@ spring:
     version: 0.0.1
 
 curo:
-  print-stacktrace: true
+  print-stacktrace: false
   camunda-telemetry: false
+  initial-users:
+    - id: bobtower
+      email: bog@tower.com
+      groups: worker
+    - id: fox
+      email: fox@fox.com
+      groups: worker
+  initial-groups:
+    - id: worker
+      permissions:
+        PROCESS_INSTANCE:
+          - READ
 
 camunda:
   bpm:
@@ -19,3 +31,7 @@ camunda:
     default-serialization-format: application/json
     filter:
       create: 🌍 All tasks
+
+logging:
+  level:
+    ch.umb.curo.starter: DEBUG

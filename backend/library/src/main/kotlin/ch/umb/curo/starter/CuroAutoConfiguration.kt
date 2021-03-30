@@ -2,6 +2,7 @@ package ch.umb.curo.starter
 
 import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
 import ch.umb.curo.starter.auth.CuroOAuth2Authentication
+import ch.umb.curo.starter.events.PostDeployListener
 import ch.umb.curo.starter.plugin.VariableInitPlugin
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.DefaultFlowToNextService
@@ -12,6 +13,8 @@ import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
+import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration
+import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -69,6 +72,20 @@ open class CuroAutoConfiguration {
     @EventListener
     fun setStringContext(event: ApplicationReadyEvent) {
         SpringContext.applicationContext = context
+    }
+
+    @Bean
+    open fun curoStartupPlugin(): AbstractCamundaConfiguration {
+        return object : AbstractCamundaConfiguration() {
+            override fun preInit(processEngineConfiguration: SpringProcessEngineConfiguration) {
+                super.preInit(processEngineConfiguration)
+                    PostDeployListener(
+                        properties,
+                        context,
+                        processEngineConfiguration
+                    ).onPostDeployEvent()
+            }
+        }
     }
 
     @Bean

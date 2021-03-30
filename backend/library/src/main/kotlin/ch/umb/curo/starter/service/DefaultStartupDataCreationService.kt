@@ -29,7 +29,7 @@ class DefaultStartupDataCreationService(val properties: CuroProperties) : Startu
                         newAuthorization.setPermissions(*entry.value.toTypedArray())
                         engine.authorizationService.saveAuthorization(newAuthorization)
                         logger.debug(
-                            "CURO: Add permissions for group '${group.id}': ${entry.key.name} -> ${
+                            "CURO: -> Add permissions for group '${group.id}': ${entry.key.name} -> ${
                                 entry.value.joinToString(
                                     ", "
                                 ) { it.name }
@@ -68,7 +68,7 @@ class DefaultStartupDataCreationService(val properties: CuroProperties) : Startu
                                 .count() == 0L
                         ) {
                             engine.identityService.createMembership(userProperty.id, it)
-                            logger.debug("CURO: Added user '${userProperty.id}' to group '$it'")
+                            logger.debug("CURO: -> Added user '${userProperty.id}' to group '$it'")
                         }
                     }
 

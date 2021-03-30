@@ -3,7 +3,9 @@ package ch.umb.curo.starter.config
 import ch.umb.curo.starter.CuroAutoConfiguration
 import ch.umb.curo.starter.auth.CamundaSecurityFilter
 import ch.umb.curo.starter.auth.CuroBasicAuthAuthentication
-import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
+import ch.umb.curo.starter.auth.CuroProcessEngineAuthenticationFilter
+import ch.umb.curo.starter.property.CuroProperties
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
@@ -24,9 +26,14 @@ import javax.servlet.ServletContext
 @ConditionalOnMissingClass("org.camunda.bpm.spring.boot.starter.webapp.CamundaBpmWebappAutoConfiguration")
 @ConditionalOnWebApplication
 @AutoConfigureAfter(CuroAutoConfiguration::class)
-open class WebAppConfiguration : ServletContextInitializer {
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
+open class WebAppConfiguration(
+    val properties: CuroProperties,
+    val objectMapper: ObjectMapper
+) : ServletContextInitializer {
 
     lateinit var servletContext: ServletContext
+
 
     private val logger = LoggerFactory.getLogger(WebAppConfiguration::class.java)!!
 
@@ -34,7 +41,10 @@ open class WebAppConfiguration : ServletContextInitializer {
         this.servletContext = servletContext
 
         val filterRegistration =
-            servletContext.addFilter("Authentication Filter", ProcessEngineAuthenticationFilter::class.java)
+            servletContext.addFilter(
+                "Authentication Filter",
+                CuroProcessEngineAuthenticationFilter(properties, objectMapper)
+            )
         filterRegistration.addMappingForUrlPatterns(
             EnumSet.of(DispatcherType.REQUEST),
             true,

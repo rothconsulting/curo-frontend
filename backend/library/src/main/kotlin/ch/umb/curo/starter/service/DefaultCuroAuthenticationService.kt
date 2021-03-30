@@ -18,7 +18,7 @@ class DefaultCuroAuthenticationService(
 
     override fun success(request: HttpServletRequest): AuthenticationSuccessResponse {
         val jwtRaw = request.getHeader("Authorization")?.substring(BEARER_HEADER_PREFIX.length)
-            ?: throw ApiException.UNAUTHENTICATED_401.throwAndPrintStackTrace(properties.printStacktrace)
+            ?: throw ApiException.UNAUTHENTICATED_401.printException(properties.printStacktrace)
         val decodedJwt = JWT.decode(jwtRaw)
 
         val synchronousInterceptors = authSuccessInterceptors.filter { !it.async }.sortedBy { it.order }

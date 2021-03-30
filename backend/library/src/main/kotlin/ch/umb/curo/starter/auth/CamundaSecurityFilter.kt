@@ -1,7 +1,8 @@
 package ch.umb.curo.starter.auth
 
+import ch.umb.curo.starter.property.CuroProperties
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
-import org.camunda.bpm.engine.rest.security.auth.ProcessEngineAuthenticationFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.web.servlet.FilterRegistrationBean
@@ -17,7 +18,10 @@ import javax.servlet.Filter
  */
 @Configuration
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-open class CamundaSecurityFilter {
+open class CamundaSecurityFilter(
+    val properties: CuroProperties,
+    val objectMapper: ObjectMapper
+) {
 
     @Autowired
     lateinit var authenticationProvider: AuthenticationProvider
@@ -45,6 +49,6 @@ open class CamundaSecurityFilter {
 
     @Bean
     open fun getProcessEngineAuthenticationFilter(): Filter {
-        return ProcessEngineAuthenticationFilter()
+        return CuroProcessEngineAuthenticationFilter(properties, objectMapper)
     }
 }

@@ -105,7 +105,7 @@ class CuroOAuth2AuthenticationTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "Bearer $token")
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isEqualTo(403) }
         }
     }
 
@@ -117,7 +117,7 @@ class CuroOAuth2AuthenticationTest {
             accept = MediaType.APPLICATION_JSON
             header("Authorization", "Bearer $token")
         }.andExpect {
-            status { isEqualTo(401) }
+            status { isEqualTo(403) }
         }
     }
 

@@ -25,7 +25,7 @@ class GlobalExceptionHandler(
             DateTime.now(),
             apiException.errorCode.httpMapping,
             apiException.errorCode.defaultMessage,
-            apiException.curoErrorCode?.name,
+            apiException.curoErrorCode?.name ?: apiException.errorCode.name,
             if (properties.printStacktrace) apiException.cause?.let { stackTraceToString(it) } ?: "" else "",
             apiException.message ?: "",
             request.servletPath)

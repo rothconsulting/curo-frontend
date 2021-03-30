@@ -4,6 +4,7 @@ import ch.umb.curo.starter.exception.details.BadRequestDetail
 import ch.umb.curo.starter.exception.details.ErrorDetail
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.logging.LogLevel
 
 /**
  * Provides constants and helper methods for common errors in our REST-API.
@@ -31,8 +32,8 @@ class ApiException private constructor(
     private val details: ErrorDetail? = details
 
     private constructor(errorCode: ErrorCode) : this(errorCode.defaultMessage, null, errorCode, null, null) {}
-    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null) : this(
-        details?.toMessage() ?: errorCode.defaultMessage, null, errorCode, details, null
+    private constructor(errorCode: ErrorCode, details: ErrorDetail? = null, cause: Throwable? = null) : this(
+        details?.toMessage() ?: errorCode.defaultMessage, cause, errorCode, details, null
     ) {
     }
 
@@ -45,17 +46,31 @@ class ApiException private constructor(
     ) {
     }
 
-    fun throwAndPrintStackTrace(
+    fun printException(
         printStacktrace: Boolean,
         e: Exception? = null,
-        logger: Logger = LoggerFactory.getLogger(this::class.java)!!
+        logger: Logger = LoggerFactory.getLogger(this::class.java)!!,
+        logLevel: LogLevel = LogLevel.ERROR
     ): ApiException {
         if (printStacktrace) {
-            logger.error("API-Exception: ${this.errorCode} -> ${this.message}")
+            printOnLogLevel("API-Exception: ${this.errorCode} -> ${this.message}", logger, logLevel)
             e?.printStackTrace()
         }
 
         return this
+    }
+
+    private fun printOnLogLevel(message: String, logger: Logger, logLevel: LogLevel) {
+        when (logLevel) {
+            LogLevel.TRACE -> logger.trace(message)
+            LogLevel.DEBUG -> logger.debug(message)
+            LogLevel.INFO -> logger.info(message)
+            LogLevel.WARN -> logger.warn(message)
+            LogLevel.ERROR -> logger.error(message)
+            LogLevel.FATAL -> logger.error(message)
+            LogLevel.OFF -> {
+            } //No nothing
+        }
     }
 
     /**
@@ -144,12 +159,20 @@ class ApiException private constructor(
             }, null)
         }
 
-        fun unauthorized403(description: String): ApiException {
+        fun unauthorized403(description: String, cause: Throwable? = null): ApiException {
             return ApiException(ErrorCode.PERMISSION_DENIED, object : ErrorDetail {
                 override fun toMessage(): String {
                     return description
                 }
             })
+        }
+
+        fun unauthorized401(description: String, cause: Throwable? = null): ApiException {
+            return ApiException(ErrorCode.UNAUTHENTICATED, object : ErrorDetail {
+                override fun toMessage(): String {
+                    return description
+                }
+            }, cause)
         }
 
         fun invalidArgument400(invalidArgumentDetails: List<String>): ApiException {

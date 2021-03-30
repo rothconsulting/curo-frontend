@@ -1,6 +1,8 @@
 package ch.umb.curo.starter.auth
 
 import ch.umb.curo.starter.SpringContext
+import ch.umb.curo.starter.exception.ApiException
+import ch.umb.curo.starter.interceptor.JWTClaimCheckInterceptor
 import ch.umb.curo.starter.models.auth.OpenidConfiguration
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.util.JsonBodyHandler
@@ -45,9 +47,10 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
         val properties = SpringContext.getBean(CuroProperties::class.java) ?: return AuthenticationResult.unsuccessful()
 
         val jwt = resolveToken(request)
-        if (jwt == null) {
-            printErrorsToLog("The Token is empty.")
-            return AuthenticationResult.unsuccessful()
+        if(jwt == null) {
+            val e = ApiException.unauthorized401("The Token is empty.")
+            printErrorsToLog(e.message ?: "n/a")
+            throw e
         }
 
         val decodedJwt = try {
@@ -66,25 +69,26 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
                 decodedJwt
             }
         } catch (e: Exception) {
-            return when (e) {
-                is JWTVerificationException,
-                is InvalidClaimException,
-                is TokenExpiredException,
-                is JWTDecodeException -> {
-                    printErrorsToLog(e.message ?: "n/a")
-                    AuthenticationResult.unsuccessful()
-                }
-                else -> {
-                    printErrorsToLog(e.message ?: "n/a")
-                    AuthenticationResult.unsuccessful()
-                }
+            printErrorsToLog(e.message ?: "n/a")
+            throw e
+        }
+
+        val customChecks = SpringContext.getBeans(JWTClaimCheckInterceptor::class.java)
+        logger.debug("CURO: Execute JWTClaimCheckInterceptors")
+        customChecks.filterNotNull().sortedBy { it.order }.forEach {
+            logger.debug("CURO: -> ${it.name} (${it.order})")
+            try {
+                it.onIntercept(decodedJwt, jwt, request)
+            }catch (e: Exception) {
+                throw e
             }
         }
 
         val userId = decodedJwt.getClaim(properties.auth.oauth2.userIdClaim).asString()
-        if (userId == null) {
-            printErrorsToLog("The Claim '${properties.auth.oauth2.userIdClaim}' does not exist.")
-            return AuthenticationResult.unsuccessful()
+        if(userId == null) {
+            val e = ApiException.unauthorized403("The Claim '${properties.auth.oauth2.userIdClaim}' does not exist.")
+            printErrorsToLog(e.message ?: "n/a")
+            throw e
         }
 
         //Allow if /curo-api/auth/success
@@ -94,8 +98,9 @@ open class CuroOAuth2Authentication : AuthenticationProvider, CuroLoginMethod {
 
         val user = engine.identityService.createUserQuery().userId(userId).singleResult()
         return if (user == null) {
-            printErrorsToLog("User ($userId) does not exist on Camunda.")
-            AuthenticationResult.unsuccessful(userId)
+            val e = ApiException.unauthorized403("User ($userId) does not exist on Camunda.")
+            printErrorsToLog(e.message ?: "n/a")
+            throw e
         } else {
             AuthenticationResult.successful(userId)
         }

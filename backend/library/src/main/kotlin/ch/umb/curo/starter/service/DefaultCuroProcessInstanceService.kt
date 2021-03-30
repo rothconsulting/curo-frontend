@@ -31,7 +31,7 @@ class DefaultCuroProcessInstanceService(
                     .count() == 0L
             ) {
                 throw ApiException.curoErrorCode(ApiException.CuroErrorCode.PROCESS_DEFINITION_NOT_FOUND)
-                    .throwAndPrintStackTrace(properties.printStacktrace)
+                    .printException(properties.printStacktrace)
             }
 
             val newInstance =
@@ -77,9 +77,10 @@ class DefaultCuroProcessInstanceService(
             return response
         } catch (e: AuthorizationException) {
             throw ApiException.unauthorized403("You are not allowed to start this process")
-                .throwAndPrintStackTrace(properties.printStacktrace, e)
+                .printException(properties.printStacktrace, e)
         } catch (e: ProcessEngineException) {
-            throw ApiException.internal500(e.localizedMessage, e).throwAndPrintStackTrace(properties.printStacktrace, e)
+            throw ApiException.internal500(e.localizedMessage, e)
+                .printException(properties.printStacktrace, e)
         }
     }
 
