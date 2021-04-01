@@ -216,6 +216,7 @@ open class CamundaVariableHelper(private val variableScope: VariableScope) {
      * @param variableClass Class with static variables definitions.
      * @param convertExistingVariables Should Curo try to convert existing complex variables to their correct type.
      */
+    @JvmOverloads
     fun initVariables(variableClass: Any, convertExistingVariables: Boolean = true) {
         logger.debug("CURO: Processing initialization of '${variableClass::class.java.canonicalName}'")
         val doAllEmpty = variableClass.javaClass.isAnnotationPresent(InitWithEmpty::class.java)
@@ -332,6 +333,7 @@ open class CamundaVariableHelper(private val variableScope: VariableScope) {
          * @param variableScope Scope which is used to load and save variables.
          * @param convertExistingVariables Should Curo try to convert existing complex variables to their correct type.
          */
+        @JvmOverloads
         fun initVariables(variableClass: Any, variableScope: VariableScope, convertExistingVariables: Boolean = true) {
             CamundaVariableHelper(variableScope).initVariables(variableClass, convertExistingVariables)
         }

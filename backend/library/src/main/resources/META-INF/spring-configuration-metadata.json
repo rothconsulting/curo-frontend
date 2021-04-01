@@ -50,15 +50,15 @@
       "sourceType": "ch.umb.curo.starter.property.CuroOAuth2Properties"
     },
     {
-      "name": "curo.auth.oauth2.user-federation.create-non-existing-users",
+      "name": "curo.auth.oauth2.user-federation.create-non-existing-groups",
       "type": "java.lang.Boolean",
-      "description": "Defines if Curo create non existing users in Camunda",
+      "description": "Create non existing jwt groups in camunda",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
-      "name": "curo.auth.oauth2.user-federation.dont-revoke-camunda-admin-group",
+      "name": "curo.auth.oauth2.user-federation.create-non-existing-users",
       "type": "java.lang.Boolean",
-      "description": "Don't revoke the camunda-admin group from users even if they don't have this group in their JWT",
+      "description": "Defines if Curo create non existing users in Camunda",
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
@@ -116,6 +116,12 @@
       "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
     },
     {
+      "name": "curo.auth.oauth2.user-federation.revoke-camunda-admin-group",
+      "type": "java.lang.Boolean",
+      "description": "Revoke the camunda-admin group from users even if they don't have this group in their JWT",
+      "sourceType": "ch.umb.curo.starter.property.CuroUserFederationProperties"
+    },
+    {
       "name": "curo.auth.oauth2.user-id-claim",
       "type": "java.lang.String",
       "description": "Claim which is used to check against Camunda (user id) Common claims: email, preferred_username",
@@ -152,6 +158,12 @@
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     },
     {
+      "name": "curo.create-initial-filters",
+      "type": "java.lang.Boolean",
+      "description": "Defines if Curo creates filter during startup.",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
       "name": "curo.flow-to-next.default-timeout",
       "type": "java.lang.Integer",
       "description": "Default timeout in seconds for flowToNext requests Default: 30s",
@@ -170,19 +182,20 @@
       "sourceType": "ch.umb.curo.starter.property.CuroFlowToNextProperties"
     },
     {
-      "name": "curo.frontend-enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
-    },
-    {
       "name": "curo.ignore-object-type",
       "type": "java.lang.Boolean",
       "description": "If active, Curo will override object variables with json value if the new value does not match the object type of the variable.",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     },
     {
+      "name": "curo.initial-filter-location",
+      "type": "java.lang.String",
+      "description": "Location in which Curo searches for initial filter json files.",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
       "name": "curo.initial-groups",
-      "type": "java.util.List<java.lang.String>",
+      "type": "java.util.List<ch.umb.curo.starter.property.CuroInitialGroupProperty>",
       "description": "Define groups which Curo should create on startup. If group already exists, Curo will not create it again.",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     },
@@ -196,6 +209,12 @@
       "name": "curo.print-stacktrace",
       "type": "java.lang.Boolean",
       "description": "Should Curo print stacktraces to the log and rest responses",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.set-default-serialization-format",
+      "type": "java.lang.Boolean",
+      "description": "If set, Curo will override the default serialization format to application\/json",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     }
   ],

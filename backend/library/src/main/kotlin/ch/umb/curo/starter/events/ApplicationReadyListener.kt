@@ -58,9 +58,9 @@ class ApplicationReadyListener(
             logger.info("CURO: Creating initial filters based on files in '$filterPath'")
             files.forEach {
                 val filterObj = try {
-                    objectMapper.readValue(it.file, FilterDto::class.java)
+                    objectMapper.readValue(it.inputStream, FilterDto::class.java)
                 } catch (e: Exception) {
-                    logger.warn("CURO: Filter file '${it.file.path}' is not a valid FilterEntity json")
+                    logger.warn("CURO: Filter file '${it.filename}' is not a valid FilterEntity json")
                     return@forEach
                 }
                 try {
@@ -70,31 +70,31 @@ class ApplicationReadyListener(
                     if (filterService.createFilterQuery().filterResourceType(resourceType).filterName(name)
                             .count() > 0
                     ) {
-                        logger.debug("CURO: Filter '${it.file.path}' already exists (name: $name, type: $resourceType)")
+                        logger.debug("CURO: Filter '${it.filename}' already exists (name: $name, type: $resourceType)")
                         return@forEach
                     }
 
                     val filter = if (EntityTypes.TASK == resourceType) {
                         filterService.newTaskFilter()
                     } else {
-                        logger.warn("CURO: Filter file '${it.file.path}' has invalid resource type '$resourceType'")
+                        logger.warn("CURO: Filter file '${it.filename}' has invalid resource type '$resourceType'")
                         return@forEach
                     }
 
                     try {
                         filterObj.updateFilter(filter, processEngine)
                     } catch (e: NotValidException) {
-                        logger.warn("CURO: Filter file '${it.file.path}' has invalid content")
+                        logger.warn("CURO: Filter file '${it.filename}' has invalid content")
                         return@forEach
                     }
 
                     filterService.saveFilter(filter)
                 } catch (e: Exception) {
-                    logger.warn("CURO: Filter file '${it.file.path}' got rejected by Camunda")
+                    logger.warn("CURO: Filter file '${it.filename}' got rejected by Camunda")
                     return@forEach
                 }
 
-                logger.debug("CURO: Create initial filter '${it.file.path}'")
+                logger.debug("CURO: Create initial filter '${it.filename}'")
             }
 
         }
