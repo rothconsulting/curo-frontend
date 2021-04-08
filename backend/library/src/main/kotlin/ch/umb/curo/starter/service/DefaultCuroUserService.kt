@@ -7,16 +7,16 @@ import org.camunda.bpm.engine.IdentityService
 class DefaultCuroUserService(private val identityService: IdentityService) : CuroUserService {
     override fun getUsers(
         emailLike: String,
-        lastNameLike: String,
-        firstNameLike: String,
+        lastnameLike: String,
+        firstnameLike: String,
         memberOfGroup: ArrayList<String>,
         attributes: ArrayList<String>
     ): CuroUserResponse {
 
         val baseQuery = identityService.createUserQuery()
         baseQuery.userEmailLike(if (emailLike.isEmpty()) "%" else emailLike)
-        baseQuery.userLastNameLike(if (lastNameLike.isEmpty()) "%" else lastNameLike)
-        baseQuery.userFirstNameLike(if (firstNameLike.isEmpty()) "%" else firstNameLike)
+        baseQuery.userLastNameLike(if (lastnameLike.isEmpty()) "%" else lastnameLike)
+        baseQuery.userFirstNameLike(if (firstnameLike.isEmpty()) "%" else firstnameLike)
 
         val users = if (memberOfGroup.isNotEmpty()) {
             memberOfGroup.flatMap {

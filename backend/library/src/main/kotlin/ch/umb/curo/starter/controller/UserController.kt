@@ -33,15 +33,15 @@ interface UserController {
             description = "Only select users where the last name matches the given parameter. The syntax is that of SQL, eg. %test%.",
             required = false
         )
-        @RequestParam("lastNameLike", required = false, defaultValue = "")
-        lastNameLike: String = "%",
+        @RequestParam("lastnameLike", required = false, defaultValue = "")
+        lastnameLike: String = "%",
 
         @Parameter(
             description = "Only select users where the first name matches the given parameter. The syntax is that of SQL, eg. %test%.",
             required = false
         )
-        @RequestParam("firstNameLike", required = false, defaultValue = "")
-        firstNameLike: String = "%",
+        @RequestParam("firstnameLike", required = false, defaultValue = "")
+        firstnameLike: String = "%",
 
         @Parameter(
             description = "Only select users that belong to one of the given groups.",

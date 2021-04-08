@@ -10,10 +10,10 @@ class DefaultUserController(
 ) : UserController {
 
     override fun getUsers(emailLike: String,
-                          lastNameLike: String,
-                          firstNameLike: String,
+                          lastnameLike: String,
+                          firstnameLike: String,
                           memberOfGroup: ArrayList<String>,
                           attributes: ArrayList<String>): CuroUserResponse {
-        return curoUserService.getUsers(emailLike, lastNameLike, firstNameLike, memberOfGroup, attributes)
+        return curoUserService.getUsers(emailLike, lastnameLike, firstnameLike, memberOfGroup, attributes)
     }
 }
