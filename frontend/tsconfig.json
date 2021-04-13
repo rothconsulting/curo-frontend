@@ -1,7 +1,12 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
+    "paths": {
+      "@umb-ag/curo-core": ["dist/core/core", "dist/core"],
+      "@umb-ag/curo-camunda": ["dist/camunda/camunda", "dist/camunda"]
+    },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -15,13 +20,10 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "es2020",
-    "lib": ["es2018", "dom"],
-    "paths": {
-      "@umb-ag/curo-core": ["dist/core/core", "dist/core"],
-      "@umb-ag/curo-camunda": ["dist/camunda/camunda", "dist/camunda"]
-    }
+    "lib": ["es2018", "dom"]
   },
   "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
