@@ -28,17 +28,17 @@
     "icon": "subway",
     "variables": [
       {
-        "lable": "Title",
+        "label": "Title",
         "name": "title",
         "type": "text"
       },
       {
-        "lable": "Order",
+        "label": "Order",
         "name": "ordering",
         "type": "number"
       },
       {
-        "lable": "Assignee",
+        "label": "Assignee",
         "name": "assignee",
         "type": "text",
         "renderer": "user",
