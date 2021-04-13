@@ -38,10 +38,15 @@
         "type": "number"
       },
       {
+        "label": "Created",
+        "name": "created",
+        "type": "date",
+        "isAttribute": "true"
+      },
+      {
         "label": "Assignee",
         "name": "assignee",
         "type": "text",
-        "renderer": "user",
         "isAttribute": "true"
       }
     ]
