@@ -29,8 +29,6 @@ camunda:
       password: demo
       id: demo
     default-serialization-format: application/json
-    filter:
-      create: 🌍 All tasks
 
 logging:
   level:

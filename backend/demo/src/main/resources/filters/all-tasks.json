@@ -1,0 +1,42 @@
+{
+  "resourceType": "Task",
+  "name": "All Tasks",
+  "owner": "demo",
+  "query": {},
+  "properties": {
+    "color": "#3e4d2f",
+    "description": "Tasks assigned to group accounting",
+    "priority": 5,
+    "icon": "subway",
+    "variables": [
+      {
+        "label": "Task",
+        "name": "name",
+        "type": "text",
+        "isAttribute": "true"
+      },
+      {
+        "label": "Title",
+        "name": "title",
+        "type": "text"
+      },
+      {
+        "label": "Order",
+        "name": "ordering",
+        "type": "number"
+      },
+      {
+        "label": "Created",
+        "name": "created",
+        "type": "date",
+        "isAttribute": "true"
+      },
+      {
+        "label": "Assignee",
+        "name": "assignee",
+        "type": "text",
+        "isAttribute": "true"
+      }
+    ]
+  }
+}
