@@ -1,7 +1,8 @@
 {
   "/api": {
-    "target": "http://localhost:8080/",
+    "target": "https://backend-curo-reborn.apps-dev.umb.cloud/",
     "secure": false,
+    "changeOrigin": true,
     "pathRewrite": {
       "^/api": ""
     }

@@ -9,6 +9,10 @@ const routes: Routes = [
     component: TaskListComponent
   },
   {
+    path: 'list/:filterId',
+    component: TaskListComponent
+  },
+  {
     path: ':taskId',
     component: TaskComponent
   }

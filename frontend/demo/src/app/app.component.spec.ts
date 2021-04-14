@@ -11,6 +11,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ProcessService } from '@umb-ag/curo-core';
 import { of } from 'rxjs';
 import { AppComponent } from './app.component';
+import { SharedModule } from './shared/shared.module';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -27,7 +28,8 @@ describe('AppComponent', () => {
         MatListModule,
         MatMenuModule,
         MatSidenavModule,
-        MatToolbarModule
+        MatToolbarModule,
+        SharedModule
       ],
       declarations: [AppComponent]
     }).compileComponents();

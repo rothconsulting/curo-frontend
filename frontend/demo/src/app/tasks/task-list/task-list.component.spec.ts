@@ -2,6 +2,11 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
 import { TaskListComponent } from './task-list.component';
 
 describe('TaskListComponent', () => {
@@ -10,7 +15,16 @@ describe('TaskListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, MatCardModule, MatListModule],
+      imports: [
+        NoopAnimationsModule,
+        HttpClientTestingModule,
+        RouterTestingModule,
+        MatCardModule,
+        MatListModule,
+        MatPaginatorModule,
+        MatSortModule,
+        MatTableModule
+      ],
       declarations: [TaskListComponent]
     }).compileComponents();
   });

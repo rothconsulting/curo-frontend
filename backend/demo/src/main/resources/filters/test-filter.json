@@ -28,12 +28,12 @@
     "icon": "fucking_awesome_icon",
     "variables": [
       {
-        "lable": "Title",
+        "label": "Title",
         "name": "title",
         "type": "text"
       },
       {
-        "lable": "Order",
+        "label": "Order",
         "name": "ordering",
         "type": "number"
       }

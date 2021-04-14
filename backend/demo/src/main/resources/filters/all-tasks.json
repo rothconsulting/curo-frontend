@@ -5,9 +5,9 @@
   "query": {},
   "properties": {
     "color": "#3e4d2f",
-    "description": "Tasks assigned to group accounting",
+    "description": "All Tasks",
     "priority": 5,
-    "icon": "subway",
+    "icon": "moped",
     "variables": [
       {
         "label": "Task",
@@ -19,11 +19,6 @@
         "label": "Title",
         "name": "title",
         "type": "text"
-      },
-      {
-        "label": "Order",
-        "name": "ordering",
-        "type": "number"
       },
       {
         "label": "Created",
