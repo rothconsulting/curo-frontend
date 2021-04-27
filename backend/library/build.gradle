@@ -65,7 +65,7 @@ dependencies {
     api "org.camunda.bpm:camunda-engine-plugin-spin:$camunda_version"
 
     compileOnly "org.springdoc:springdoc-openapi-kotlin:1.5.8"
-    compileOnly "org.springdoc:springdoc-openapi-ui:1.5.7"
+    compileOnly "org.springdoc:springdoc-openapi-ui:1.5.8"
     compileOnly "com.auth0:java-jwt:3.14.0"
     compileOnly "com.auth0:jwks-rsa:0.17.1"
 
