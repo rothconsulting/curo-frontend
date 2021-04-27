@@ -230,7 +230,7 @@ open class CamundaVariableHelper(private val variableScope: VariableScope) {
             }
             .forEach {
                 it.isAccessible = true
-                val definition = it.get(variableClass) as CamundaVariableDefinition<*>
+                val definition = it.get(variableClass) as CamundaVariableDefinitionConvention<*>
 
                 if (convertExistingVariables && variableScope.hasVariable(definition.value)) {
                     val raw = variableScope.getVariableTyped<TypedValue>(definition.value, true)
