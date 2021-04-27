@@ -116,6 +116,7 @@ class ApiException private constructor(
         PROCESS_DEFINITION_NOT_FOUND(ErrorCode.NOT_FOUND, "Process definition not found"),
         VARIABLE_NOT_FOUND(ErrorCode.NOT_FOUND, "Variable not found"),
         VARIABLE_IS_NO_FILE(ErrorCode.NOT_FOUND, "Variable is not a file"),
+        VARIABLE_IS_NOT_SERIALIZABLE(ErrorCode.INTERNAL, "One or more variables are not serializable. Please make sure that the json corresponds to the defined types."),
         NEEDS_SAME_ASSIGNEE(ErrorCode.PERMISSION_DENIED, "Task does not belong to the logged in user"),
         CANT_SAVE_IN_EXISTING_OBJECT(
             ErrorCode.INVALID_ARGUMENT,
@@ -151,10 +152,10 @@ class ApiException private constructor(
             })
         }
 
-        fun internal500(description: String, e: Throwable): ApiException {
-            return ApiException(e.localizedMessage, e, ErrorCode.INTERNAL, object : ErrorDetail {
+        fun internal500(description: String? = null, e: Throwable): ApiException {
+            return ApiException(description ?: e.localizedMessage, e, ErrorCode.INTERNAL, object : ErrorDetail {
                 override fun toMessage(): String {
-                    return description
+                    return description ?: e.localizedMessage
                 }
             }, null)
         }

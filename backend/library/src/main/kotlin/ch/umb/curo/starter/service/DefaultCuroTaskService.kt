@@ -17,13 +17,18 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import org.apache.commons.io.IOUtils
 import org.camunda.bpm.engine.*
+import org.camunda.bpm.engine.filter.Filter
+import org.camunda.bpm.engine.impl.identity.Authentication
 import org.camunda.bpm.engine.rest.dto.task.TaskDto
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto
 import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl
+import org.camunda.bpm.engine.task.Task
+import org.camunda.bpm.engine.variable.VariableMap
 import org.camunda.bpm.engine.variable.type.ValueType
 import org.camunda.bpm.engine.variable.value.FileValue
 import org.camunda.bpm.engine.variable.value.TypedValue
 import org.camunda.spin.impl.json.jackson.JacksonJsonNode
+import org.camunda.spin.json.SpinJsonException
 import org.camunda.spin.plugin.variable.type.JsonValueType
 import org.camunda.spin.plugin.variable.value.impl.JsonValueImpl
 import org.springframework.beans.BeanUtils
@@ -54,38 +59,33 @@ open class DefaultCuroTaskService(
     ): CuroFilterResponse {
         val filter = filterService.getFilter(id) ?: throw ApiException.notFound404("Filter not found")
 
-        if (filter.resourceType !in arrayListOf(EntityTypes.TASK, EntityTypes.HISTORIC_TASK)) {
-            throw ApiException.invalidArgument400(arrayListOf("Filter is not of type TASK or HISTORIC_TASK"))
-        }
+        checkFilterType(filter)
+        checkQuery(query)
 
-        if (query != null && query.isNotEmpty()) {
-            try {
-                objectMapper.readValue(query, TaskQueryDto::class.java)
-            } catch (e: Exception) {
-                throw ApiException.invalidArgument400(arrayListOf("query attribute is not deserializable into TaskQueryDto."))
-            }
-        }
+        var areVariablesNeeded = attributes.contains("variables") || attributes.isEmpty()
+        val isShowUndefinedVariable = (filter.properties.getOrDefault(
+            "showUndefinedVariable",
+            false
+        ) as Boolean)
 
         val description = filter.properties.getOrDefault("description", "") as String
         val refresh = filter.properties.getOrDefault("refresh", false) as Boolean
         val properties = filter.properties.filterNot { it.key in arrayListOf("description", "refresh") }
 
-        val variablesToInclude =
-            if ((attributes.contains("variables") || attributes.isEmpty()) && variables.isEmpty()) {
-                if (attributes.isNotEmpty()) {
-                    attributes.add("variables")
-                }
-
-                if (!(filter.properties.getOrDefault("showUndefinedVariable", false) as Boolean)) {
-                    @Suppress("UNCHECKED_CAST")
-                    val filterVariables = filter.properties["variables"] as List<HashMap<String, String>?>?
-                    filterVariables?.mapNotNull { it?.getOrDefault("name", null) } ?: variables
-                } else {
-                    arrayListOf()
-                }
-            } else {
-                variables
+        var variablesToInclude = listOf<String>()
+        when {
+            isShowUndefinedVariable -> {
+                listOf<String>()
             }
+            areVariablesNeeded  -> {
+                @Suppress("UNCHECKED_CAST")
+                val filterVariables = filter.properties["variables"] as List<HashMap<String, String>?>?
+                variablesToInclude = filterVariables?.mapNotNull { it?.getOrDefault("name", null) } ?: variables
+            }
+            variables.isNotEmpty() -> {
+                variablesToInclude = variables
+            }
+        }
 
         val camundaFilterImpl = FilterResourceImpl(null, objectMapper, id, "/")
 
@@ -103,8 +103,9 @@ open class DefaultCuroTaskService(
         val result = camundaFilterImpl.queryJsonList(query ?: "{}", offset, maxResult)
             .map { CuroTask.fromCamundaTaskDto(it as TaskDto) }
 
-        result.map { curoTask ->
-            if (attributes.contains("variables") || attributes.isEmpty()) {
+
+        if (areVariablesNeeded) {
+            result.forEach { curoTask ->
                 curoTask.variables = hashMapOf()
                 loadVariables(variablesToInclude, curoTask)
             }
@@ -127,6 +128,22 @@ open class DefaultCuroTaskService(
             CuroFilterResponse(filter.name, description, refresh, properties, count, result)
         } else {
             CuroFilterResponse(total = count, items = result)
+        }
+    }
+
+    private fun checkFilterType(filter: Filter) {
+        if (filter.resourceType !in arrayListOf(EntityTypes.TASK, EntityTypes.HISTORIC_TASK)) {
+            throw ApiException.invalidArgument400(arrayListOf("Filter is not of type TASK or HISTORIC_TASK"))
+        }
+    }
+
+    private fun checkQuery(query: String?) {
+        if (query != null && query.isNotEmpty()) {
+            try {
+                objectMapper.readValue(query, TaskQueryDto::class.java)
+            } catch (e: Exception) {
+                throw ApiException.invalidArgument400(arrayListOf("query attribute is not deserializable into TaskQueryDto."))
+            }
         }
     }
 
@@ -239,68 +256,18 @@ open class DefaultCuroTaskService(
         val task = getTask(id)
         //Check if user is assignee
         val currentUser = identityService.currentAuthentication
-        if (task.assignee != currentUser.userId) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
-                .printException(properties.printStacktrace)
-        }
+        checkForSameAssignee(task, currentUser)
 
         //Save variables
         if (body != null) {
             val taskVariables = taskService.getVariablesTyped(task.id)
-            val objectVariables =
-                taskVariables.filter { it.value != null && !BeanUtils.isSimpleValueType(it.value::class.java) }
+            val objectVariables = taskVariables
+                .filterNot { it.value == null }
+                .filterNot { BeanUtils.isSimpleValueType(it.value::class.java) }
             val objectVariablesNames = objectVariables.map { it.key }
 
             body.entries.forEach { entry ->
-                if (entry.key in objectVariablesNames) {
-                    try {
-                        if (taskVariables[entry.key]!! is JacksonJsonNode) {
-                            taskService.setVariable(
-                                task.id,
-                                entry.key,
-                                JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                            )
-                        } else {
-                            val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
-                            taskService.setVariable(task.id, entry.key, obj)
-                        }
-                    } catch (e: InvalidDefinitionException) {
-                        if (properties.ignoreObjectType) {
-                            taskService.setVariable(
-                                task.id,
-                                entry.key,
-                                JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                            )
-                        } else {
-                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .printException(properties.printStacktrace, e)
-                        }
-                    } catch (e: UnrecognizedPropertyException) {
-                        if (properties.ignoreObjectType) {
-                            taskService.setVariable(
-                                task.id,
-                                entry.key,
-                                JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                            )
-                        } else {
-                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .printException(properties.printStacktrace, e)
-                        }
-                    } catch (e: Exception) {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .printException(properties.printStacktrace, e)
-                    }
-                } else {
-                    if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
-                        taskService.setVariable(
-                            task.id,
-                            entry.key,
-                            JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                        )
-                    } else {
-                        taskService.setVariable(task.id, entry.key, entry.value)
-                    }
-                }
+                saveSingleVariable(entry.key, entry.value, objectVariablesNames, taskVariables, task)
             }
         }
         //Complete Task
@@ -332,6 +299,75 @@ open class DefaultCuroTaskService(
 
         response.variables = variables
         return response
+    }
+
+    private fun saveSingleVariable(
+        name: String,
+        value: Any?,
+        objectVariablesNames: List<String>,
+        taskVariables: VariableMap,
+        task: Task
+    ) {
+        if (name in objectVariablesNames) {
+            try {
+                if (taskVariables[name]!! is JacksonJsonNode) {
+                    taskService.setVariable(
+                        task.id,
+                        name,
+                        JsonValueImpl(ObjectMapper().writeValueAsString(value), "application/json")
+                    )
+                } else {
+                    val obj = ObjectMapper().convertValue(value, taskVariables[name]!!::class.java)
+                    taskService.setVariable(task.id, name, obj)
+                }
+            } catch (e: Exception) {
+                when (e) {
+                    is InvalidDefinitionException,
+                    is UnrecognizedPropertyException -> {
+                        saveIfIgnoreObjectType(task, name, value, e)
+                    }
+                    else -> {
+                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                            .printException(properties.printStacktrace, e)
+                    }
+                }
+            }
+        } else {
+            if (value != null && !BeanUtils.isSimpleValueType(value::class.java)) {
+                try {
+                    taskService.setVariable(
+                        task.id,
+                        name,
+                        JsonValueImpl(ObjectMapper().writeValueAsString(value), "application/json")
+                    )
+                } catch (e: UnrecognizedPropertyException) {
+                    saveIfIgnoreObjectType(task, name, value, e)
+                } catch (e: Exception) {
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                        .printException(properties.printStacktrace, e)
+                }
+            } else {
+                taskService.setVariable(task.id, name, value)
+            }
+        }
+    }
+
+    private fun saveIfIgnoreObjectType(
+        task: Task,
+        name: String,
+        value: Any?,
+        e: java.lang.Exception
+    ) {
+        if (properties.ignoreObjectType) {
+            taskService.setVariable(
+                task.id,
+                name,
+                JsonValueImpl(ObjectMapper().writeValueAsString(value), "application/json")
+            )
+        } else {
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
+                .printException(properties.printStacktrace, e)
+        }
     }
 
     override fun assignTask(id: String, assigneeRequest: AssigneeRequest, response: HttpServletResponse) {
@@ -378,10 +414,7 @@ open class DefaultCuroTaskService(
         val task = getTask(id)
         //Check if user is assignee
         val currentUser = identityService.currentAuthentication
-        if (task.assignee != currentUser.userId) {
-            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
-                .printException(properties.printStacktrace)
-        }
+        checkForSameAssignee(task, currentUser)
 
         //Save variables
         val taskVariables = taskService.getVariablesTyped(task.id)
@@ -390,74 +423,20 @@ open class DefaultCuroTaskService(
         val objectVariablesNames = objectVariables.map { it.key }
 
         body.entries.forEach { entry ->
-            if (entry.key in objectVariablesNames) {
-                try {
-                    if (taskVariables[entry.key]!! is JacksonJsonNode) {
-                        taskService.setVariable(
-                            task.id,
-                            entry.key,
-                            JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                        )
-                    } else {
-                        val obj = ObjectMapper().convertValue(entry.value, taskVariables[entry.key]!!::class.java)
-                        taskService.setVariable(task.id, entry.key, obj)
-                    }
-                } catch (e: InvalidDefinitionException) {
-                    if (properties.ignoreObjectType) {
-                        taskService.setVariable(
-                            task.id,
-                            entry.key,
-                            JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                        )
-                    } else {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .printException(properties.printStacktrace, e)
-                    }
-                } catch (e: UnrecognizedPropertyException) {
-                    if (properties.ignoreObjectType) {
-                        taskService.setVariable(
-                            task.id,
-                            entry.key,
-                            JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                        )
-                    } else {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .printException(properties.printStacktrace, e)
-                    }
-                } catch (e: Exception) {
-                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                        .printException(properties.printStacktrace, e)
-                }
-            } else {
-                if (entry.value != null && !BeanUtils.isSimpleValueType(entry.value!!::class.java)) {
-                    try {
-                        taskService.setVariable(
-                            task.id,
-                            entry.key,
-                            JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                        )
-                    } catch (e: UnrecognizedPropertyException) {
-                        if (properties.ignoreObjectType) {
-                            taskService.setVariable(
-                                task.id,
-                                entry.key,
-                                JsonValueImpl(ObjectMapper().writeValueAsString(entry.value), "application/json")
-                            )
-                        } else {
-                            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                                .printException(properties.printStacktrace, e)
-                        }
-                    } catch (e: Exception) {
-                        throw ApiException.curoErrorCode(ApiException.CuroErrorCode.CANT_SAVE_IN_EXISTING_OBJECT)
-                            .printException(properties.printStacktrace, e)
-                    }
-                } else {
-                    taskService.setVariable(task.id, entry.key, entry.value)
-                }
-            }
+            saveSingleVariable(entry.key, entry.value, objectVariablesNames, taskVariables, task)
         }
 
         response.status = HttpStatus.OK.value()
+    }
+
+    private fun checkForSameAssignee(
+        task: Task,
+        currentUser: Authentication
+    ) {
+        if (task.assignee != currentUser.userId) {
+            throw ApiException.curoErrorCode(ApiException.CuroErrorCode.NEEDS_SAME_ASSIGNEE)
+                .printException(properties.printStacktrace)
+        }
     }
 
     override fun nextTask(id: String, flowToNextIgnoreAssignee: Boolean?): FlowToNextResult {
@@ -503,46 +482,54 @@ open class DefaultCuroTaskService(
      * Files are not added to the task object.
      */
     private fun loadVariables(variables: List<String>, curoTask: CuroTask, fromHistoric: Boolean = false) {
-        if (curoTask.variables == null) {
-            curoTask.variables = hashMapOf()
-        }
+        curoTask.variables = curoTask.variables ?: hashMapOf()
 
         if (!fromHistoric) {
-            val taskVariables = if (variables.isEmpty()) {
-                taskService.getVariablesTyped(curoTask.id)
-            } else {
-                taskService.getVariablesTyped(curoTask.id, variables, true)
-            }
+            try {
+                val taskVariables = if (variables.isEmpty()) {
+                    taskService.getVariablesTyped(curoTask.id)
+                } else {
+                    taskService.getVariablesTyped(curoTask.id, variables, true)
+                }
 
-            taskVariables.entries.forEach { variable ->
-                val valueInfo = taskVariables.getValueTyped<TypedValue>(variable.key)
-                when (valueInfo.type) {
-                    ValueType.FILE -> curoTask.variables!![variable.key] =
-                        CuroFileVariable.fromFileValue(valueInfo as FileValue)
-                    JsonValueType.JSON -> curoTask.variables!![variable.key] =
-                        ObjectMapper().registerModule(JodaModule())
-                            .readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                    else -> curoTask.variables!![variable.key] = variable.value
+                taskVariables.entries.forEach { variable ->
+                    val valueInfo = taskVariables.getValueTyped<TypedValue>(variable.key)
+                    convertAndAddVariable(valueInfo, curoTask, variable.key, variable.value)
+                }
+            } catch (e: Exception) {
+                if (e.cause is SpinJsonException) {
+                    throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NOT_SERIALIZABLE)
                 }
             }
         } else {
-            val taskVariables =
-                historyService.createHistoricVariableInstanceQuery().processInstanceId(curoTask.processInstanceId)
+            try {
+                val taskVariables = historyService
+                    .createHistoricVariableInstanceQuery()
+                    .processInstanceId(curoTask.processInstanceId)
                     .list()
 
-            taskVariables.forEach { variable ->
-                val valueInfo = variable.typedValue
-                if (variables.isEmpty() || variables.contains(variable.name)) {
-                    when {
-                        valueInfo.type == ValueType.FILE -> curoTask.variables!![variable.name] =
-                            CuroFileVariable.fromFileValue(valueInfo as FileValue)
-                        valueInfo.type == JsonValueType.JSON -> curoTask.variables!![variable.name] =
-                            ObjectMapper().registerModule(JodaModule())
-                                .readValue((variable.value as JacksonJsonNode).toString(), JsonNode::class.java)
-                        else -> curoTask.variables!![variable.name] = variable.value
-                    }
+                taskVariables.filter { variables.isEmpty() || variables.contains(it.name) }.forEach { variable ->
+                    convertAndAddVariable(variable.typedValue, curoTask, variable.name, variable.value)
                 }
+            } catch (e: NullPointerException) {
+                throw ApiException.curoErrorCode(ApiException.CuroErrorCode.VARIABLE_IS_NOT_SERIALIZABLE)
             }
+        }
+    }
+
+    private fun convertAndAddVariable(
+        valueInfo: TypedValue,
+        curoTask: CuroTask,
+        name: String,
+        value: Any?
+    ) {
+        when (valueInfo.type) {
+            ValueType.FILE -> curoTask.variables!![name] =
+                CuroFileVariable.fromFileValue(valueInfo as FileValue)
+            JsonValueType.JSON -> curoTask.variables!![name] =
+                ObjectMapper().registerModule(JodaModule())
+                    .readValue((value as JacksonJsonNode).toString(), JsonNode::class.java)
+            else -> curoTask.variables!![name] = value
         }
     }
 

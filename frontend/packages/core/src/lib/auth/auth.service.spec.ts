@@ -37,4 +37,29 @@ describe('AuthService', () => {
 
     req.flush({});
   });
+
+  it('should load permissions', () => {
+    const requestedPermissions = {
+      '*': {
+        PROCESS_DEFINITION: ['READ'],
+        PROCESS_INSTANCE: ['*']
+      }
+    };
+    const mock = {
+      userId: 'test',
+      groups: ['admin'],
+      permissions: {},
+      curoPermissions: {}
+    };
+
+    service
+      .loadPermissions(requestedPermissions)
+      .subscribe((auth) => expect(auth).toEqual(mock));
+
+    const req = httpTestingController.expectOne(`/curo-api/auth/permissions`);
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body).toEqual(requestedPermissions);
+
+    req.flush(mock);
+  });
 });

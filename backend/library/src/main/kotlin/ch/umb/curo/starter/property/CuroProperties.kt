@@ -30,6 +30,13 @@ open class CuroProperties {
      */
     var camundaTelemetry: Boolean? = null
 
+
+    /**
+     * If set, Curo will define the camunda enableHistoricInstancePermissions to that value
+     * Since [Camunda 7.13](https://camunda.com/blog/2020/06/camunda-bpm-runtime-713-released) historic permissions are disabled by default.
+     */
+    var enableHistoricInstancePermissions: Boolean? = null
+
     /**
      * Define users which Curo should create on startup.
      * If the user already exists, only the groups are assigned.

@@ -22,12 +22,27 @@ class PostDeployListener(
 
         checkAuthorization(processEngineConfiguration)
         setDefaultSerializationFormat(processEngineConfiguration)
+        setEnableHistoricInstancePermissions(processEngineConfiguration)
 
         //Set patterns
         setCamundaUserIdPattern(processEngineConfiguration)
         setCamundaGroupIdPattern(processEngineConfiguration)
     }
 
+    private fun setEnableHistoricInstancePermissions(processEngineConfiguration: SpringProcessEngineConfiguration) {
+        val enableHistoricInstancePermissions = try {
+                (context.environment.getProperty("camunda.bpm.generic-properties.enable-historic-instance-permissions") as Boolean?)
+                ?: processEngineConfiguration.isEnableHistoricInstancePermissions
+        }catch (e: Exception) {
+            false
+        }
+        if(properties.enableHistoricInstancePermissions != null){
+            processEngineConfiguration.isEnableHistoricInstancePermissions = properties.enableHistoricInstancePermissions ?: false
+            logger.info("CURO: Set enableHistoricInstancePermissions to '${processEngineConfiguration.isEnableHistoricInstancePermissions}'")
+        }else{
+            logger.warn("CURO: Camunda enableHistoricInstancePermissions is set to $enableHistoricInstancePermissions!")
+        }
+    }
 
     private fun checkAuthorization(processEngineConfiguration: SpringProcessEngineConfiguration) {
         if (!processEngineConfiguration.isAuthorizationEnabled) {

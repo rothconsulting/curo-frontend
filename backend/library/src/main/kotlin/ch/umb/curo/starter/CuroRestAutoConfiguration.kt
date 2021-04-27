@@ -71,9 +71,17 @@ open class CuroRestAutoConfiguration {
     @ConditionalOnMissingBean
     open fun defaultCuroAuthenticationService(
         authSuccessInterceptors: List<AuthSuccessInterceptor>,
-        properties: CuroProperties
+        properties: CuroProperties,
+        identityService: IdentityService,
+        authorizationService: AuthorizationService,
+        repositoryService: RepositoryService
     ): CuroAuthenticationService {
-        return DefaultCuroAuthenticationService(authSuccessInterceptors, properties)
+        return DefaultCuroAuthenticationService(
+            authSuccessInterceptors,
+            properties,
+            identityService,
+            authorizationService
+        )
     }
 
 }
