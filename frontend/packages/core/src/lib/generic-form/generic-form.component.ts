@@ -34,9 +34,10 @@ export class GenericFormComponent {
       );
 
       if (form) {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory<any>(
-          form.component
-        );
+        const componentFactory =
+          this.componentFactoryResolver.resolveComponentFactory<any>(
+            form.component
+          );
 
         this.formHost.createComponent(componentFactory);
       }
