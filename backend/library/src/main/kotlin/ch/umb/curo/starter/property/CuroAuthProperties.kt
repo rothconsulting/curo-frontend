@@ -16,4 +16,10 @@ class CuroAuthProperties {
     @NestedConfigurationProperty
     var oauth2: CuroOAuth2Properties = CuroOAuth2Properties()
 
+
+    /**
+     * BasicAuth configuration
+     */
+    @NestedConfigurationProperty
+    var basic: CuroBasicAuthProperties = CuroBasicAuthProperties()
 }

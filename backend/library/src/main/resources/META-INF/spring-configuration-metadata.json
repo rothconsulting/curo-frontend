@@ -12,6 +12,12 @@
       "sourceMethod": "getAuth()"
     },
     {
+      "name": "curo.auth.basic",
+      "type": "ch.umb.curo.starter.property.CuroBasicAuthProperties",
+      "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties",
+      "sourceMethod": "getBasic()"
+    },
+    {
       "name": "curo.auth.oauth2",
       "type": "ch.umb.curo.starter.property.CuroOAuth2Properties",
       "sourceType": "ch.umb.curo.starter.property.CuroAuthProperties",
@@ -31,6 +37,30 @@
     }
   ],
   "properties": [
+    {
+      "name": "curo.auth.basic.secure-only-session-cookie",
+      "type": "java.lang.Boolean",
+      "description": "Only send session cookie over SSL",
+      "sourceType": "ch.umb.curo.starter.property.CuroBasicAuthProperties"
+    },
+    {
+      "name": "curo.auth.basic.session-cookie-name",
+      "type": "java.lang.String",
+      "description": "Session cookie name",
+      "sourceType": "ch.umb.curo.starter.property.CuroBasicAuthProperties"
+    },
+    {
+      "name": "curo.auth.basic.session-timeout",
+      "type": "java.time.Duration",
+      "description": "Specifies the time, in seconds, between client requests before the servlet container will invalidate this session. A zero or negative time indicates that the session should never timeout.",
+      "sourceType": "ch.umb.curo.starter.property.CuroBasicAuthProperties"
+    },
+    {
+      "name": "curo.auth.basic.use-session-cookie",
+      "type": "java.lang.Boolean",
+      "description": "Should basic auth allow session cookies",
+      "sourceType": "ch.umb.curo.starter.property.CuroBasicAuthProperties"
+    },
     {
       "name": "curo.auth.oauth2.allowed-issuers",
       "type": "java.util.ArrayList<java.lang.String>",
@@ -161,6 +191,12 @@
       "name": "curo.create-initial-filters",
       "type": "java.lang.Boolean",
       "description": "Defines if Curo creates filter during startup.",
+      "sourceType": "ch.umb.curo.starter.property.CuroProperties"
+    },
+    {
+      "name": "curo.enable-historic-instance-permissions",
+      "type": "java.lang.Boolean",
+      "description": "If set, Curo will define the camunda enableHistoricInstancePermissions to that value Since [Camunda 7.13](https:\/\/camunda.com\/blog\/2020\/06\/camunda-bpm-runtime-713-released) historic permissions are disabled by default.",
       "sourceType": "ch.umb.curo.starter.property.CuroProperties"
     },
     {
