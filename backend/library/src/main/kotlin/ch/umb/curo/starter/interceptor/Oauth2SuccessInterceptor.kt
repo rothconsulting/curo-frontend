@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletRequest
 /**
  * AuthSuccessInterceptors are called on the /curo-api/auth/success endpoint.
  */
-interface AuthSuccessInterceptor {
+interface Oauth2SuccessInterceptor {
 
     val name: String
     val async: Boolean

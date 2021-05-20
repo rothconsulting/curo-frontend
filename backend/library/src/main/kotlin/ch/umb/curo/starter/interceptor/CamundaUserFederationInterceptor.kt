@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest
 class CamundaUserFederationInterceptor(
     private val properties: CuroProperties,
     private val identityService: IdentityService
-) : AuthSuccessInterceptor {
+) : Oauth2SuccessInterceptor {
     override val name: String = "Camunda:UserFederation"
     override val async: Boolean = false
     override val order: Int = 10

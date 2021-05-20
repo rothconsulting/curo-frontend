@@ -1,17 +1,22 @@
 package ch.umb.curo.starter
 
-import ch.umb.curo.starter.interceptor.AuthSuccessInterceptor
+import ch.umb.curo.starter.interceptor.BasicSuccessInterceptor
+import ch.umb.curo.starter.interceptor.Oauth2SuccessInterceptor
 import ch.umb.curo.starter.property.CuroProperties
 import ch.umb.curo.starter.service.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.*
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
 open class CuroRestAutoConfiguration {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     @Bean
     @ConditionalOnMissingBean
@@ -69,15 +74,36 @@ open class CuroRestAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    open fun defaultCuroAuthenticationService(
-        authSuccessInterceptors: List<AuthSuccessInterceptor>,
+    @ConditionalOnProperty(prefix = "curo", value = ["auth.type"], havingValue = "oauth2")
+    open fun defaultCuroOauth2AuthenticationService(
+        oauth2SuccessInterceptors: List<Oauth2SuccessInterceptor>,
         properties: CuroProperties,
         identityService: IdentityService,
         authorizationService: AuthorizationService,
         repositoryService: RepositoryService
     ): CuroAuthenticationService {
-        return DefaultCuroAuthenticationService(
-            authSuccessInterceptors,
+        logger.debug("CURO: use DefaultCuroOauth2AuthenticationService as auth type is oauth2")
+        return DefaultCuroOauth2AuthenticationService(
+            oauth2SuccessInterceptors,
+            properties,
+            identityService,
+            authorizationService
+        )
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "curo", value = ["auth.type"], havingValue = "basic", matchIfMissing = true)
+    open fun defaultCuroBasicAuthenticationService(
+        basicSuccessInterceptors: List<BasicSuccessInterceptor>,
+        properties: CuroProperties,
+        identityService: IdentityService,
+        authorizationService: AuthorizationService,
+        repositoryService: RepositoryService
+    ): CuroAuthenticationService {
+        logger.debug("CURO: use DefaultCuroBasicAuthenticationService as auth type is basic")
+        return DefaultCuroBasicAuthenticationService(
+            basicSuccessInterceptors,
             properties,
             identityService,
             authorizationService

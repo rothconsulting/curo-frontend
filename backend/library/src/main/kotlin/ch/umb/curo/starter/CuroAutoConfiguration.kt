@@ -111,7 +111,7 @@ open class CuroAutoConfiguration {
                 sessionCookieConfig.isHttpOnly = true
                 sessionCookieConfig.isSecure = properties.auth.basic.secureOnlySessionCookie
                 sessionCookieConfig.name = properties.auth.basic.sessionCookieName
-            }else if (properties.auth.type == "basic" && !properties.auth.basic.useSessionCookie){
+            } else if (properties.auth.type == "basic" && !properties.auth.basic.useSessionCookie){
                 logger.debug("CURO: session cookies are disabled")
             }
         }

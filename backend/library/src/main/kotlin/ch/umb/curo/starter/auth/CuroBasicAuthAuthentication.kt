@@ -2,14 +2,12 @@ package ch.umb.curo.starter.auth
 
 import ch.umb.curo.starter.SpringContext
 import ch.umb.curo.starter.property.CuroProperties
+import ch.umb.curo.starter.util.AuthUtil
 import org.camunda.bpm.engine.ProcessEngine
-import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
-import javax.servlet.ServletContext
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
 import javax.ws.rs.core.HttpHeaders
 
 /**
@@ -24,70 +22,27 @@ import javax.ws.rs.core.HttpHeaders
  */
 open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), CuroLoginMethod {
 
-    private val BASIC_AUTH_HEADER_PREFIX = "Basic "
-    private val CURO_BASIC_AUTH_HEADER_PREFIX = "CuroBasic "
-
     override fun extractAuthenticatedUser(request: HttpServletRequest, engine: ProcessEngine): AuthenticationResult {
 
         val properties = SpringContext.getBean(CuroProperties::class.java) ?: return AuthenticationResult.unsuccessful()
 
         //This will return a username based on the current session if session cookies are allowed.
-        val sessionUsername = getUsernameFromSessionCookie(request, properties)
-        if(sessionUsername != null){
+        val sessionUsername = AuthUtil.getUsernameFromSessionCookieOrNull(request, properties, true)
+        if (sessionUsername != null) {
             return AuthenticationResult.successful(sessionUsername)
         }
 
-        val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION)?.takeIf { it.isNotBlank() }
-            ?: return AuthenticationResult.unsuccessful()
-
         //Check for CuroBasic in authorization header else we use normal Basic
-        val encodedCredentials = if (authorizationHeader.startsWith(CURO_BASIC_AUTH_HEADER_PREFIX)) {
-            authorizationHeader.substring(CURO_BASIC_AUTH_HEADER_PREFIX.length)
-        } else {
-            authorizationHeader.substring(BASIC_AUTH_HEADER_PREFIX.length)
-        }
-        val decodedCredentials = String(Base64.decodeBase64(encodedCredentials))
-        val firstColonIndex = decodedCredentials.indexOf(":")
+        val credentials = AuthUtil.getDecodedBasicAuthCredentials(request) ?: return AuthenticationResult.unsuccessful()
 
-        return if (firstColonIndex == -1) {
-            AuthenticationResult.unsuccessful()
-        } else {
-            val username = decodedCredentials.substring(0, firstColonIndex)
-            val password = decodedCredentials.substring(firstColonIndex + 1)
-            if (isAuthenticated(engine, username, password)) {
-                if(properties.auth.basic.useSessionCookie){
-                    createOrGetSecureSession(request, properties)
-                    request.session.setAttribute("username", username)
-                }
-                AuthenticationResult.successful(username)
-            } else {
-                AuthenticationResult.unsuccessful(username)
+        return if (isAuthenticated(engine, credentials.username, credentials.password)) {
+            if (properties.auth.basic.useSessionCookie) {
+                AuthUtil.createOrGetSecureSession(request, properties)
+                request.session.setAttribute("username", credentials.username)
             }
-        }
-    }
-
-    private fun createOrGetSecureSession(request: HttpServletRequest, properties: CuroProperties): HttpSession {
-        val session = request.getSession(true)
-        session.maxInactiveInterval = properties.auth.basic.sessionTimeout.toSeconds().toInt()
-
-        return session
-    }
-
-    private fun getUsernameFromSessionCookie(
-        request: HttpServletRequest,
-        properties: CuroProperties
-    ): String? {
-        return if (properties.auth.basic.useSessionCookie) {
-            val session: HttpSession? = request.getSession(false)
-            val username = session?.getAttribute("username") as String?
-            if (username != null) {
-                username
-            } else {
-                session?.invalidate()
-                null
-            }
+            AuthenticationResult.successful(credentials.username)
         } else {
-            null
+            AuthenticationResult.unsuccessful(credentials.username)
         }
     }
 
@@ -96,7 +51,7 @@ open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), Curo
     ) {
         response.setHeader(
             HttpHeaders.WWW_AUTHENTICATE,
-            CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\""
+            AuthUtil.CURO_BASIC_AUTH_HEADER_PREFIX + "realm=\"" + engine.name + "\""
         )
     }
 

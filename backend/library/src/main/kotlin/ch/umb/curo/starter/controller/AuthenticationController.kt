@@ -1,7 +1,6 @@
 package ch.umb.curo.starter.controller
 
 import ch.umb.curo.starter.models.request.CuroPermissionsRequest
-import ch.umb.curo.starter.models.request.ProcessStartRequest
 import ch.umb.curo.starter.models.response.AuthenticationSuccessResponse
 import ch.umb.curo.starter.models.response.CuroPermissionsResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -11,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 @Tag(name = "auth", description = "Curo Auth API")
 @RequestMapping("/curo-api/auth")
@@ -26,12 +26,25 @@ interface AuthenticationController {
     fun success(request: HttpServletRequest): AuthenticationSuccessResponse
 
     @Operation(
+        summary = "Trigger logout",
+        operationId = "logout",
+        description = "",
+        security = [SecurityRequirement(name = "CuroBasic")]
+    )
+    @PostMapping("/logout", produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun logout(request: HttpServletRequest, response: HttpServletResponse)
+
+    @Operation(
         summary = "Load permissions",
         operationId = "getPermissionsPost",
         description = "",
         security = [SecurityRequirement(name = "CuroBasic")]
     )
-    @PostMapping("/permissions", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping(
+        "/permissions",
+        consumes = [MediaType.APPLICATION_JSON_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
     fun getPermissions(
         @Parameter(
             description = "Should the permissions field be calculated",

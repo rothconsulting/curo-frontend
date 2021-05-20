@@ -1,57 +1,68 @@
 package ch.umb.curo.starter.service
 
 import ch.umb.curo.starter.exception.ApiException
-import ch.umb.curo.starter.interceptor.AuthSuccessInterceptor
+import ch.umb.curo.starter.interceptor.BasicSuccessInterceptor
 import ch.umb.curo.starter.models.request.CuroPermissionsRequest
 import ch.umb.curo.starter.models.response.AuthenticationSuccessResponse
 import ch.umb.curo.starter.models.response.CuroPermissionsResponse
 import ch.umb.curo.starter.property.CuroProperties
-import com.auth0.jwt.JWT
+import ch.umb.curo.starter.util.AuthUtil
 import org.camunda.bpm.engine.AuthorizationService
 import org.camunda.bpm.engine.IdentityService
-import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.authorization.Permissions
 import org.camunda.bpm.engine.authorization.Resources
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
-class DefaultCuroAuthenticationService(
-    val authSuccessInterceptors: List<AuthSuccessInterceptor>,
-    val properties: CuroProperties,
-    val identityService: IdentityService,
-    val authorizationService: AuthorizationService
+open class DefaultCuroBasicAuthenticationService(
+    private val basicSuccessInterceptors: List<BasicSuccessInterceptor>,
+    open val properties: CuroProperties,
+    open val identityService: IdentityService,
+    open val authorizationService: AuthorizationService
 ) : CuroAuthenticationService {
 
-    private val BEARER_HEADER_PREFIX = "Bearer "
     private val authSuccessInterceptorThreadPool = Executors.newCachedThreadPool()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun success(request: HttpServletRequest): AuthenticationSuccessResponse {
-        val jwtRaw = request.getHeader("Authorization")?.substring(BEARER_HEADER_PREFIX.length)
-            ?: throw ApiException.UNAUTHENTICATED_401.printException(properties.printStacktrace)
-        val decodedJwt = JWT.decode(jwtRaw)
+        val username = AuthUtil.getUsernameFromRequest(request, properties)
 
-        val synchronousInterceptors = authSuccessInterceptors.filter { !it.async }.sortedBy { it.order }
-        val asynchronousInterceptors = authSuccessInterceptors.filter { it.async }.sortedBy { it.order }
+        val synchronousInterceptors = basicSuccessInterceptors.filter { !it.async }.sortedBy { it.order }
+        val asynchronousInterceptors = basicSuccessInterceptors.filter { it.async }.sortedBy { it.order }
 
         val completedSteps = arrayListOf<String>()
 
+        logger.debug("CURO: run basic success interceptors")
         synchronousInterceptors.forEach {
-            val intercept = it.onIntercept(decodedJwt, jwtRaw, request)
+            logger.debug("CURO:\t-> run ${it.javaClass.canonicalName}:onIntercept")
+            val intercept = it.onIntercept(username, request)
             if (intercept) {
                 completedSteps.add(it.name)
             }
         }
 
+        logger.debug("CURO: run async oauth2 success interceptors")
         authSuccessInterceptorThreadPool.execute {
-            asynchronousInterceptors.forEach { it.onIntercept(decodedJwt, jwtRaw, request) }
+            asynchronousInterceptors.forEach {
+                logger.debug("CURO:\t-> run async ${it.javaClass.canonicalName}:onIntercept")
+                it.onIntercept(username, request)
+            }
         }
 
         val response = AuthenticationSuccessResponse()
         response.completedSteps = completedSteps
         response.asyncSteps = asynchronousInterceptors.map { it.name }
         return response
+    }
+
+    override fun logout(request: HttpServletRequest, response: HttpServletResponse) {
+        if (properties.auth.basic.useSessionCookie) {
+            AuthUtil.invalidateSession(request, response, properties)
+        }
+        response.status = 200
     }
 
     override fun getPermissions(
@@ -94,7 +105,7 @@ class DefaultCuroAuthenticationService(
 
                 val filteredPermissions = extendedPermissions.distinct().map {
                     try {
-                        Permissions.valueOf(it.toUpperCase())
+                        Permissions.valueOf(it.uppercase(Locale.getDefault()))
                     } catch (e: Exception) {
                         throw ApiException.invalidArgument400(arrayListOf("$it is not a valid permission"))
                     }

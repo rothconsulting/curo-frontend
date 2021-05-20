@@ -1,11 +1,6 @@
 package ch.umb.curo.starter.events
 
 import ch.umb.curo.starter.property.CuroProperties
-import org.camunda.bpm.engine.ManagementService
-import org.camunda.bpm.engine.ProcessEngine
-import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
-import org.camunda.bpm.engine.impl.telemetry.reporter.TelemetryReporter
-import org.camunda.bpm.engine.impl.util.TelemetryUtil
 import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.context.ConfigurableApplicationContext
@@ -31,15 +26,16 @@ class PostDeployListener(
 
     private fun setEnableHistoricInstancePermissions(processEngineConfiguration: SpringProcessEngineConfiguration) {
         val enableHistoricInstancePermissions = try {
-                (context.environment.getProperty("camunda.bpm.generic-properties.enable-historic-instance-permissions") as Boolean?)
+            (context.environment.getProperty("camunda.bpm.generic-properties.enable-historic-instance-permissions") as Boolean?)
                 ?: processEngineConfiguration.isEnableHistoricInstancePermissions
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             false
         }
-        if(properties.enableHistoricInstancePermissions != null){
-            processEngineConfiguration.isEnableHistoricInstancePermissions = properties.enableHistoricInstancePermissions ?: false
+        if (properties.enableHistoricInstancePermissions != null) {
+            processEngineConfiguration.isEnableHistoricInstancePermissions =
+                properties.enableHistoricInstancePermissions ?: false
             logger.info("CURO: Set enableHistoricInstancePermissions to '${processEngineConfiguration.isEnableHistoricInstancePermissions}'")
-        }else{
+        } else {
             logger.warn("CURO: Camunda enableHistoricInstancePermissions is set to $enableHistoricInstancePermissions!")
         }
     }
