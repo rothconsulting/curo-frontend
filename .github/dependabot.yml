@@ -1,51 +1,37 @@
-
 version: 2
 updates:
-
   # Enable version updates for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    target-branch: "main"
+      interval: 'weekly'
+      time: '06:00'
+      timezone: 'Europe/Zurich'
+    target-branch: 'main'
     labels:
-      - "github-actions"
-      - "dependencies"
+      - 'github-actions'
+      - 'dependencies'
 
   # Enable version updates for npm
-  - package-ecosystem: "npm"
-    directory: "/frontend"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    target-branch: "main"
+      interval: 'weekly'
+      time: '06:00'
+      timezone: 'Europe/Zurich'
+    target-branch: 'main'
     labels:
-      - "npm"
-      - "dependencies"
-
-  # Enable version updates for Gradle
-  - package-ecosystem: "gradle"
-    directory: "/backend"
-    schedule:
-      interval: "weekly"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    target-branch: "main"
-    labels:
-      - "gradle"
-      - "dependencies"
+      - 'npm'
+      - 'dependencies'
 
   # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    directory: "/backend/deployment"
+  - package-ecosystem: 'docker'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    target-branch: "main"
+      interval: 'weekly'
+      time: '06:00'
+      timezone: 'Europe/Zurich'
+    target-branch: 'main'
     labels:
-      - "docker"
-      - "dependencies"
+      - 'docker'
+      - 'dependencies'

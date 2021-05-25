@@ -1,6 +1,0 @@
-plugins {
-    id "idea"
-    id "application"
-}
-
-tasks.jar {enabled = false}
