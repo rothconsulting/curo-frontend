@@ -15,17 +15,21 @@ import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationProvider
 import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.servlet.ServletContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 import org.springframework.context.event.EventListener
+import javax.servlet.SessionCookieConfig
+import javax.servlet.SessionTrackingMode
 
 @Configuration
 @Import(CuroRestAutoConfiguration::class)
@@ -39,6 +43,8 @@ open class CuroAutoConfiguration {
 
     @Autowired
     lateinit var context: ConfigurableApplicationContext
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     @Bean
     @ConditionalOnMissingBean
@@ -79,11 +85,11 @@ open class CuroAutoConfiguration {
         return object : AbstractCamundaConfiguration() {
             override fun preInit(processEngineConfiguration: SpringProcessEngineConfiguration) {
                 super.preInit(processEngineConfiguration)
-                    PostDeployListener(
-                        properties,
-                        context,
-                        processEngineConfiguration
-                    ).onPostDeployEvent()
+                PostDeployListener(
+                    properties,
+                    context,
+                    processEngineConfiguration
+                ).onPostDeployEvent()
             }
         }
     }
@@ -91,6 +97,24 @@ open class CuroAutoConfiguration {
     @Bean
     open fun injectVariableInitPlugin(): AbstractProcessEnginePlugin {
         return VariableInitPlugin(context)
+    }
+
+    @Bean
+    open fun servletContextInitializer(
+        properties: CuroProperties
+    ): ServletContextInitializer {
+        return ServletContextInitializer { servletContext ->
+            if(properties.auth.type == "basic" && properties.auth.basic.useSessionCookie) {
+                logger.debug("CURO: set SessionCookieConfig (isHttpOnly: true, isSecure: ${properties.auth.basic.secureOnlySessionCookie}, name: ${properties.auth.basic.sessionCookieName})")
+                servletContext.setSessionTrackingModes(setOf(SessionTrackingMode.COOKIE))
+                val sessionCookieConfig: SessionCookieConfig = servletContext.sessionCookieConfig
+                sessionCookieConfig.isHttpOnly = true
+                sessionCookieConfig.isSecure = properties.auth.basic.secureOnlySessionCookie
+                sessionCookieConfig.name = properties.auth.basic.sessionCookieName
+            }else if (properties.auth.type == "basic" && !properties.auth.basic.useSessionCookie){
+                logger.debug("CURO: session cookies are disabled")
+            }
+        }
     }
 
 }

@@ -1,11 +1,15 @@
 package ch.umb.curo.starter.auth
 
+import ch.umb.curo.starter.SpringContext
+import ch.umb.curo.starter.property.CuroProperties
 import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.impl.digest._apacheCommonsCodec.Base64
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.HttpBasicAuthenticationProvider
+import javax.servlet.ServletContext
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
 import javax.ws.rs.core.HttpHeaders
 
 /**
@@ -25,6 +29,14 @@ open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), Curo
 
     override fun extractAuthenticatedUser(request: HttpServletRequest, engine: ProcessEngine): AuthenticationResult {
 
+        val properties = SpringContext.getBean(CuroProperties::class.java) ?: return AuthenticationResult.unsuccessful()
+
+        //This will return a username based on the current session if session cookies are allowed.
+        val sessionUsername = getUsernameFromSessionCookie(request, properties)
+        if(sessionUsername != null){
+            return AuthenticationResult.successful(sessionUsername)
+        }
+
         val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION)?.takeIf { it.isNotBlank() }
             ?: return AuthenticationResult.unsuccessful()
 
@@ -37,16 +49,45 @@ open class CuroBasicAuthAuthentication : HttpBasicAuthenticationProvider(), Curo
         val decodedCredentials = String(Base64.decodeBase64(encodedCredentials))
         val firstColonIndex = decodedCredentials.indexOf(":")
 
-        if (firstColonIndex == -1) {
-            return AuthenticationResult.unsuccessful()
+        return if (firstColonIndex == -1) {
+            AuthenticationResult.unsuccessful()
         } else {
             val username = decodedCredentials.substring(0, firstColonIndex)
             val password = decodedCredentials.substring(firstColonIndex + 1)
             if (isAuthenticated(engine, username, password)) {
-                return AuthenticationResult.successful(username)
+                if(properties.auth.basic.useSessionCookie){
+                    createOrGetSecureSession(request, properties)
+                    request.session.setAttribute("username", username)
+                }
+                AuthenticationResult.successful(username)
             } else {
-                return AuthenticationResult.unsuccessful(username)
+                AuthenticationResult.unsuccessful(username)
             }
+        }
+    }
+
+    private fun createOrGetSecureSession(request: HttpServletRequest, properties: CuroProperties): HttpSession {
+        val session = request.getSession(true)
+        session.maxInactiveInterval = properties.auth.basic.sessionTimeout.toSeconds().toInt()
+
+        return session
+    }
+
+    private fun getUsernameFromSessionCookie(
+        request: HttpServletRequest,
+        properties: CuroProperties
+    ): String? {
+        return if (properties.auth.basic.useSessionCookie) {
+            val session: HttpSession? = request.getSession(false)
+            val username = session?.getAttribute("username") as String?
+            if (username != null) {
+                username
+            } else {
+                session?.invalidate()
+                null
+            }
+        } else {
+            null
         }
     }
 

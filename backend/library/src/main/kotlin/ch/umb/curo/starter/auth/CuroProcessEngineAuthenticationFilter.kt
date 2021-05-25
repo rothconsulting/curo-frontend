@@ -24,7 +24,8 @@ import javax.ws.rs.core.Response
 /**
  * This filter is a copy of ProcessEngineAuthenticationFilter extended with our error handling.
  */
-class CuroProcessEngineAuthenticationFilter(private val properties: CuroProperties, private val mapper: ObjectMapper) : ProcessEngineAuthenticationFilter() {
+class CuroProcessEngineAuthenticationFilter(private val properties: CuroProperties, private val mapper: ObjectMapper) :
+    ProcessEngineAuthenticationFilter() {
 
     @Throws(IOException::class, ServletException::class)
     override fun doFilter(
@@ -67,18 +68,15 @@ class CuroProcessEngineAuthenticationFilter(private val properties: CuroProperti
                     GlobalExceptionHandler(properties, mapper).handleApiException(e, request, response)
                 }
                 is InvalidClaimException -> {
-                    GlobalExceptionHandler(
-                        properties,
-                        mapper
-                    ).handleApiException(ApiException.unauthorized403(e.message ?: "", e), request, response)
+                    throw403(e, request, response)
                 }
                 is JWTVerificationException,
                 is TokenExpiredException,
                 is JWTDecodeException -> {
-                    GlobalExceptionHandler(
-                        properties,
-                        mapper
-                    ).handleApiException(ApiException.unauthorized401(e.message ?: "", e), request, response)
+                    throw401(e, request, response)
+                }
+                else -> {
+                    throw401(e, request, response)
                 }
             }
 
@@ -101,5 +99,23 @@ class CuroProcessEngineAuthenticationFilter(private val properties: CuroProperti
             authenticationProvider.augmentResponseByAuthenticationChallenge(resp, engine)
         }
     }
+
+    private fun throw401(
+        e: Exception,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ) = GlobalExceptionHandler(
+        properties,
+        mapper
+    ).handleApiException(ApiException.unauthorized401(e.message ?: "", e), request, response)
+
+    private fun throw403(
+        e: Exception,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ) = GlobalExceptionHandler(
+        properties,
+        mapper
+    ).handleApiException(ApiException.unauthorized403(e.message ?: "", e), request, response)
 
 }
