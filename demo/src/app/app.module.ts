@@ -8,7 +8,6 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CAMUNDA_BASE_PATH, CuroCamundaModule } from '@umb-ag/curo-camunda';
 import {
   CuroCoreModule,
   CURO_BASE_PATH,
@@ -38,7 +37,6 @@ import { SharedModule } from './shared/shared.module';
     MatToolbarModule,
 
     CuroCoreModule,
-    CuroCamundaModule,
 
     AppRoutingModule,
     CoreModule,
@@ -50,10 +48,6 @@ import { SharedModule } from './shared/shared.module';
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true
-    },
-    {
-      provide: CAMUNDA_BASE_PATH,
-      useValue: '/api/engine-rest'
     },
     {
       provide: CURO_BASE_PATH,

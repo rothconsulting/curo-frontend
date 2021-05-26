@@ -4,8 +4,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@umb-ag/curo-core": ["dist/core/core", "dist/core"],
-      "@umb-ag/curo-camunda": ["dist/camunda/camunda", "dist/camunda"]
+      "@umb-ag/curo-core": ["dist/core/core", "dist/core"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
