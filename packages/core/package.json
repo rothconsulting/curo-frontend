@@ -1,6 +1,6 @@
 {
   "name": "@umb-ag/curo-core",
-  "version": "0.0.20",
+  "version": "0.0.0-CURO",
   "publishConfig": {
     "registry": "https://repo.umb.cloud/repository/npm-curo-releases/"
   },
