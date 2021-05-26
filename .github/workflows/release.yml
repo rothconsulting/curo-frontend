@@ -20,35 +20,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - run: /usr/bin/git fetch --tags -f
-
-      - name: Conventional Changelog Action
-        id: changelog
-        uses: TriPSs/conventional-changelog-action@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          skip-version-file: 'true'
-          skip-commit: 'true'
-          tag-prefix: ''
-          output-file: 'false'
-
       - name: Update Version Number
         run: |
-          echo "Update version number to ${{ steps.changelog.outputs.tag }}"
-          find . -name package.json -exec sed -i "s/\"version\": \"0.0.0-CURO\",/\"version\": \"${{ steps.changelog.outputs.tag }}\",/g" {} \;
+          find . -name package.json -exec sed -i "s/\"version\": \"0.0.0-CURO\",/\"version\": \"${GITHUB_REF/refs\/tags\//}\",/g" {} \;
 
       - run: npm ci
       - run: npm run build.libs
       - run: echo "${{secrets.NPMRC}}" >> ~/.npmrc
       - run: npm publish
         working-directory: dist/core
-
-      - name: Create Release
-        uses: actions/create-release@v1
-        if: ${{ steps.changelog.outputs.skipped == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
-        with:
-          tag_name: ${{ steps.changelog.outputs.tag }}
-          release_name: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.clean_changelog }}
