@@ -28,7 +28,8 @@ jobs:
           output-file: 'false'
 
       - name: Update Version Number
-        run: find . -name package.json -exec sed -i "s/\"version\": \"0.0.0-CURO\",/\"version\": \"${{ steps.changelog.outputs.tag }}\",/g" {} \;
+        run: |
+          find . -name package.json -exec sed -i "s/\"version\": \"0.0.0-CURO\",/\"version\": \"${{ steps.changelog.outputs.tag }}\",/g" {} \;
 
       - run: npm ci
       - run: npm run build.libs
