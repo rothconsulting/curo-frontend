@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - run: /usr/bin/git pull --unshallow --tags --ff-only
+      - run: /usr/bin/git fetch --tags -f
 
       - name: Conventional Changelog Action
         id: changelog
