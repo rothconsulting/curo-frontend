@@ -20,11 +20,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - run: /usr/bin/git pull --unshallow --tags --ff-only
+
       - name: Conventional Changelog Action
         id: changelog
         uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          skip-version-file: 'true'
           skip-commit: 'true'
           tag-prefix: ''
           output-file: 'false'
