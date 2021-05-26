@@ -1,6 +1,6 @@
 {
   "name": "curo",
-  "version": "0.0.0-CURO",
+  "version": "0.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng build core --watch --configuration development & sleep 10 && ng serve",
