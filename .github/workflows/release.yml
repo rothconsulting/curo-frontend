@@ -9,8 +9,8 @@ env:
   NODE_VERSION: 14.x
 
 jobs:
-  frontend:
-    name: Release Frontend
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
