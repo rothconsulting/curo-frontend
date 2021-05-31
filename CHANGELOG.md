@@ -1,3 +1,14 @@
+# [1.1.0](https://github.com/umb/curo-frontend/compare/1.0.0...1.1.0) (2021-05-31)
+
+
+### Features
+
+* add additional user endpoints ([25b668f](https://github.com/umb/curo-frontend/commit/25b668fe03bb24afa5ef118fcdcb30bd4be48201))
+* add additionalAttributes param to menu endpoint ([86788d4](https://github.com/umb/curo-frontend/commit/86788d49124a7990ae37c5069c7b043846724fdc))
+* add file uploads to process and task service ([a765e64](https://github.com/umb/curo-frontend/commit/a765e6479a7e5d1857bb07feebecc48f5d9a596c))
+
+
+
 # [1.0.0](https://github.com/umb/curo-frontend/compare/0.0.20...1.0.0) (2021-05-26)
 
 
