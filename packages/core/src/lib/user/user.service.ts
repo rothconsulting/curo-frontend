@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Inject, Injectable, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CURO_BASE_PATH } from '../curo-base-path';
@@ -24,25 +24,34 @@ export class UserService {
    * @param filter     Filter to be applied to the result. If not present, all users are returned.
    */
   getUsers(
-    attributes?: string[],
-    filter?: {
-      emailLike: string;
-      lastnameLike: string;
-      firstnameLike: string;
-      memberOfGroup: string[];
-    }
+    attributes: string[] = [],
+    filter: {
+      emailLike?: string;
+      lastnameLike?: string;
+      firstnameLike?: string;
+      memberOfGroup?: string[];
+    } = {}
   ): Observable<User[]> {
-    let params = {};
-
-    if (attributes) {
-      params = { ...params, attributes };
-    }
-    if (filter) {
-      params = { ...params, ...filter };
-    }
+    let params = new HttpParams({ fromObject: { attributes, ...filter } });
 
     return this.httpClient.get<User[]>(`${this.basePath}/users`, {
       params
     });
+  }
+
+  /**
+   * Get a user.
+   *
+   * @param id ID of a user
+   */
+  getUser(id: string) {
+    return this.httpClient.get<User>(`${this.basePath}/users/${id}`);
+  }
+
+  /**
+   * Get current user.
+   */
+  getCurrentUser() {
+    return this.httpClient.get<User>(`${this.basePath}/users/me`);
   }
 }

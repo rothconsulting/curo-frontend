@@ -36,4 +36,34 @@ describe('UserService', () => {
 
     req.flush([]);
   });
+
+  it('should get a user', () => {
+    const userA = {
+      id: 'userA',
+      firstname: 'User',
+      lastname: 'A',
+      email: 'user.a@me.com'
+    };
+    service.getUser('userA').subscribe((user) => expect(user).toEqual(userA));
+
+    const req = httpTestingController.expectOne(`/curo-api/users/userA`);
+    expect(req.request.method).toEqual('GET');
+
+    req.flush(userA);
+  });
+
+  it('should get current user', () => {
+    const myUser = {
+      id: 'myUser',
+      firstname: 'My',
+      lastname: 'User',
+      email: 'my.user@me.com'
+    };
+    service.getCurrentUser().subscribe((user) => expect(user).toEqual(myUser));
+
+    const req = httpTestingController.expectOne(`/curo-api/users/me`);
+    expect(req.request.method).toEqual('GET');
+
+    req.flush(myUser);
+  });
 });
