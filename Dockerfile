@@ -1,4 +1,4 @@
-FROM nginx:1.19.10
+FROM nginx:1.21.0
 
 COPY ./nginx-startup.sh /docker-entrypoint.d/
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
