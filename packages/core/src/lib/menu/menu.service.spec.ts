@@ -36,4 +36,17 @@ describe('MenuService', () => {
 
     req.flush([]);
   });
+
+  it('should get the menu with additional attributes', () => {
+    service
+      .getMenu(['additionalLabel', 'additionalLabel2'])
+      .subscribe((menu) => expect(menu).toEqual([]));
+
+    const req = httpTestingController.expectOne(
+      `/curo-api/menus?additionalAttributes=additionalLabel&additionalAttributes=additionalLabel2`
+    );
+    expect(req.request.method).toEqual('GET');
+
+    req.flush([]);
+  });
 });

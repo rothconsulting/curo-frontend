@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Inject, Injectable, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CURO_BASE_PATH } from '../curo-base-path';
@@ -20,7 +20,12 @@ export class MenuService {
   /**
    * Get menu for the current user.
    */
-  getMenu(): Observable<MenuElement[]> {
-    return this.httpClient.get<MenuElement[]>(`${this.basePath}/menus`);
+  getMenu(additionalAttributes: string[] = []): Observable<MenuElement[]> {
+    const params = new HttpParams({
+      fromObject: { additionalAttributes }
+    });
+    return this.httpClient.get<MenuElement[]>(`${this.basePath}/menus`, {
+      params
+    });
   }
 }
