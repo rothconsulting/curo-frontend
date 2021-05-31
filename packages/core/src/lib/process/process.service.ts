@@ -41,6 +41,38 @@ export class ProcessService {
   }
 
   /**
+   * Start a new process instance with files.
+   */
+  startProcessWithFiles(
+    processDefinitionKey: string,
+    variables?: any,
+    files?: { [name: string]: any },
+    businessKey?: string,
+    params?: {
+      returnVariables?: boolean;
+      flowToNext?: boolean;
+      flowToNextIgnoreAssignee?: boolean;
+      flowToNextTimeOut?: number;
+    }
+  ): Observable<FlowToNext & Task> {
+    const formData = new FormData();
+    formData.append(
+      'processStartData',
+      JSON.stringify({ processDefinitionKey, variables, businessKey })
+    );
+
+    Object.keys(files || {}).forEach((name) =>
+      formData.append(name, files![name])
+    );
+
+    return this.httpClient.post<Task & FlowToNext>(
+      `${this.basePath}/process-instances`,
+      formData,
+      { params: params as Params }
+    );
+  }
+
+  /**
    * Query for next user task of process instance.
    */
   nextTask(

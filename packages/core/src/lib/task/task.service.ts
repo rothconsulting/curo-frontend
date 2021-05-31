@@ -107,6 +107,34 @@ export class TaskService {
   }
 
   /**
+   * Completes a task with files.
+   */
+  completeTaskWithFiles(
+    id: string,
+    variables?: any,
+    files?: { [name: string]: any },
+    params?: {
+      returnVariables?: boolean;
+      flowToNext?: boolean;
+      flowToNextIgnoreAssignee?: boolean;
+      flowToNextTimeOut?: number;
+    }
+  ): Observable<FlowToNext & Task> {
+    const formData = new FormData();
+    formData.append('variables', JSON.stringify(variables));
+
+    Object.keys(files || {}).forEach((name) =>
+      formData.append(name, files![name])
+    );
+
+    return this.httpClient.post<Task & FlowToNext>(
+      `${this.basePath}/tasks/${id}/status`,
+      formData,
+      { params: params as Params }
+    );
+  }
+
+  /**
    * Query for next user task.
    */
   nextTask(
@@ -126,6 +154,27 @@ export class TaskService {
     return this.httpClient.patch<void>(
       `${this.basePath}/tasks/${id}/variables`,
       variables
+    );
+  }
+
+  /**
+   * Saves the variables of a task with files.
+   */
+  saveVariablesWithFiles(
+    id: string,
+    variables?: any,
+    files?: { [name: string]: any }
+  ): Observable<void> {
+    const formData = new FormData();
+    formData.append('variables', JSON.stringify(variables));
+
+    Object.keys(files || {}).forEach((name) =>
+      formData.append(name, files![name])
+    );
+
+    return this.httpClient.patch<void>(
+      `${this.basePath}/tasks/${id}/variables`,
+      formData
     );
   }
 

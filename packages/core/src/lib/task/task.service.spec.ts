@@ -146,6 +146,37 @@ describe('TaskService', () => {
     });
   });
 
+  describe('completeTaskWithFiles', () => {
+    it('should complete the task with variables and files', () => {
+      const id = '1234';
+      const variables = { firstname: 'Demo' };
+      const files = {
+        myFileA: new File([], 'file-a.pdf'),
+        myFileB: new File([], 'file-b.pdf')
+      };
+
+      const expectedFormData = new FormData();
+      expectedFormData.append('variables', JSON.stringify(variables));
+      expectedFormData.append('myFileA', files.myFileA);
+      expectedFormData.append('myFileB', files.myFileB);
+
+      service
+        .completeTaskWithFiles(id, variables, files, {
+          flowToNext: true,
+          returnVariables: true
+        })
+        .subscribe((data) => expect(data).toEqual({}));
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/status?flowToNext=true&returnVariables=true`
+      );
+      expect(req.request.method).toEqual('POST');
+      expect(req.request.body).toEqual(expectedFormData);
+
+      req.flush({});
+    });
+  });
+
   describe('nextTask', () => {
     it('should query the next user task', () => {
       const id = '1234';
@@ -173,6 +204,32 @@ describe('TaskService', () => {
       );
       expect(req.request.method).toEqual('PATCH');
       expect(req.request.body).toEqual(variables);
+
+      req.flush({});
+    });
+  });
+
+  describe('saveVariablesWithFiles', () => {
+    it('should complete the task with variables and files', () => {
+      const id = '1234';
+      const variables = { firstname: 'Demo' };
+      const files = {
+        myFileA: new File([], 'file-a.pdf'),
+        myFileB: new File([], 'file-b.pdf')
+      };
+
+      const expectedFormData = new FormData();
+      expectedFormData.append('variables', JSON.stringify(variables));
+      expectedFormData.append('myFileA', files.myFileA);
+      expectedFormData.append('myFileB', files.myFileB);
+
+      service.saveVariablesWithFiles(id, variables, files).subscribe();
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/tasks/${id}/variables`
+      );
+      expect(req.request.method).toEqual('PATCH');
+      expect(req.request.body).toEqual(expectedFormData);
 
       req.flush({});
     });

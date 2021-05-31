@@ -56,6 +56,52 @@ describe('ProcessService', () => {
     });
   });
 
+  describe('startProcessWithFiles', () => {
+    it('should start with files', () => {
+      const processDefinitionKey = 'TestProcess';
+      const businessKey = '1234';
+      const variables = {
+        varA: 'Test'
+      };
+      const files = {
+        myFileA: new File([], 'file-a.pdf'),
+        myFileB: new File([], 'file-b.pdf')
+      };
+
+      const expectedFormData = new FormData();
+      expectedFormData.append(
+        'processStartData',
+        JSON.stringify({
+          processDefinitionKey,
+          businessKey,
+          variables
+        })
+      );
+      expectedFormData.append('myFileA', files.myFileA);
+      expectedFormData.append('myFileB', files.myFileB);
+
+      service
+        .startProcessWithFiles(
+          processDefinitionKey,
+          variables,
+          files,
+          businessKey,
+          {
+            returnVariables: true
+          }
+        )
+        .subscribe();
+
+      const req = httpTestingController.expectOne(
+        `/curo-api/process-instances?returnVariables=true`
+      );
+      expect(req.request.method).toEqual('POST');
+      expect(req.request.body).toEqual(expectedFormData);
+
+      req.flush({});
+    });
+  });
+
   describe('nextTask', () => {
     it('should query the next user task', () => {
       const id = '1234';
