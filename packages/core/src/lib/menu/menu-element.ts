@@ -7,4 +7,5 @@ export interface MenuElement {
   link?: string;
   filterId?: string;
   subElements?: MenuElement[];
+  additionalAttributes?: any;
 }
