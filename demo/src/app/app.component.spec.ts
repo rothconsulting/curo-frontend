@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ProcessService } from '@umb-ag/curo-core';
 import { of } from 'rxjs';
@@ -48,7 +49,11 @@ describe('AppComponent', () => {
   describe('startProcess', () => {
     it('should start a process', () => {
       const processService = TestBed.inject(ProcessService);
-      spyOn(processService, 'startProcess').and.returnValue(of());
+      spyOn(processService, 'startProcess').and.returnValue(of({}));
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.returnValue(
+        new Promise((resolve) => resolve(true))
+      );
 
       component.startProcess();
 
@@ -61,6 +66,31 @@ describe('AppComponent', () => {
           flowToNextIgnoreAssignee: true
         }
       );
+      expect(router.navigate).toHaveBeenCalledWith(['tasks', '']);
+    });
+
+    it('should start a process and flow to next task', () => {
+      const processService = TestBed.inject(ProcessService);
+      spyOn(processService, 'startProcess').and.returnValue(
+        of({ flowToNext: ['next-task'] })
+      );
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.returnValue(
+        new Promise((resolve) => resolve(true))
+      );
+
+      component.startProcess();
+
+      expect(processService.startProcess).toHaveBeenCalledWith(
+        'new-technic-suggestion',
+        undefined,
+        undefined,
+        {
+          flowToNext: true,
+          flowToNextIgnoreAssignee: true
+        }
+      );
+      expect(router.navigate).toHaveBeenCalledWith(['tasks', 'next-task']);
     });
   });
 });
