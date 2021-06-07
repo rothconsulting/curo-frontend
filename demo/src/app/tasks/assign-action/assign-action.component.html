@@ -1,0 +1,10 @@
+<button mat-icon-button matTooltip="assign" (click)="showDialog()">
+  <mat-icon>event_seat</mat-icon>
+</button>
+
+<ng-container *ngIf="assignee; else claimText">
+  <button mat-button (click)="showDialog()">{{ assignee }}</button>
+</ng-container>
+<ng-template #claimText>
+  <button mat-button (click)="claim()">claim</button>
+</ng-template>

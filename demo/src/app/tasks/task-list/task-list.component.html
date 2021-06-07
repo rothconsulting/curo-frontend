@@ -19,6 +19,12 @@
             <ng-container *ngSwitchCase="'date'">
               {{ getElementValue(element, column) | date: 'medium' }}
             </ng-container>
+            <ng-container *ngSwitchCase="'assignee'">
+              <app-assign-action
+                [assignee]="getElementValue(element, column)"
+                (assign)="assign($event, element)"
+              ></app-assign-action>
+            </ng-container>
             <ng-container *ngSwitchDefault>
               {{ getElementValue(element, column) }}
             </ng-container>

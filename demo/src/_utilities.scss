@@ -1,0 +1,222 @@
+$spacers: (
+  0: 0,
+  1: 8px,
+  2: 16px,
+  3: 24px,
+  4: 48px,
+  5: 72px
+);
+
+$marginspacers: map-merge(
+  $spacers,
+  (
+    auto: auto
+  )
+);
+
+// Utilities
+
+/* stylelint-disable */
+$utilities: (
+  'overflow': (
+    property: overflow,
+    values: auto hidden visible scroll
+  ),
+  'display': (
+    property: display,
+    class: d,
+    values: inline inline-block block grid table table-row table-cell flex
+      inline-flex none
+  ),
+  'justify-content': (
+    property: justify-content,
+    values: (
+      start: flex-start,
+      end: flex-end,
+      center: center,
+      between: space-between,
+      around: space-around,
+      evenly: space-evenly
+    )
+  ),
+  'align-items': (
+    property: align-items,
+    values: (
+      start: flex-start,
+      end: flex-end,
+      center: center,
+      baseline: baseline,
+      stretch: stretch
+    )
+  ),
+  'align-content': (
+    property: align-content,
+    values: (
+      start: flex-start,
+      end: flex-end,
+      center: center,
+      between: space-between,
+      around: space-around,
+      stretch: stretch
+    )
+  ),
+  'align-self': (
+    property: align-self,
+    values: (
+      auto: auto,
+      start: flex-start,
+      end: flex-end,
+      center: center,
+      baseline: baseline,
+      stretch: stretch
+    )
+  ),
+  'order': (
+    property: order,
+    values: (
+      first: -1,
+      0: 0,
+      1: 1,
+      2: 2,
+      3: 3,
+      4: 4,
+      5: 5,
+      last: 6
+    )
+  ),
+  'margin': (
+    property: margin,
+    class: m,
+    values: $marginspacers
+  ),
+  'margin-x': (
+    property: margin-right margin-left,
+    class: mx,
+    values: $marginspacers
+  ),
+  'margin-y': (
+    property: margin-top margin-bottom,
+    class: my,
+    values: $marginspacers
+  ),
+  'margin-top': (
+    property: margin-top,
+    class: mt,
+    values: $marginspacers
+  ),
+  'margin-right': (
+    property: margin-right,
+    class: mr,
+    values: $marginspacers
+  ),
+  'margin-bottom': (
+    property: margin-bottom,
+    class: mb,
+    values: $marginspacers
+  ),
+  'margin-left': (
+    property: margin-left,
+    class: ml,
+    values: $marginspacers
+  ),
+  'padding': (
+    property: padding,
+    class: p,
+    values: $spacers
+  ),
+  'padding-x': (
+    property: padding-right padding-left,
+    class: px,
+    values: $spacers
+  ),
+  'padding-y': (
+    property: padding-top padding-bottom,
+    class: py,
+    values: $spacers
+  ),
+  'padding-top': (
+    property: padding-top,
+    class: pt,
+    values: $spacers
+  ),
+  'padding-right': (
+    property: padding-right,
+    class: pr,
+    values: $spacers
+  ),
+  'padding-bottom': (
+    property: padding-bottom,
+    class: pb,
+    values: $spacers
+  ),
+  'padding-left': (
+    property: padding-left,
+    class: pl,
+    values: $spacers
+  ),
+  'text-align': (
+    property: text-align,
+    class: text,
+    values: left right center
+  ),
+  'visibility': (
+    property: visibility,
+    class: null,
+    values: (
+      visible: visible,
+      invisible: hidden
+    )
+  ),
+  'list-style': (
+    property: list-style,
+    values: (
+      none: none
+    )
+  )
+);
+/* stylelint-enable */
+
+@mixin generate-utility($utility) {
+  $values: map-get($utility, values);
+
+  // If the values are a list or string, convert it into a map
+  @if type-of($values) == 'string' or type-of(nth($values, 1)) != 'list' {
+    $values: zip($values, $values);
+  }
+
+  @each $key, $value in $values {
+    $properties: map-get($utility, property);
+
+    // Multiple properties are possible, for example with vertical or horizontal margins or paddings
+    @if type-of($properties) == 'string' {
+      $properties: append((), $properties);
+    }
+
+    // Use custom class if present
+    $property-class: if(
+      map-has-key($utility, class),
+      map-get($utility, class),
+      nth($properties, 1)
+    );
+    $property-class: if($property-class == null, '', $property-class);
+
+    // Don't prefix if value key is null (eg. with shadow class)
+    $property-class-modifier: if(
+      $key,
+      if($property-class == '', '', '-') + $key,
+      ''
+    );
+
+    @if $value != null {
+      .#{$property-class + $property-class-modifier} {
+        @each $property in $properties {
+          #{$property}: $value !important;
+        }
+      }
+    }
+  }
+}
+
+@each $key, $utility in $utilities {
+  @include generate-utility($utility);
+}

@@ -1,0 +1,25 @@
+<h1 mat-dialog-title>Assign task</h1>
+
+<div mat-dialog-content cdkFocusInitial class="my-3">
+  <mat-form-field>
+    <mat-label>User</mat-label>
+    <input matInput [formControl]="user" [matAutocomplete]="autoComplete" />
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+  <button mat-stroked-button [mat-dialog-close]>Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [mat-dialog-close]="user.value || null"
+  >
+    Assign
+  </button>
+</div>
+
+<mat-autocomplete #autoComplete="matAutocomplete">
+  <mat-option [value]="user.id" *ngFor="let user of filteredUsers$ | async">
+    {{ user.firstname }} {{ user.lastname }}
+  </mat-option>
+</mat-autocomplete>

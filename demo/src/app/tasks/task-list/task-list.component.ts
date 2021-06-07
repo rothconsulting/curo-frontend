@@ -8,7 +8,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, Sort } from '@angular/material/sort';
 import { ActivatedRoute } from '@angular/router';
 import { Task, TaskService } from '@umb-ag/curo-core';
-import { combineLatest, Observable, of } from 'rxjs';
+import { combineLatest, Observable, of, Subject } from 'rxjs';
 import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 
 @Component({
@@ -31,6 +31,8 @@ export class TaskListComponent implements AfterViewInit {
   dataSource$?: Observable<Task[]>;
   columns?: any[];
 
+  private reloadSubject = new Subject();
+
   constructor(
     private taskService: TaskService,
     private activatedRoute: ActivatedRoute
@@ -40,10 +42,11 @@ export class TaskListComponent implements AfterViewInit {
     this.dataSource$ = combineLatest([
       this.sort.sortChange.pipe(startWith({} as Sort)),
       this.paginator.page.pipe(startWith(this.paginator)),
-      this.activatedRoute.params.pipe(map((params) => params.filterId))
+      this.activatedRoute.params.pipe(map((params) => params.filterId)),
+      this.reloadSubject.asObservable().pipe(startWith(true))
     ]).pipe(
       tap(() => (this.isLoading = true)),
-      switchMap(([sort, page, filterId]) => {
+      switchMap(([sort, page, filterId, _]) => {
         let sorting;
         if (sort.direction) {
           const sortBy = sort.active;
@@ -81,7 +84,7 @@ export class TaskListComponent implements AfterViewInit {
               this.isLoading = false;
               this.title = taskList.name;
               this.total = taskList.total;
-              this.columns = taskList.properties.variables;
+              this.columns = taskList.properties?.variables;
             }),
             map((taskList) => taskList.items)
           );
@@ -93,6 +96,12 @@ export class TaskListComponent implements AfterViewInit {
     return column.isAttribute
       ? element[column.name]
       : element.variables[column.name];
+  }
+
+  assign(assignee: string, task: any) {
+    this.taskService
+      .assignTask(task.id, assignee)
+      .subscribe(() => this.reloadSubject.next());
   }
 
   get displayedColumns(): string[] {
