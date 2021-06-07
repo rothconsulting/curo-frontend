@@ -10,6 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { TaskService } from '@umb-ag/curo-core';
 import { of, throwError } from 'rxjs';
@@ -182,7 +183,12 @@ describe('CreateSuggestionComponent', () => {
   describe('complete', () => {
     it('should call complete task when form value is valid', () => {
       const taskService = TestBed.inject(TaskService);
-      spyOn(taskService, 'completeTask').and.callThrough();
+      spyOn(taskService, 'completeTask').and.returnValue(of({}));
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.returnValue(
+        new Promise((resolve) => resolve(true))
+      );
+      const activatedRoute = TestBed.inject(ActivatedRoute);
 
       component.form.patchValue({
         title: 'demo title',
@@ -192,6 +198,32 @@ describe('CreateSuggestionComponent', () => {
       component.complete();
 
       expect(taskService.completeTask).toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['..', ''], {
+        relativeTo: activatedRoute
+      });
+    });
+    it('should call complete task and flow to next when form value is valid', () => {
+      const taskService = TestBed.inject(TaskService);
+      spyOn(taskService, 'completeTask').and.returnValue(
+        of({ flowToNext: ['next-task'] })
+      );
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.returnValue(
+        new Promise((resolve) => resolve(true))
+      );
+      const activatedRoute = TestBed.inject(ActivatedRoute);
+
+      component.form.patchValue({
+        title: 'demo title',
+        description: 'demo description'
+      });
+
+      component.complete();
+
+      expect(taskService.completeTask).toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['..', 'next-task'], {
+        relativeTo: activatedRoute
+      });
     });
 
     it('should not call complete task when form value is invalid', () => {
