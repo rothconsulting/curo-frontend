@@ -1,10 +1,16 @@
 # Curo
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.0.0.
-
 ## Getting started
 
-Run `npm install --save @umb-ag/curo-core`to install the Curo core dependency.
+1. Run `npm install --save @umb-ag/curo-core` to install the Curo core dependency.
+2. Add `CuroCoreModule` to your AppModule imports.
+3. Provide `CURO_BASE_PATH` configuration if needed.
+   ```typescript
+   {
+     provide: CURO_BASE_PATH,
+     useValue: '/api/curo-api'
+   },
+   ```
 
 ## Development server
 
