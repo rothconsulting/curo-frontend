@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/umb/curo-frontend/compare/1.1.0...1.2.0) (2021-06-29)
+
+
+### Features
+
+* copy readme and licence file to package ([5ad40bb](https://github.com/umb/curo-frontend/commit/5ad40bb82a2c5ad81fcbf931ce41d8faf1e001c7))
+* **core:** add additionalAttributes to MenuElement ([f0233cd](https://github.com/umb/curo-frontend/commit/f0233cdc763c90414ed4f206b1675bd8eb8aa9de))
+* **core:** add support for dynamic filter properties ([79d1629](https://github.com/umb/curo-frontend/commit/79d1629b538daae2e00c19ab44a6af8eb426649a))
+* add list action assign button to demo app ([7ca2d5f](https://github.com/umb/curo-frontend/commit/7ca2d5fb241f4be4eb19efce18571fd27cf70972))
+
+
+
 # [1.1.0](https://github.com/umb/curo-frontend/compare/1.0.0...1.1.0) (2021-05-31)
 
 
