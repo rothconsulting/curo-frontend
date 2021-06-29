@@ -1,3 +1,7 @@
+## [1.2.1](https://github.com/umb/curo-frontend/compare/1.2.0...1.2.1) (2021-06-29)
+
+
+
 # [1.2.0](https://github.com/umb/curo-frontend/compare/1.1.0...1.2.0) (2021-06-29)
 
 
