@@ -30,6 +30,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build.libs
-      - run: echo "${{secrets.NPMRC}}" >> ~/.npmrc
       - run: npm publish
         working-directory: dist/core
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

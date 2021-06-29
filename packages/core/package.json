@@ -1,8 +1,20 @@
 {
   "name": "@umb-ag/curo-core",
   "version": "0.0.0-CURO",
+  "keywords": [
+    "angular",
+    "curo",
+    "camunda",
+    "bpmn"
+  ],
+  "author": "UMB AG",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/umb/curo-frontend.git"
+  },
   "publishConfig": {
-    "registry": "https://repo.umb.cloud/repository/npm-curo-releases/"
+    "access": "public"
   },
   "peerDependencies": {
     "@angular/common": "^12.0.0",
