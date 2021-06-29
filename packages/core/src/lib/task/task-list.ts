@@ -5,6 +5,7 @@ export interface TaskList {
   description?: string;
   refresh?: boolean;
   properties?: any;
+  filterProperties?: any;
   total: number;
   items: Task[];
 }

@@ -1,5 +1,11 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick
+} from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -23,6 +29,7 @@ describe('TaskListComponent', () => {
         NoopAnimationsModule,
         HttpClientTestingModule,
         RouterTestingModule,
+        ReactiveFormsModule,
         MatCardModule,
         MatListModule,
         MatPaginatorModule,
@@ -55,12 +62,14 @@ describe('TaskListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should request tasklist', () => {
+  it('should request tasklist', fakeAsync(() => {
     spyOn(taskService, 'queryTasks').and.returnValue(
       of({ name: 'TestTaskList', total: 10, items: [] })
     );
 
     component.dataSource$?.subscribe();
+
+    tick(500);
 
     expect(taskService.queryTasks).toHaveBeenCalledWith(
       '9f2860a2-6637-11eb-b2aa-0a58ac80026c',
@@ -73,7 +82,7 @@ describe('TaskListComponent', () => {
         maxResult: 10
       }
     );
-  });
+  }));
 
   it('should assign a user', () => {
     spyOn(taskService, 'assignTask').and.callThrough();

@@ -4,12 +4,21 @@ import {
   Component,
   ViewChild
 } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, Sort } from '@angular/material/sort';
 import { ActivatedRoute } from '@angular/router';
 import { Task, TaskService } from '@umb-ag/curo-core';
 import { combineLatest, Observable, of, Subject } from 'rxjs';
-import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  startWith,
+  switchMap,
+  tap
+} from 'rxjs/operators';
 
 @Component({
   selector: 'app-task-list',
@@ -30,23 +39,60 @@ export class TaskListComponent implements AfterViewInit {
 
   dataSource$?: Observable<Task[]>;
   columns?: any[];
+  filterProperties?: any[];
+
+  filterForm: FormGroup;
 
   private reloadSubject = new Subject();
 
   constructor(
     private taskService: TaskService,
-    private activatedRoute: ActivatedRoute
-  ) {}
+    private activatedRoute: ActivatedRoute,
+    private fb: FormBuilder
+  ) {
+    this.filterForm = fb.group({});
+  }
 
   ngAfterViewInit(): void {
+    const filter$ = this.filterForm.valueChanges.pipe(
+      startWith({}),
+      debounceTime(500),
+      distinctUntilChanged((prev, curr) =>
+        Object.keys(curr).every(
+          (value) => prev[value]?.value === curr[value]?.value
+        )
+      ),
+      map((value) =>
+        Object.keys(value)
+          .map((name) => {
+            return { name, ...value[name] };
+          })
+          .filter((value) => value.value !== null && value.value !== '')
+          .reduce((prev, current) => {
+            const filter = { ...prev };
+            if (current.isAttribute) {
+              filter[current.name] = current.value;
+            } else {
+              const { isAttribute, ...rest } = current;
+              filter.processVariables = [
+                ...(filter.processVariables || []),
+                rest
+              ];
+            }
+            return filter;
+          }, {})
+      )
+    );
+
     this.dataSource$ = combineLatest([
       this.sort.sortChange.pipe(startWith({} as Sort)),
       this.paginator.page.pipe(startWith(this.paginator)),
       this.activatedRoute.params.pipe(map((params) => params.filterId)),
-      this.reloadSubject.asObservable().pipe(startWith(true))
+      this.reloadSubject.asObservable().pipe(startWith(true)),
+      filter$
     ]).pipe(
       tap(() => (this.isLoading = true)),
-      switchMap(([sort, page, filterId, _]) => {
+      switchMap(([sort, page, filterId, _, filter]) => {
         let sorting;
         if (sort.direction) {
           const sortBy = sort.active;
@@ -70,6 +116,7 @@ export class TaskListComponent implements AfterViewInit {
           .queryTasks(
             filterId,
             {
+              ...filter,
               sorting
             },
             {
@@ -85,6 +132,10 @@ export class TaskListComponent implements AfterViewInit {
               this.title = taskList.name;
               this.total = taskList.total;
               this.columns = taskList.properties?.variables;
+              this.filterProperties = taskList.filterProperties;
+              this.filterProperties?.forEach((filterProperty) =>
+                this.addFilterFormControl(filterProperty)
+              );
             }),
             map((taskList) => taskList.items)
           );
@@ -104,6 +155,10 @@ export class TaskListComponent implements AfterViewInit {
       .subscribe(() => this.reloadSubject.next());
   }
 
+  filterPropertyTrackByFn(_: number, filterProperty: any) {
+    return filterProperty.variable;
+  }
+
   get displayedColumns(): string[] {
     return this.columns?.map((column) => column.name) as any;
   }
@@ -112,5 +167,19 @@ export class TaskListComponent implements AfterViewInit {
     return this.columns?.some(
       (column) => column.name === sortBy && column.isAttribute
     );
+  }
+
+  private addFilterFormControl(filterProperty: any) {
+    const group = this.fb.group({
+      isAttribute: [],
+      operator: [],
+      value: []
+    });
+
+    group.patchValue(filterProperty);
+
+    this.filterForm.addControl(filterProperty.variable, group, {
+      emitEvent: false
+    });
   }
 }
