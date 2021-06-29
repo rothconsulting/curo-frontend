@@ -7,6 +7,7 @@
     "prebuild": "npm run build.libs",
     "build": "ng build",
     "build.libs": "ng build core",
+    "postbuild.libs": "cp README.md LICENSE dist/core",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "pretest.ci": "npm run build.libs",
