@@ -45,7 +45,7 @@ jobs:
           retention-days: 1
 
   wiki:
-    needs: build
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
