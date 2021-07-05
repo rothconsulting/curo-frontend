@@ -35,3 +35,37 @@ jobs:
         working-directory: dist/core
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - run: npm run docs
+      - name: Upload Docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: dist/docs
+          retention-days: 1
+
+  wiki:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{github.repository}}.wiki
+      - name: check wiki repo content
+        run: |
+          ls -al
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: docs
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "docs: generate docs"
+      - name: Push changes to wiki repo
+        run: |
+          echo "${{ secrets.WIKI_SSH }}" > id_rsa
+          GIT_SSH_COMMAND="ssh -i id_rsa" git push origin master
