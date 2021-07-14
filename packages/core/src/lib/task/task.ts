@@ -1,4 +1,4 @@
-export interface Task {
+export interface Task<T = any> {
   id?: string;
   name?: string;
   assignee?: string;
@@ -19,7 +19,5 @@ export interface Task {
   taskDefinitionKey?: string;
   suspended?: boolean;
   formKey?: string;
-  variables?: {
-    [key: string]: any;
-  };
+  variables?: T;
 }
