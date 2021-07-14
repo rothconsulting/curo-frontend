@@ -1,3 +1,12 @@
+# [1.3.0](https://github.com/umb/curo-frontend/compare/1.2.1...1.3.0) (2021-07-14)
+
+
+### Features
+
+* add generic type for task variables ([#57](https://github.com/umb/curo-frontend/issues/57)) ([923b636](https://github.com/umb/curo-frontend/commit/923b6364d852fa315ede424d90ae06e75fad32cb))
+
+
+
 ## [1.2.1](https://github.com/umb/curo-frontend/compare/1.2.0...1.2.1) (2021-06-29)
 
 
