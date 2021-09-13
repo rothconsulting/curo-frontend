@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:1.21.1
+FROM nginxinc/nginx-unprivileged:1.21.3
 
 COPY ./nginx-startup.sh /docker-entrypoint.d/
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
